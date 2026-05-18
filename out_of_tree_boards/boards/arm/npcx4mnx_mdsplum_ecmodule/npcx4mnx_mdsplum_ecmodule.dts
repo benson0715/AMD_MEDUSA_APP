@@ -1,0 +1,283 @@
+/*****************************************************************************
+ * Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ *
+ *****************************************************************************
+*/
+
+/dts-v1/;
+
+#include <nuvoton/npcx4m8f.dtsi>
+#include <nuvoton/npcx/npcx4/npcx4-pinctrl.dtsi>
+
+
+/ {
+	model = "Nuvoton NPCX4M8F evaluation board";
+	flash2: flash@10070400 {
+		reg = <0x10070400 DT_SIZE_K(384)>;
+	};
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,console = &uart2;
+		zephyr,flash = &flash2;
+		zephyr,keyboard-scan = &kscan0;
+		zephyr,shell-uart = &uart2;
+
+	};
+	aliases {
+		pwm-led0 = &pwm_led0_green;
+		led0 = &gpio_led_red;
+		pwm-0 = &pwm0;
+		// i2c-0 = &i2c0_0;
+		i2c0 = &i2c0_0;
+		i2c1 = &i2c1_0;
+		i2c2 = &i2c2_0;
+		i2c3 = &i2c3_0;
+		watchdog0 = &twd0;
+		peci-0 = &peci0;
+		spi-flash0 = &int_flash;
+		taf-flash = &ext_flash0;
+		/* For kscan test suites */
+		kscan0 = &kscan0;
+	};
+
+	leds-pwm {
+		compatible = "pwm-leds";
+		pwm_led0_green: pwm_led_0 {
+			pwms = <&pwm6 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			label = "User D7 green";
+		};
+	};
+
+	leds-gpio {
+		compatible = "gpio-leds";
+		gpio_led_red: led_0 {
+			gpios = <&gpio6 0 GPIO_ACTIVE_LOW>;
+			label = "User D8 red";
+		};
+	};
+};
+
+/* Overwrite default device properties with overlays in board dt file here. */
+&uart1 {
+	status = "disabled";
+	current-speed = <115200>;
+	/* Use UART1_SL2 ie. PIN64.65 */
+	pinctrl-0 = <&uart1_2_sin_gp64 &uart1_2_sout_gp65>;
+	pinctrl-names = "default";
+};
+
+/* Overwrite default device properties with overlays in board dt file here. */
+&uart2 {
+	status = "okay";
+	current-speed = <115200>;
+	/* Use UART2 ie. PIN75.86 */
+	pinctrl-0 = <&uart2_sin_gp75 &uart2_sout_gp86>;
+	pinctrl-names = "default";
+};
+
+&pwm0 {
+	status = "disabled";
+	pinctrl-0 = <&pwm0_gpc3>;
+	pinctrl-names = "default";
+};
+
+&bbram {
+	status = "okay";  
+};
+
+&adc0 {
+	status = "okay";
+	/* Use adc0 channel 0 and 2 for 'adc_api' driver tests */
+	pinctrl-0 = <&adc0_chan0_gp45 &adc0_chan2_gp43>;
+	pinctrl-names = "default";
+};
+
+&espi0 {
+	status = "okay";
+	pinctrl-0 = <&espi_lpc_gp46_47_51_52_53_54_55_57>;
+	pinctrl-names = "default";
+};
+
+&i2c0_0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_0_sda_scl_gpb4_b5>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c1_0 {
+	status = "okay";
+	pinctrl-0 = <&i2c1_0_sda_scl_gp87_90>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c2_0 {
+	status = "okay";
+	pinctrl-0 = <&i2c2_0_sda_scl_gp91_92>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c3_0 {
+	status = "okay";
+	pinctrl-0 = <&i2c3_0_sda_scl_gpd0_d1>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c_ctrl0 {
+	status = "okay";
+};
+
+&i2c_ctrl1 {
+	status = "okay";
+};
+
+&i2c_ctrl2 {
+	status = "okay";
+};
+
+&i2c_ctrl3 {
+	status = "okay";
+};
+
+
+&tach1 {
+	status = "disabled";
+	pinctrl-0 = <&ta1_1_in_gp40>;
+	pinctrl-names = "default";
+	port = <NPCX_TACH_PORT_A>;
+	sample-clk = <NPCX_TACH_FREQ_LFCLK>;
+	pulses-per-round = <1>;
+};
+
+&peci0 {
+	status = "okay";
+	pinctrl-0 = <&peci_dat_gp81>;
+	pinctrl-names = "default";
+};
+
+
+/* Add nand flash */
+&qspi_fiu1 {
+    status = "okay";
+    en-direct-access-2dev;
+    /* NOR flash */
+     ext_flash0: ext_flash0@0 {
+        compatible ="nuvoton,npcx-fiu-nor";
+        size = <0x20000000>; /* 32 Mbytes */
+        max-timeout = <86784>;
+        reg = <0>;
+        quad-enable-requirements = "S2B1v1";
+        status = "okay";
+        enter-4byte-addr = <0x85>; 
+        /* Config for npcx4 SVB board - CS0 */
+        qspi-flags = <NPCX_QSPI_SW_CS0>;
+        mapped-addr = <0x68000000>;
+        pinctrl-0 = <&fiu_ext_io0_io1_clk_cs_gpa4_96_a2_a0
+                 &fiu_ext_quad_io2_io3_gp93_a7
+                 &ext_flash_tris_off>;
+        pinctrl-names = "default"; 
+    };
+   ext_flash1: ext_flash1@1 {
+        compatible ="nuvoton,npcx-fiu-nor";
+        size = <0x20000000>; /* 32 Mbytes */
+        max-timeout = <8>;
+        reg = <1>;
+        quad-enable-requirements = "S2B1v1";
+        status = "disabled";
+        /* Config for npcx4 SVB board - NPCX_QSPI_SEC_FLASH_SL */
+        qspi-flags = <(NPCX_QSPI_SW_CS0|NPCX_QSPI_SEC_FLASH_SL)>;
+        mapped-addr = <0x6C000000>;
+        pinctrl-0 = <&fiu_ext_io0_io1_clk_cs_gpa4_96_a2_a0
+                 &fiu_ext_quad_io2_io3_gp93_a7
+                 &ext_flash_tris_off
+                 &ext_flash_cs1_sl>;
+        pinctrl-names = "default"; 
+    };
+
+
+};
+&espi_taf {
+    mapped-addr = <0x68000000>;
+    max-read-sz = "NPCX_ESPI_TAF_MAX_READ_REQ_64B";
+    erase-sz = "NPCX_ESPI_TAF_ERASE_BLOCK_SIZE_4KB";
+    status = "okay";
+};
+
+
+&kscan0 {
+	/* Demonstrate a 16 x 8 keyboard matrix on evb */
+	pinctrl-0 = <&ksi0_gp31 /* KSI0 PIN31 */
+		     &ksi1_gp30 /* KSI1 PIN30 */
+		     &ksi2_gp27 /* KSI2 PIN27 */
+		     &ksi3_gp26 /* KSI3 PIN26 */
+		     &ksi4_gp25 /* KSI4 PIN25 */
+		     &ksi5_gp24 /* KSI5 PIN24 */
+		     &ksi6_gp23 /* KSI6 PIN23 */
+		     &ksi7_gp22 /* KSI7 PIN22 */
+		     &kso00_gp21 /* KSO00 PIN21 */
+		     &kso01_gp20 /* KSO01 PIN20 */
+		     &kso02_gp17 /* KSO02 PIN17 */
+		     &kso03_gp16 /* KSO03 PIN16 */
+		     &kso04_gp15 /* KSO04 PIN15 */
+		     &kso05_gp14 /* KSO05 PIN14 */
+		     &kso06_gp13 /* KSO06 PIN13 */
+		     &kso07_gp12 /* KSO07 PIN12 */
+		     &kso08_gp11 /* KSO08 PIN11 */
+		     &kso09_gp10 /* KSO09 PIN10 */
+		     &kso10_gp07 /* KSO10 PIN07 */
+		     &kso11_gp06 /* KSO11 PIN06 */
+		     &kso12_gp05 /* KSO12 PIN05 */
+		     &kso13_gp04 /* KSO13 PIN04 */
+		     &kso14_gp82 /* KSO14 PIN82 */
+		     &kso15_gp83 /* KSO15 PIN83 */
+		     >;
+	pinctrl-names = "default";
+	row-size = <8>;
+	col-size = <16>;
+	status = "okay";
+
+};
+
+&psl_in1_gpd2 {
+
+    psl-in-mode = "level";
+
+    psl-in-pol = "high-rising";
+
+};
+
+/* Power domain device controlled by PSL */
+/ {
+    psl_ctrl {
+        compatible = "npcx-hibernate-psl";
+        psl-driven-type = "gpio-driven";
+        status = "okay";
+        enable-gpios = <&gpio8 5 0>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&psl_in1_gpd2 &psl_in2_gp00 >;
+    };
+};
+
+&espi_taf {
+	mapped-addr = <0x68000000>;
+	max-read-sz = "NPCX_ESPI_TAF_MAX_READ_REQ_64B";
+	erase-sz = "NPCX_ESPI_TAF_ERASE_BLOCK_SIZE_4KB";
+	status = "okay";
+};
+
+&pinctrl {
+	uart2_sout_gp86_disable: periph-uart2-sout-disable {
+		pinmux = <&altj_cr_sout2_sl_disable>;
+};
+};
+
+&host_uart  {
+    compatible = "nuvoton,npcx-host-uart";
+    pinctrl-0 = <&huart_rxd_gp75 &huart_txd_gp86 &uart2_sout_gp86_disable>;
+    pinctrl-names = "default";
+    status = "okay";
+};

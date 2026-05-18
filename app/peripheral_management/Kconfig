@@ -1,0 +1,134 @@
+# Kconfig - Config options for EC FW peripheral management
+#
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+#
+
+config PERIPHERAL_MANAGEMENT
+	bool "Enable EC human interface"
+	default y
+	help
+	  Enable EC support for button, switches, this includes:
+	  1) Buttons: i.e power button
+	  2) Switches: EC HW straps used to change EC behavior.
+
+config PERIPHERAL_BTN_DEBOUNCE_TIME
+	int "Switches/button debounce time"
+	default 10
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce buttons
+	  and switches for user interaction.
+
+config PERIPHERAL_AC_PRENT_DEBOUNCE_TIME
+	int "AC adapter present debounce time"
+	default 10
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce AC adapter present.
+	  
+config PERIPHERAL_UART_DONGLE_DEBOUNCE_TIME
+	int "Uart dongle present debounce time"
+	default 100
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce Uart dongle present.
+	  
+config PERIPHERAL_BAT_INT_DEBOUNCE_TIME
+	int "Bat in debounce time"
+	default 10
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce Bat in.
+
+config PERIPHERAL_CHG_OK_DEBOUNCE_TIME
+	int "chg ok debounce time"
+	default 50
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce chg ok.
+	  
+config PERIPHERAL_DOCK_IN_DEBOUNCE_TIME
+	int "dock in debounce time"
+	default 100
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce dock in.
+	  
+config PERIPHERAL_LID_DEBOUNCE_TIME
+	int "lid close debounce time"
+	default 100
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce lid close.
+	  
+config PERIPHERAL_DBG_CARD_DEBOUNCE_TIME
+	int "debug card present debounce time"
+	default 100
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce debug card present.
+	  
+config PERIPHERAL_PD_SRC_ON_DEBOUNCE_TIME
+	int "PD source on debounce time"
+	default 100
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce PD source on.
+	  
+config PERIPHERAL_UART0_INT_DEBOUNCE_TIME
+	int "UART0 int on debounce time"
+	default 3
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce uart0 int.
+
+config PERIPHERAL_SMI_INT_DEBOUNCE_TIME
+	int "SMI int on debounce time"
+	default 3
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce smi int.
+
+config PERIPHERAL_DISP_SW_DEBOUNCE_TIME
+	int "display switch on debounce time"
+	default 3
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce display switch.
+
+config PERIPHERAL_AC_330W_PRSNT_DEBOUNCE_TIME
+	int "ac 330w present on debounce time"
+	default 5
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce ac 330w present.
+
+config PERIPHERAL_CHG_PROCHOT1_DEBOUNCE_TIME
+	int "charger prochot1 on debounce time"
+	default 5
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce charger prochot1.
+
+config PERIPHERAL_CHG_PROCHOT2_DEBOUNCE_TIME
+	int "charger prochot2 on debounce time"
+	default 5
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce charger prochot2.
+
+config PERIPHERAL_MEM_PMIC_PG_DEBOUNCE_TIME
+	int "mem pmic power good debounce time"
+	default 5
+	depends on PERIPHERAL_MANAGEMENT
+	help
+	  Indicate time in milliseconds used to debounce mem pmic power good.
+
+config PERIPHERAL_LOG_LEVEL
+	int "Peripheral log level"
+	depends on PERIPHERAL_MANAGEMENT
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for peripheral module.

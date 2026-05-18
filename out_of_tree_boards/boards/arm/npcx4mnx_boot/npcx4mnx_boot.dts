@@ -1,0 +1,190 @@
+/*
+ * Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ */
+
+/dts-v1/;
+
+#include <nuvoton/npcx4m8f.dtsi>
+#include <nuvoton/npcx/npcx4/npcx4-pinctrl.dtsi>
+
+/ {
+	model = "Nuvoton NPCX4M8F evaluation board";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,console = &uart2;
+		zephyr,flash = &flash0;
+		zephyr,keyboard-scan = &kscan0;
+		zephyr,shell-uart = &uart2;
+		zephyr,code-partition = &slot0_partition;
+
+	};
+
+	aliases {
+		pwm-led0 = &pwm_led0_green;
+		led0 = &gpio_led_red;
+		pwm-0 = &pwm6;
+		i2c-0 = &i2c0_0;
+		watchdog0 = &twd0;
+		peci-0 = &peci0;
+		spi-flash0 = &int_flash;
+		taf-flash = &int_flash;
+		/* For kscan test suites */
+		kscan0 = &kscan0;
+	};
+
+	leds-pwm {
+		compatible = "pwm-leds";
+		pwm_led0_green: pwm_led_0 {
+			pwms = <&pwm6 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			label = "User D7 green";
+		};
+	};
+
+	leds-gpio {
+		compatible = "gpio-leds";
+		gpio_led_red: led_0 {
+			gpios = <&gpio6 0 GPIO_ACTIVE_LOW>;
+			label = "User D8 red";
+		};
+	};
+
+
+};
+
+&qspi_fiu0 {
+				
+				partitions {
+					compatible = "fixed-partitions";
+					#address-cells = < 0x1 >;
+					#size-cells = < 0x1 >;
+					boot_partition: partition@0 {
+						label = "mcuboot";
+						reg = < 0x0 0xc000 >;
+					};
+					slot0_partition: partition@c000 {
+						label = "image-0";
+						reg = < 0xc000 0x32000 >;
+					};
+					slot1_partition: partition@3e000 {
+						label = "image-1";
+						reg = < 0x3e000 0x32000 >;
+					};
+					scratch_partition: partition@70000 {
+						label = "image-scratch";
+						reg = < 0x70000 0xa000 >;
+					};
+					storage_partition: partition@7a000 {
+						label = "storage";
+						reg = < 0x7a000 0x4000 >;
+					};
+					user_partition: partition@7e000 {
+						label = "user_storage";
+						reg = < 0x7e000 0x2000 >;
+					};
+				};
+			};
+/* Overwrite default device properties with overlays in board dt file here. */
+
+&uart2 {
+	status = "okay";
+	current-speed = <115200>;
+	/* Use UART2 ie. PIN75.86 */
+	pinctrl-0 = <&uart2_sin_gp75 &uart2_sout_gp86>;
+	pinctrl-names = "default";
+};
+
+&pwm6 {
+	status = "okay";
+	pinctrl-0 = <&pwm6_gpc0>;
+	pinctrl-names = "default";
+};
+
+&adc0 {
+	status = "okay";
+	/* Use adc0 channel 0 and 2 for 'adc_api' driver tests */
+	pinctrl-0 = <&adc0_chan0_gp45 &adc0_chan2_gp43>;
+	pinctrl-names = "default";
+};
+
+&espi0 {
+	status = "okay";
+	pinctrl-0 = <&espi_lpc_gp46_47_51_52_53_54_55_57>;
+	pinctrl-names = "default";
+};
+
+&i2c0_0 {
+	status = "okay";
+	pinctrl-0 = <&i2c0_0_sda_scl_gpb4_b5>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_FAST>;
+};
+
+&i2c_ctrl0 {
+	status = "okay";
+};
+
+
+&qspi_fiu0 {
+	status = "okay";
+};
+
+&qspi_fiu1 {
+          status = "okay";
+          ext_flash0: ext_flash0@0 {
+                   compatible ="nuvoton,npcx-fiu-nor";
+                   size = <0x10000000>; /* 268435456 bits = 32M Bytes */
+                   max-timeout = <86784>;
+                   reg = <0>;
+                   quad-enable-requirements = "S2B1v1"; 
+                   status = "okay";
+
+                   /* Enable 4Byte address mode when the flash size > 16MB */
+                    enter-4byte-addr = <0x85>; 
+
+                   /* quad spi bus configuration of nor flash device */
+                   qspi-flags = <NPCX_QSPI_SW_CS0>;
+                   mapped-addr = <0x68000000>;
+                   pinctrl-0 = <&fiu_ext_io0_io1_clk_cs_gpa4_96_a2_a0
+                                  &fiu_ext_quad_io2_io3_gp93_a7
+                                  &ext_flash_tris_off>;
+                   pinctrl-names = "default";
+          };       
+};
+
+&peci0 {
+	status = "okay";
+	pinctrl-0 = <&peci_dat_gp81>;
+	pinctrl-names = "default";
+};
+
+&kscan0 {
+	/* Demonstrate a 13 x 8 keyboard matrix on evb */
+	pinctrl-0 = <&ksi0_gp31 /* KSI0 PIN31 */
+		     &ksi1_gp30 /* KSI1 PIN30 */
+		     &ksi2_gp27 /* KSI2 PIN27 */
+		     &ksi3_gp26 /* KSI3 PIN26 */
+		     &ksi4_gp25 /* KSI4 PIN25 */
+		     &ksi5_gp24 /* KSI5 PIN24 */
+		     &ksi6_gp23 /* KSI6 PIN23 */
+		     &ksi7_gp22 /* KSI7 PIN22 */
+		     &kso00_gp21 /* KSO00 PIN21 */
+		     &kso01_gp20 /* KSO01 PIN20 */
+		     &kso02_gp17 /* KSO02 PIN17 */
+		     &kso03_gp16 /* KSO03 PIN16 */
+		     &kso04_gp15 /* KSO04 PIN15 */
+		     &kso05_gp14 /* KSO05 PIN14 */
+		     &kso06_gp13 /* KSO06 PIN13 */
+		     &kso07_gp12 /* KSO07 PIN12 */
+		     &kso08_gp11 /* KSO08 PIN11 */
+		     &kso09_gp10 /* KSO09 PIN10 */
+		     &kso10_gp07 /* KSO10 PIN07 */
+		     &kso11_gp06 /* KSO11 PIN06 */
+		     &kso12_gp05 /* KSO12 PIN05 */
+		     >;
+	pinctrl-names = "default";
+	row-size = <8>;
+	col-size = <13>;
+	status = "disabled";
+
+};

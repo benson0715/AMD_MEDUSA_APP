@@ -1,0 +1,22 @@
+#EC Fan control build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "Fan Control"
+
+config FAN_RPM_CONTROL
+	bool "Enable fan RPM control"
+	default n
+	help
+	  Indicate if EC supports fan RPM control.
+
+config FANCTRL_LOG_LEVEL
+	int "Fan control log level"
+	depends on FAN_RPM_CONTROL
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for fan control module.
+
+endmenu

@@ -1,0 +1,23 @@
+# EC Wireless module build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+
+menu "Wireless manageability"
+
+config WIRELESS_MANAGEABILITY
+	bool "Enable wireless manageability"
+	default y
+	help
+	  Indicate if EC supports wireless manageability OS triggers.
+
+config WIRELESS_MANOS_LOG_LEVEL
+	int "Wireless manageability log level"
+	depends on WIRELESS_MANAGEABILITY
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for wireless manageability module.
+
+endmenu

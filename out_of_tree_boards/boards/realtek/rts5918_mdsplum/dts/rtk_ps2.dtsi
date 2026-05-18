@@ -1,0 +1,66 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * PS/2 channels (1) — TrackPoint on PS2 channel 1 (GPIO067 data / GPIO068 clk).
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * Phase 10.8: trimmed from 4 channels to 1. RTS5918 has 3 PS/2
+ * controllers (ps2_1/ps2_2/ps2_3 @ 0x40254300/0x40254400/0x40255700)
+ * but the realtek driver is single-instance only — see Phase 10.9
+ * note in zephyr_fork rts5918.dtsi.
+ *
+ * On Bison the only physically wired PS/2 device is the Lenovo
+ * TrackPoint (internal pointing device). Phase 10.9 routes it
+ * through PS/2 channel 1 (controller ps2_1 @ 0x40254300) with
+ * PS2_DATA01 on GPIO067 and PS2_CLK01 on GPIO068; the
+ * IP_INPUT_SIGNAL_SELECT_REGISTER programming is in the
+ * ps2data1_gpio067 / ps2clk1_gpio068 pinctrl entries (see
+ * zephyr_fork rts5918-pinctrl.dtsi Phase 10.9 block).
+ *
+ * EXTERNAL_KEYBOARD / INTERNAL_POINTING_DEVICE / EXTERNAL_POINTING_DEVICE
+ * were Lenovo's npck legacy enum names for a 3-channel controller
+ * and have NO source-tree reference via the DT-driven `enum ps2_chan`
+ * — they only appear inside Jupiter/ps2com.c as local `#define`s
+ * used to index Dcb[3]/Icb[3] arrays (which is a separate namespace;
+ * the preprocessor #define shadows any enum value of the same name
+ * within ps2com.c only).
+ *
+ * ps2com.c itself only fully wires Dcb[0] (INTERNAL_POINTING_DEVICE
+ * -> trackpoint); Dcb[1]/Dcb[2] have icb=NULL so Send_Data_To_A_Ps2_Port
+ * for them is a no-op anyway. Removing the 3 DT children does not
+ * change any application behaviour.
+ *
+ * After this trim:
+ *   enum ps2_chan { PS2_TRACK_POINT = 0, PS2_CH_COUNT = 1 };
+ *   mdl_ps2_hub_init checks only &ps2_1 (enabled by &ps2_1 block below)
+ *
+ * Phase 10.9 pin_sel programming of IP_INPUT_SIGNAL_SELECT_REGISTER
+ * (offset 0x13C):
+ *   _PS2_DATA1_SEL bit 27       = 1   -> GPIO067 (PS2_DATA01b)
+ *   _PS2_CLK1_SEL  bit 26:25    = 10  -> GPIO068 (PS2_CLK01c)
+ *
+ * NOTE: ps2_2 and ps2_3 stay status="disabled" — the
+ * ps2_realtek_rts5918.c driver is hardcoded for single instance
+ * (DT_INST_IRQN(0) / DT_DRV_INST(0) literals in the
+ * REALTEK_PS2_DEVICE macro), so only one ps2_N can be enabled per
+ * board.
+ */
+
+/ {
+	poc_ps2_channels: poc-ps2-channels {
+		compatible = "vnd,poc-ps2-channels";
+		poc_ps2_channels_0: poc-ps2-channels-0 {
+			enum-name = "PS2_TRACK_POINT";
+			ps2-channel = <&ps2_1>;
+		};
+	};
+};
+
+&ps2_1 {
+	status = "okay";
+	pinctrl-0 = <&ps2data1_gpio067 &ps2data1_gpio067_pin_sel
+		     &ps2clk1_gpio068 &ps2clk1_gpio068_pin_sel>;
+	pinctrl-names = "default";
+};

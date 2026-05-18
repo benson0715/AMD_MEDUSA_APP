@@ -1,0 +1,61 @@
+# EC Power management build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "Power management"
+
+config ACDCSWITCH
+	bool "Enable AC DC switch"
+	default y
+	help
+	  Simulate the DC and AC/DC switch mode for the user who don't have real battery.
+
+config SLEEP
+	bool "Enable sleep feature"
+	default y
+	help
+	  Indicate if EC supports sleep in S3/S4/G3 when plug in ac.
+
+config PSL
+	bool "Enable PSL"
+	depends on SLEEP
+	default n
+	help
+	  Indicate if PSL is enabled.
+
+config SLEEP_LOG_LEVEL
+	int "sleep feature log level"
+	depends on SLEEP
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for sleep feature.
+
+config PWRMGMT
+	bool "Enable EC power management"
+	default y
+	help
+	  Indicate if EC supports power management this includes:
+	  1) ACPI spec system transitions to S3, S4, S5
+	  2) Intel-specific transitions to Sx sub-states during S3/S4/S5
+	  (deep Sx) and or transition to S0ix during S0 (deep sleep)
+
+config PWRMGMT_DEEPSX
+	bool "Enable system deep suspend support"
+	help
+	  Indicate if EC supports deep suspend process. Deep suspend refers
+	  to additional transition during S4, S5 states but reducing power
+	  further since EC loses either context or power.
+
+config PWRMGMT_DEEPSX_LOG_LEVEL
+	int "Power management deep sx log level"
+	depends on PWRMGMT
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for power management module which includes Intel
+	  transitions into deep sx sub-states.
+
+endmenu

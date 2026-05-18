@@ -1,0 +1,72 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Phase 10.1 — five Lenovo Housekeeper threads.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * app/app_task.c walks DT_FOREACH_CHILD_STATUS_OKAY(poc_ec_tasks, ...)
+ * to spawn one Zephyr thread per child via k_thread_create(). Each
+ * thread runs the corresponding task_*_thread() main loop which
+ * blocks on k_msgq_get(K_FOREVER) until task_manager.c::Init_Housekeeper
+ * broadcasts a TSK_STATECHANG event from main()::TskEventPowerOn().
+ *
+ * Priority is computed as
+ *     K_PRIO_PREEMPT(DT_NODE_CHILD_IDX(node) + CONFIG_EC_THREAD_BASE_PRIORITY(=1))
+ * so the FIRST child gets the HIGHEST priority. The order below
+ * matches 5918/Wistron_Lenovo_ecfw/app/sys_resource.h:17-21
+ * (HOSTIF=highest, then PERIPH, POWER, SENSOR, SYSTEM=lowest).
+ * Stack sizes match 5918/Wistron_Lenovo_ecfw/app/sys_resource.h:24-28.
+ *
+ * Note on enum-name suffix `_THR`: app_task.h converts each child's
+ * enum-name into a member of `enum task_id`. Lenovo's existing task
+ * ID space already uses bare names like `TASK_SENSOR` (defined as
+ * `#define TASK_SENSOR 56` in include/Jupiter/Task.h and as an
+ * enumerator in include/app/app_sensor_thread.h). The bare names
+ * would collide at preprocessor / enum redeclaration time. The
+ * `_THR` suffix keeps the housekeeper-thread enum cleanly separate
+ * from the legacy Lenovo task IDs while still being self-describing.
+ */
+
+/ {
+	poc_ec_tasks: poc-ec-tasks {
+		compatible = "vnd,poc-ec-tasks";
+
+		hostif_thread: hostif-thread {
+			status = "okay";
+			enum-name = "TASK_HOSTIF_THR";
+			task-name = "task_hostif";
+			stack-size = <2048>;
+			entry-point-func = "task_hostif_thread";
+		};
+		periph_thread: periph-thread {
+			status = "okay";
+			enum-name = "TASK_PERIPH_THR";
+			task-name = "task_periph";
+			stack-size = <2048>;
+			entry-point-func = "task_periph_thread";
+		};
+		power_thread: power-thread {
+			status = "okay";
+			enum-name = "TASK_POWER_THR";
+			task-name = "task_power";
+			stack-size = <2048>;
+			entry-point-func = "task_power_thread";
+		};
+		sensor_thread: sensor-thread {
+			status = "okay";
+			enum-name = "TASK_SENSOR_THR";
+			task-name = "task_sensor";
+			stack-size = <2048>;
+			entry-point-func = "task_sensor_thread";
+		};
+		system_thread: system-thread {
+			status = "okay";
+			enum-name = "TASK_SYSTEM_THR";
+			task-name = "task_system";
+			stack-size = <2048>;
+			entry-point-func = "task_system_thread";
+		};
+	};
+};

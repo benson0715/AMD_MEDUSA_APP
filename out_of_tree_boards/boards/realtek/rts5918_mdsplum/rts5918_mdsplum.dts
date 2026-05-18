@@ -1,0 +1,115 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Bison reference board for Realtek RTS5918 EC.
+ *
+ * Pin assignments come from Bison_pindef.csv (the customer-supplied
+ * Nuvoton -> RTS5918 pin map for the CS27 Bison board) cross-checked
+ * against section 3.4 GPIO Multiplexing in
+ * RTS5918_preliminary_datasheet_V0.11_202602032_Lenovo (page 17-21).
+ *
+ * File layout (2026-04-16 reorg):
+ *   rts5918_bison.dts                      ← THIS FILE (chosen/aliases/
+ *                                            bbram0 only; everything
+ *                                            else is split by function
+ *                                            into dts/rtk_*.dtsi)
+ *   rts5918_mdsplum_gpio_autogen.overlay     ← output of
+ *                                            scripts/gen_poc_from_xlsx.py,
+ *                                            carries CSV/Excel-derived
+ *                                            poc_gpios + poc_gpio_ints +
+ *                                            &gpioa..&gpioq enables.
+ *   dts/rtk_uart.dtsi                      ← UART02 + swj_port
+ *   dts/rtk_espi.dtsi                      ← eSPI host interface
+ *   dts/rtk_adc.dtsi                       ← poc_adc_channels + &adc0
+ *   dts/rtk_i2c.dtsi                       ← poc_i2c_ports + &i2c_N +
+ *                                            wrappers + iox virt-ports
+ *   dts/rtk_pwm.dtsi                       ← poc_pwm_channels + &pwmN
+ *   dts/rtk_fan.dtsi                       ← poc_fans + &tachN
+ *   dts/rtk_ps2.dtsi                       ← poc_ps2_channels + &ps2_1
+ *   dts/rtk_watchdog.dtsi                  ← poc_watchdog_devs + &wdog
+ *   dts/rtk_flash.dtsi                     ← poc_nor_flashes + SAF
+ *   dts/rtk_tasks.dtsi                     ← poc_ec_tasks (housekeepers)
+ */
+
+/dts-v1/;
+#include <realtek/ec/rts5918.dtsi>
+#include <realtek/ec/rts5918-pinctrl.dtsi>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+#include "rts5918_mdsplum_gpio_autogen.overlay"
+
+#include "dts/rtk_uart.dtsi"
+#include "dts/rtk_espi.dtsi"
+#include "dts/rtk_adc.dtsi"
+#include "dts/rtk_i2c.dtsi"
+#include "dts/rtk_pwm.dtsi"
+#include "dts/rtk_fan.dtsi"
+#include "dts/rtk_ps2.dtsi"
+#include "dts/rtk_watchdog.dtsi"
+#include "dts/rtk_flash.dtsi"
+#include "dts/rtk_tasks.dtsi"
+#include "dts/rtk_keyboard.dtsi"
+#include "dts/rtk_rtc.dtsi"
+#include "dts/rtk_tsensor.dtsi"
+
+/ {
+	model = "AMD MDS Plum on Realtek RTS5918";
+	compatible = "realtek,rts5918-mdsplum";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,flash = &flash0;
+		zephyr,bbram = &bbram0;
+		/*
+		 * Used by the host-bridge layer (drivers/espi/drv_host_*.c +
+		 * Jupiter/smc/HwEsNvs.c et al) to find the eSPI controller for
+		 * promt3 / acpi register access. Mirrors the sister project's
+		 * boards/lenovo/lbc2_arl_7088/realtek/HwEsNvs.c convention.
+		 */
+		rtk,ec-espi = &espi0;
+	};
+
+	aliases {
+		bbram-0  = &bbram0;
+		/* Phase 10.14: lct-0 and peci-0 removed.
+		 *   - lct-0:  mdl_lct_dev.h has only `#define LCT_DEV_HANDLE
+		 *             DT_ALIAS(lct_0)` (no static inline functions
+		 *             that would force DT macro expansion). Consumer
+		 *             middle/lct/mdl_lct_dev.c is gated by
+		 *             CONFIG_LCT_DEV which is not set in build/.config,
+		 *             so the .c file is never compiled. The alias
+		 *             was pure dead infrastructure.
+		 *   - peci-0: same pattern. mdl_peci_dev.h has only the
+		 *             #define + non-inline prototypes. Consumer
+		 *             middle/peci/mdl_peci_dev.c is gated by
+		 *             CONFIG_PECI_DEV (also unset in build/.config).
+		 *
+		 * kbscan-0 stays as &bbram0 placeholder — UNLIKE lct/peci,
+		 * mdl_kbscan_dev.h has 8 static inline functions that all
+		 * call DEVICE_DT_GET(KBSCAN_DEV_HANDLE), and
+		 * Jupiter/keyscan.c + Jupiter/smc/HwKeyscan.c really do call
+		 * those inlines. Removing the alias would break compile in
+		 * every translation unit that #includes mdl_kbscan_dev.h via
+		 * zephyr_common_lib.h.
+		 *
+		 * Re-routing kbscan-0 to &kbd (Realtek input_rts5918_kbd) is
+		 * also not a fix: that driver implements the Zephyr Input
+		 * Subsystem (auto-scan + event-driven via input_kbd_matrix
+		 * framework), NOT the drv_kb_raw_* polling API that Lenovo
+		 * keyscan expects. The two keyboard subsystems are
+		 * fundamentally incompatible without a bridge layer. The
+		 * runtime path is currently safe because drivers/kb_raw/drv_kb_raw.c::
+		 * drv_kb_raw_init/drive_column/read_columns/read_rows are
+		 * all `(void)dev; return 0;` stubs that ignore the dev
+		 * pointer entirely. need_to_check.md section 10.12 has the
+		 * full 4-option (A/B/C/D) analysis of how to actually wire
+		 * the keyboard if a future board variant needs it.
+		 */
+		kbscan-0 = &bbram0;
+		espi-0   = &espi0;
+	};
+};

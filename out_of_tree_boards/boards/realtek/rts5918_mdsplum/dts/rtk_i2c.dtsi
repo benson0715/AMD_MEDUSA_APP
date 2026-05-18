@@ -1,0 +1,315 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * I2C buses (Bison uses 9 of the 11 controllers) + SCCON wrappers +
+ * virtual port-byte nodes for KTS1622 GPIO expanders on i2c_4 +
+ * poc_i2c_ports enum hub.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ */
+
+/ {
+	/*
+	 * Phase 8.3 — virtual port-byte nodes for the two KTS1622 GPIO
+	 * expanders on i2c_4 (U5601 + U5602). The Lenovo Nct5635 driver
+	 * (Jupiter/peripheral/Nct5635/nct5635.c) talks to the chips via
+	 * SMBusRequest with I2C addresses 0x20/0x21 (Nct5635.h). The
+	 * `index` property here matches what IoSetExpander() expects in
+	 * its IoxShadowRegs[] array (see Phase 8.3 commit message and
+	 * dts/bindings/gpio/vnd,lenovo-iox-virt-port.yaml for full
+	 * encoding rationale).
+	 *
+	 *   index = 0  ->  U5601 P0  (chip 0, port byte 0)
+	 *   index = 1  ->  U5601 P1  (chip 0, port byte 1)
+	 *   index = 2  ->  U5602 P0  (chip 1, port byte 0)
+	 *   index = 3  ->  U5602 P1  (chip 1, port byte 1)
+	 */
+	expander1_p0: u5601_p0 {
+		compatible = "vnd,lenovo-iox-virt-port";
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <8>;
+		index = <0>;
+	};
+	expander1_p1: u5601_p1 {
+		compatible = "vnd,lenovo-iox-virt-port";
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <8>;
+		index = <1>;
+	};
+	expander2_p0: u5602_p0 {
+		compatible = "vnd,lenovo-iox-virt-port";
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <8>;
+		index = <2>;
+	};
+	expander2_p1: u5602_p1 {
+		compatible = "vnd,lenovo-iox-virt-port";
+		gpio-controller;
+		#gpio-cells = <2>;
+		ngpios = <8>;
+		index = <3>;
+	};
+
+	/* ----- I2C ports (12) -----
+	 * Children 00-09 are wired to real i2c controllers per Bison BOM.
+	 * Children 10-11 (ECC / PSENSE) are not wired on Bison and fall
+	 * back to &bbram0 — see per-child comments for rationale.
+	 */
+	poc_i2c_ports: poc-i2c-ports {
+		compatible = "vnd,poc-i2c-ports";
+		poc_i2c_ports_00: poc-i2c-ports-00 {
+			enum-name = "I2C_PORT_WWAN";
+			i2c-port = <&i2c_1>;
+		};
+		poc_i2c_ports_01: poc-i2c-ports-01 {
+			enum-name = "I2C_PORT_GSENSE";
+			i2c-port = <&i2c_3>;
+		};
+		poc_i2c_ports_02: poc-i2c-ports-02 {
+			enum-name = "I2C_PORT_IO_EX";
+			i2c-port = <&i2c_4>;
+		};
+		poc_i2c_ports_03: poc-i2c-ports-03 {
+			enum-name = "I2C_PORT_PD";
+			i2c-port = <&i2c_5>;
+		};
+		poc_i2c_ports_04: poc-i2c-ports-04 {
+			enum-name = "I2C_PORT_SSD_THRM",
+						"I2C_PORT_PSENSE";
+			i2c-port = <&i2c_6>;
+		};
+		poc_i2c_ports_05: poc-i2c-ports-05 {
+			enum-name = "I2C_PORT_DEBUG";
+			i2c-port = <&i2c_7>;
+		};
+		poc_i2c_ports_06: poc-i2c-ports-06 {
+			enum-name = "I2C_PORT_BATTERY",
+						"I2C_PORT_ECC";
+			i2c-port = <&i2c_8>;
+		};
+		poc_i2c_ports_07: poc-i2c-ports-07 {
+			enum-name = "I2C_PORT_CHARGE";
+			i2c-port = <&i2c_9>;
+		};
+		poc_i2c_ports_08: poc-i2c-ports-08 {
+			enum-name = "I2C_PORT_VIDEO";
+			/* Phase 10.11: routed to i2c_10 (GPIO149 data + GPIO152 clk).
+			 * The board file enables &i2c_10 + &i2c_10_wrapper with the
+			 * matching pinctrl entries (i2c10_dataa_gpio149 +
+			 * i2c10_clkb_gpio152, both FUNC1).
+			 * Consumer: Jupiter/thermon.c::SYS_IIC_SEL_VIDEO_THERM for
+			 * GPU thermal sensor reads.
+			 */
+			i2c-port = <&i2c_10>;
+		};
+		poc_i2c_ports_09: poc-i2c-ports-09 {
+			enum-name = "I2C_PORT_KBD";
+			/* Phase 10.12: routed to i2c_11 (GPIO071 data + GPIO072 clk).
+			 * The board file enables &i2c_11 + &i2c_11_wrapper with
+			 * matching pinctrl (i2c11_dataa_gpio071 + i2c11_clka_gpio072,
+			 * both FUNC1, both "a" variant).
+			 *
+			 * Note: as of Phase 10.12 no Lenovo source file references
+			 * I2C_PORT_KBD via the DT enum (only this overlay declares
+			 * the name). The phandle is wired so a future application
+			 * caller can use the bus immediately, but no current
+			 * housekeeper exercises it — the i2c_11 controller will
+			 * sit idle at runtime until application code is added.
+			 */
+			i2c-port = <&i2c_11>;
+		};
+/*
+		poc_i2c_ports_10: poc-i2c-ports-10 {
+			enum-name = "I2C_PORT_ECC";
+			i2c-port = <&i2c_8>;
+		};
+		poc_i2c_ports_11: poc-i2c-ports-11 {
+			enum-name = "I2C_PORT_PSENSE";
+			i2c-port = <&i2c_6>;
+		};
+*/
+	};
+};
+
+/* ----- I2C buses (Bison uses 9 of the 11 controllers) ----- */
+&i2c_1 {
+	/* WWAN — GPIO077/078 */
+	status = "okay";
+	pinctrl-0 = <&i2c01_dataa_gpio077 &i2c01_dataa_gpio077_pin_sel
+		     &i2c01_clka_gpio078 &i2c01_clka_gpio078_pin_sel>;
+	pinctrl-names = "default";
+};
+
+/*
+ * i2c_2: legacy enable inherited from the previous application overlay.
+ * Flagged as dead enable in check_reports/Phase6_Summary.md M-01 because
+ * no pinctrl / wrapper is configured on Bison. Retained here to keep
+ * the relocation behaviour-neutral; drop in a follow-up cleanup if
+ * desired.
+ */
+ /*
+&i2c_2 { status = "okay"; };
+*/
+&i2c_3 {
+	/* GSENSE — GPIO142/143 */
+	status = "okay";
+	pinctrl-0 = <&i2c03_datab_gpio142 &i2c03_datab_gpio142_pin_sel
+		     &i2c03_clkc_gpio143 &i2c03_clkc_gpio143_pin_sel>;
+	pinctrl-names = "default";
+};
+
+&i2c_4 {
+	/* GPIO_EXPANDER — GPIO069/070
+	 *
+	 * Two KTS1622 GPIO expanders (U5601 + U5602) at I2C addresses
+	 * 0x20 and 0x21. They are NOT instantiated as Zephyr i2c
+	 * children because the Lenovo Nct5635 driver
+	 * (Jupiter/peripheral/Nct5635/nct5635.c) talks to them directly
+	 * via i2c_hub_write/read using EXPANDER1_ADDRESS / EXPANDER2_ADDRESS
+	 * from include/Jupiter/peripheral/Nct5635/Nct5635.h (Phase 8.2).
+	 *
+	 * The "GPIO controller" abstraction the per-pin enum_gpio_idx
+	 * encoding needs is provided by the four virtual port-byte
+	 * nodes (expander1_p0, expander1_p1, expander2_p0, expander2_p1)
+	 * declared in the root `/` block above (Phase 8.3a) — see
+	 * dts/bindings/gpio/vnd,lenovo-iox-virt-port.yaml for the
+	 * encoding rationale.
+	 *
+	 * Phase 4.7's `nxp,pcal6416a` driver instantiation for these
+	 * chips was removed in Phase 8.3d because:
+	 *   1. We're routing through Lenovo Nct5635 instead (Phase 8.3
+	 *      end-to-end chain), keeping N4SHT17W consistency.
+	 *   2. The PCAL driver and the Nct5635 driver would race-init
+	 *      registers 0x06/0x07 if both ran simultaneously.
+	 *   3. Bison BOM is KTS1622 (Kinetic), not PCAL6416A — they are
+	 *      register-compatible at the basic GPIO level but PCAL
+	 *      writes to PCAL-extended registers 0x40-0x4B during init,
+	 *      and KTS1622's behavior at those addresses is not
+	 *      identical (drive-strength register layout differs).
+	 */
+	status = "okay";
+	pinctrl-0 = <&i2c04_dataa_gpio069 &i2c04_dataa_gpio069_pin_sel
+		     &i2c04_clka_gpio070 &i2c04_clka_gpio070_pin_sel>;
+	pinctrl-names = "default";
+};
+
+&i2c_5 {
+	/* PD controller — GPIO015/016 */
+	status = "okay";
+	pinctrl-0 = <&i2c05_clk_gpio015 &i2c05_data_gpio016>;
+	pinctrl-names = "default";
+};
+
+&i2c_6 {
+	/* SSD_THRM — GPIO100/101 (datasheet GPIO100/101 = I3C06_SCL/SDA Func1,
+	 * I3C03_SCL/SDA Func2) — actually the CSV says GPIO100=clk, GPIO101=data
+	 */
+	status = "okay";
+};
+
+&i2c_7 {
+	/* Debug I2C — GPIO014/017 */
+	status = "okay";
+	pinctrl-0 = <&i2c07_clk_gpio014 &i2c07_data_gpio017>;
+	pinctrl-names = "default";
+};
+
+&i2c_8 {
+	/* BAT — GPIO147 (DATA), GPIO150 (CLK) */
+	status = "okay";
+	pinctrl-0 = <&i2c08_datab_gpio147 &i2c08_datab_gpio147_pin_sel
+		     &i2c08_clkb_gpio150 &i2c08_clkb_gpio150_pin_sel>;
+	pinctrl-names = "default";
+};
+
+&i2c_9 {
+	/* CHARGE — GPIO144 (CLK), GPIO148 (DATA) */
+	status = "okay";
+	pinctrl-0 = <&i2c09_clka_gpio144 &i2c09_clka_gpio144_pin_sel
+		     &i2c09_dataa_gpio148 &i2c09_dataa_gpio148_pin_sel>;
+	pinctrl-names = "default";
+};
+
+&i2c_10 {
+	/* VIDEO/THERM — GPIO149 (DATA "a" variant), GPIO152 (CLK "b" variant)
+	 *
+	 * Phase 10.11: routed for the I2C_PORT_VIDEO enum used by
+	 * Jupiter/thermon.c::SYS_IIC_SEL_VIDEO_THERM (the GPU-side
+	 * thermal sensor on Bison BOM). The cross "data-a + clk-b"
+	 * pin combination matches what the user supplied; both pins
+	 * use FUNC1 per rts5918-pinctrl.dtsi:1207/1219.
+	 *
+	 * IXC_INPUT_SIGNAL_SELECT_REGISTER programming (offset 0x130):
+	 *   _I2C10_SDA_SEL bit 14 = 0  -> GPIO149 (i2c10_dataa)
+	 *   _I2C10_SCL_SEL bit 13 = 1  -> GPIO152 (i2c10_clkb)
+	 */
+	status = "okay";
+	pinctrl-0 = <&i2c10_dataa_gpio149 &i2c10_dataa_gpio149_pin_sel
+		     &i2c10_clkb_gpio152  &i2c10_clkb_gpio152_pin_sel>;
+	pinctrl-names = "default";
+};
+
+&i2c_11 {
+	/* KBD — GPIO071 (DATA), GPIO072 (CLK), both "a" variants
+	 *
+	 * Phase 10.12: routed for the I2C_PORT_KBD enum slot. As of
+	 * this phase no Lenovo source file actually references
+	 * I2C_PORT_KBD via the DT enum (only the overlay declaration
+	 * uses the name), so wiring this controller is preparation
+	 * for future application code rather than fixing a current
+	 * runtime path.
+	 *
+	 * IXC_INPUT_SIGNAL_SELECT_REGISTER programming (offset 0x130):
+	 *   _I2C11_SDA_SEL bit 16 = 0  -> GPIO071 (i2c11_dataa)
+	 *   _I2C11_SCL_SEL bit 15 = 0  -> GPIO072 (i2c11_clka)
+	 */
+	status = "okay";
+	pinctrl-0 = <&i2c11_dataa_gpio071 &i2c11_dataa_gpio071_pin_sel
+		     &i2c11_clka_gpio072  &i2c11_clka_gpio072_pin_sel>;
+	pinctrl-names = "default";
+};
+
+/* ----- I2C SCCON clock wrappers (Phase 10.10) -----
+ *
+ * The upstream `snps,designware-i2c` driver (i2c_dw.c) has no clock
+ * binding — it expects platform code to enable the controller clock
+ * out-of-band. On RTS5918 each i2c controller's IPCLK1 / APBCLK0 bit
+ * must be set via SCCON before any register access.
+ *
+ * Realtek's solution is the per-bus wrapper node `i2c_N_wrapper`
+ * (compat `realtek,rts5918-i2c`) declared at the top level of
+ * rts5918.dtsi. The wrapper carries `clocks = <&sccon ... >`, and
+ * its driver (drivers/i2c/i2c_realtek_rts5918.c) calls
+ * `clock_control_on()` during init.
+ *
+ * For this to actually run we need ALL of:
+ *   1. CONFIG_I2C_RTS5918=y (auto-enabled by Kconfig.rts5918's
+ *      `default y + depends on DT_HAS_REALTEK_RTS5918_I2C_ENABLED`)
+ *   2. The CMakeLists.txt symbol must match Kconfig (was wrong:
+ *      `CONFIG_I2C_REALTEK_RTS5918`; fixed in Phase 10.10)
+ *   3. At least one `i2c_N_wrapper` node `status="okay"` so the
+ *      DT_HAS_* macro fires
+ *
+ * Bison enables 10 i2c buses (1, 3..11), so we enable the matching
+ * 10 wrappers here. Without this block the build would still pass
+ * and the DesignWare driver init would still run, but SCCON
+ * `SYSTEM_IPCLK1__I2Cn_Msk` would never be set -> controller
+ * clock-gated -> all i2c transactions would fail at runtime
+ * (-EIO / -ETIMEDOUT). Phase 10.10 commit message has the full
+ * trace of why battery SBS reads silently failed before this fix.
+ */
+&i2c_1_wrapper  { status = "okay"; };  /* WWAN */
+&i2c_2_wrapper  { status = "okay"; };  /* TODO(realtek-schematic): Plum I2C_BUS_1 target */
+&i2c_3_wrapper  { status = "okay"; };  /* GSENSE */
+&i2c_4_wrapper  { status = "okay"; };  /* GPIO_EXPANDER (KTS1622) */
+&i2c_5_wrapper  { status = "okay"; };  /* PD */
+&i2c_6_wrapper  { status = "okay"; };  /* SSD_THRM */
+&i2c_7_wrapper  { status = "okay"; };  /* DEBUG */
+&i2c_8_wrapper  { status = "okay"; };  /* BAT (SBS battery) */
+&i2c_9_wrapper  { status = "okay"; };  /* CHARGE */
+&i2c_10_wrapper { status = "okay"; };  /* VIDEO/THERM (Phase 10.11) */
+&i2c_11_wrapper { status = "okay"; };  /* KBD (Phase 10.12) */

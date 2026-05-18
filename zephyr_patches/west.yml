@@ -1,0 +1,22 @@
+
+manifest:
+
+  remotes:
+    - name: zephyrproject
+      url-base: https://github.com/zephyrproject-rtos
+    - name: zephyrproject_nuvoton
+      url-base: https://github.com/Nuvoton-EC-FAE
+
+  # The list of dependencies
+  #
+  projects:
+    - name: zephyr
+      path: ecfwwork/zephyr_fork
+      remote: origin
+      revision: npcx-v3.2-branch
+      clone-depth: 1
+      west-commands: scripts/west-commands.yml
+      remote: zephyrproject_nuvoton
+
+  self:
+    path: ecfwwork

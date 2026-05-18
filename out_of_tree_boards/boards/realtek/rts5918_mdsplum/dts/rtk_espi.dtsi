@@ -1,0 +1,18 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * eSPI peripheral interface to host (Bison: GPIO002-009).
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ */
+
+&espi0 {
+	status = "okay";
+	pinctrl-0 = <&espi_cs_gpio004
+		     &espi_io3_gpio005 &espi_io2_gpio006
+		     &espi_io1_gpio007 &espi_io0_gpio008
+		     &espi_clk_gpio009 &espi_reset_gpio002
+		     &espi_reset_gpio002_pin_sel>;
+	pinctrl-names = "default";
+};

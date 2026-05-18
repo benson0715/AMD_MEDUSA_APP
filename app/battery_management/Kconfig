@@ -1,0 +1,21 @@
+#EC battery management build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "Battery management"
+
+config BATTERY_MANAGEMENT
+	bool "Enable battery management"
+	help
+	  Indicate if EC supports charge, battery management.
+
+config BATTERY_MGMT_LOG_LEVEL
+	int "Battery management log level"
+	depends on BATTERY_MANAGEMENT
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for battery management module.
+
+endmenu

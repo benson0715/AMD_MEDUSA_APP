@@ -1,0 +1,127 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * PWM channels (7) + per-controller enables.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * Phase 10.6: routed FAN_CPU/FAN_VIDEO to their real PWM
+ * controllers per Bison schematic (PWM01 / PWM06). The other
+ * five channels (LED_LOGO / KBD_BACKLIGHT / FAN_3RD /
+ * LED_POWER / POWER_SPEAKER) still point at &pwm1 ch0 as
+ * placeholder until a future phase routes them too.
+ *
+ * Phase 10.7: PWM_FAN_3RD reverted from &pwm12 back to &pwm1
+ * placeholder because pwm12 was disabled — Lenovo HwFan.c only
+ * supports 2 fans (NUMBER_OF_FAN=2) so FAN_3RD has no caller
+ * and pwm12 was being instantiated for nobody.
+ *
+ * Note: source code uses PWM_FAN_VIDEO as the enum name for the
+ * fan that the schematic labels FAN_ON2_VIDEO; this is the same
+ * physical fan that poc_fans below calls FAN_GPU.
+ *
+ * Hardware routing summary:
+ *   FAN_CPU  = PWM01 @ GPIO020
+ *   KBD_BL   = PWM02 @ GPIO079
+ *   FAN_GPU  = PWM06 @ GPIO066
+ *   FAN_3RD  = PWM12 @ GPIO108 (disabled — see Phase 10.7 note)
+ */
+
+/ {
+	poc_pwm_channels: poc-pwm-channels {
+		compatible = "vnd,poc-pwm-channels";
+		poc_pwm_channels_00: poc-pwm-channels-00 {
+			enum-name = "PWM_FAN_CPU";
+			pwms = <&pwm1 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+		poc_pwm_channels_01: poc-pwm-channels-01 {
+			enum-name = "PWM_LED_LOGO";
+			pwms = <&pwmled2 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+		poc_pwm_channels_02: poc-pwm-channels-02 {
+			enum-name = "PWM_FAN_VIDEO";
+			pwms = <&pwm6 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+		poc_pwm_channels_03: poc-pwm-channels-03 {
+			enum-name = "PWM_KBD_BACKLIGHT";
+			/* Phase 10.15: routed to pwm2 (PWM02 controller @ 0x40254600).
+			 * Bison BOM uses PWM02 on GPIO079 (BGA pin per
+			 * Bison_pindef.csv "KBD_BL_PWM" net) for keyboard
+			 * backlight brightness control. The pinctrl entry
+			 * pwm2_gpio079 (FUNC1) and the &pwm2 enable block below
+			 * were already in place (added in earlier porting phases);
+			 * only this phandle was still pointing at the &pwm1
+			 * placeholder.
+			 */
+			pwms = <&pwm2 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+		poc_pwm_channels_04: poc-pwm-channels-04 {
+			enum-name = "PWM_FAN_3RD";
+			pwms = <&pwm12 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+		poc_pwm_channels_05: poc-pwm-channels-05 {
+			enum-name = "PWM_LED_POWER";
+			pwms = <&pwmled1 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+/*
+		poc_pwm_channels_06: poc-pwm-channels-06 {
+			enum-name = "PWM_POWER_SPEAKER";
+			pwms = <&pwm1 0 1000000 PWM_POLARITY_NORMAL>;
+		};
+*/
+	};
+
+	poc_pwm_nonfunc_channels: poc-pwm-nonfunc-channels {
+		compatible = "realtek,non-funcs-enum";
+		poc_pwm_channels_06: poc-pwm-channels-06 {
+			enum-name = "PWM_POWER_SPEAKER";
+		};
+	};
+};
+
+&pwm1 {
+	status = "okay";
+	pinctrl-0 = <&pwm1_gpio020>;
+	pinctrl-names = "default";
+};
+
+&pwmled1 {
+	status = "okay";
+	pinctrl-0 = <&led1_gpio138>;
+	pinctrl-names = "default";
+};
+
+&pwmled2 {
+	status = "okay";
+	pinctrl-0 = <&led2_gpio059>;
+	pinctrl-names = "default";
+};
+
+&pwm2 {
+	status = "okay";
+	pinctrl-0 = <&pwm2_gpio079>;
+	pinctrl-names = "default";
+};
+
+&pwm6 {
+	status = "okay";
+	pinctrl-0 = <&pwm6_gpio066>;
+	pinctrl-names = "default";
+};
+
+/*
+ * Phase 10.7: pwm12 (FAN_3RD PWM) intentionally NOT enabled here.
+ * Lenovo's Jupiter/smc/HwFan.c hard-codes NUMBER_OF_FAN=2 with only
+ * FAN_CPU_ID/FAN_GPU_ID dispatch — no application call site exists
+ * for FAN_3RD, so enabling pwm12 would just instantiate a device
+ * nobody talks to. The pinctrl entry pwm12_gpio108 stays in
+ * rts5918-pinctrl.dtsi (omit-if-no-ref), available for future use
+ * if Lenovo HwFan.c is ever extended to 3 fans.
+ */
+
+ &pwm12 {
+	status = "okay";
+	pinctrl-0 = <&pwm12_gpio108>;
+	pinctrl-names = "default";
+ };

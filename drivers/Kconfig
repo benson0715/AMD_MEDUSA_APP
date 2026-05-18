@@ -1,0 +1,451 @@
+#EC driver build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "Keyboard matrix driver"
+
+if KSCAN_EC || PS2_KEYBOARD
+choice
+	prompt "Select your keyboard"
+	default EC_AMDCRB_KEYBOARD
+	help
+	 Select your keyboard implementation which is going
+	 to allow you to handle variations specially in
+	 alternate functions.
+
+	config EC_AMDCRB_KEYBOARD
+	bool "Amd keyboard"
+
+endchoice
+
+config GPIO_KSO_DRIVE
+	bool "Turn on gpio kso drive method"
+	depends on KSCAN_EC
+	help
+	 Some project use gpio to drive the kso but not
+	 the register.
+
+config EARLY_KEY_SEQUENCE_DETECTION
+	bool "Turn on kscan early key sequence detection"
+	depends on KSCAN_EC
+	help
+	 Request that the keyboard scan matrix driver detects key sequence and
+	 notifies to an propagate these to other EC modules in addition to kbchost
+
+config EARLY_KEYSEQ_CUSTOM0
+	int "Custom key trigger to detect"
+	# Letter d
+	default 33
+	depends on EARLY_KEY_SEQUENCE_DETECTION
+	help
+	  Intercept this key sequence at boot to perform any user defined
+	  operation.
+
+config EARLY_KEYSEQ_CUSTOM1
+	int "Custom key trigger to detect"
+	# Letter e
+	default 19
+	depends on EARLY_KEY_SEQUENCE_DETECTION
+	help
+	  Intercept this key sequence at boot to perform any user defined
+	  operation.
+
+endif
+
+endmenu
+
+menu "eSPI hub features"
+config OOBMNGR_SUPPORT
+	bool "Enable OOB manager support"
+	default n
+	help
+	  Enable EC support for OOB manager eSPI hub extension to tunnel all
+	  the OOB traffic through OOB manager APIs.
+
+config ENABLE_ESPI_LTR
+	bool "Enable Latency Tolerance Reporting"
+	help
+	  Sends LTR message once BME is enabled.
+
+config ESPI_PERIPHERAL_MMIO_TO_SRAM
+	bool "Host mmio mapping to EC SRAM via eSPI peripheral channel"
+	default y
+	help
+	  x86 mmio access can be configured to map EC SRAM.
+
+config MMIO_DECODE_RANGE
+	hex "eSPI mmio decode range"
+	depends on ESPI_PERIPHERAL_MMIO_TO_SRAM
+	default 0xFEEC2000
+	help
+	  The eSPI mmios decode range. This setting must be the same as host's.
+
+config MMIO_ACCESS
+	hex "eSPI mmio access type and ram size"
+	depends on ESPI_PERIPHERAL_MMIO_TO_SRAM
+	default 0x87
+	help
+	  [7:4] for ram size, 0: 1B, 1: 2B, 8:256B. [2:1] 3: read and write, 
+	  2: write only, 1: read only, 0: no access. [0]: valid bit only for EC
+	  SRAM setting. 
+
+endmenu
+
+menu "EC basic drivers logging control"
+
+config MAX6958_LOG_LEVEL
+	int "MAX6958 driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for MAX5958 LED driver.
+
+config EEPROM_LOG_LEVEL
+	int "EEPROM driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for EEPROM driver.
+
+config MAX695_LOG_LEVEL
+	int "MAX695 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for MAX695 LED driver.
+
+config MPC_LOG_LEVEL
+	int "MPC driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for MPC LED driver.
+	  
+config SBTSI_LOG_LEVEL
+	int "SBTSI driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for SBTSI driver.
+
+config PCA9535_LOG_LEVEL
+	int "PCA9535 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for PCA9535 driver.
+
+config PCA9557_LOG_LEVEL
+	int "PCA9557 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for PCA9557 driver.
+
+config TMP432_LOG_LEVEL
+	int "TMP432 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for TMP432 temperature sensor driver.
+
+config TCS3430_LOG_LEVEL
+	int "TCS3430 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for TCS3430 ALSsensor driver.
+
+config LM95234_LOG_LEVEL
+	int "LM95234 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for LM95234 temperature sensor driver.
+
+config SVI3_LOG_LEVEL
+	int "SVI3 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for SVI3 controller driver.
+
+config MP2945_LOG_LEVEL
+	int "MP2945 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for MP2945 svi controller driver.
+
+config INA219_LOG_LEVEL
+	int "INA219 driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for INA219 driver.
+
+config CPLD_LOG_LEVEL
+	int "cpld driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for cpld driver.
+
+config CHARGER_LOG_LEVEL
+	int "charger driver log level"
+	depends on LOG
+	default 2
+	help
+	  Set log level for charger driver.
+
+config GPIO_EC_LOG_LEVEL
+	int "GPIO EC driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for GPIO wrapper driver.
+
+config ESPIHUB_LOG_LEVEL
+	int "eSPI hub driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for eSPI hub.
+
+config ESPIOOB_MNGR_LOG_LEVEL
+	int "eSPI OOB manager driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for eSPI OOB manager.
+
+config PECIHUB_LOG_LEVEL
+	int "peci hub log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for peci hub interface.
+
+config FAN_LOG_LEVEL
+	int "Fan driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for fan driver.
+
+config LED_LOG_LEVEL
+	int "Led driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for led driver.
+
+config I2C_HUB_LOG_LEVEL
+	int "I2C hub driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for i2c hub driver.
+
+config ACPIPLANES_LOG_LEVEL
+	int "Acpiplanes driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for acpiplanes driver.
+	  
+config RAA_LOG_LEVEL
+	int "raa PD module regulator driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for raa pd module 48V to 20V regulator driver.
+	  
+endmenu
+
+menu "USBC Power Delivery drivers"
+
+config USBC_DRIVERS
+	bool "Enable USBC drivers"
+	default y
+	help
+	  Inlcude the PD related drivers 
+	  
+config USBC_TIPD_TPS6599X
+	bool "Enable TIPD TPS6599x drivers"
+	default y
+	help
+	  Inlcude the TIPD related drivers 
+	  
+config USBC_TIPD_TPS6699X
+	bool "Enable TIPD TPS6699x drivers"
+	default n
+	help
+	  Inlcude the TIPD related drivers 
+
+config USBC_ITEPD
+	bool "Enable ITE PD drivers"
+	default y
+	help
+	  Inlcude the ITE PD related drivers 
+	  
+config USBC_RTKPD
+	bool "Enable RTK PD drivers"
+	default y
+	help
+	  Inlcude the RTK PD related drivers
+
+config TPS_LOG_LEVEL
+	int "TPS driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for TPS driver.
+	  
+config HPI_LOG_LEVEL
+	int "HPI driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for HPI driver.
+	  
+config ITE_LOG_LEVEL
+	int "ite pd driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ite pd driver.
+	  
+config RTK_LOG_LEVEL
+	int "rtk pd driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for rtk pd driver.
+	  
+config SPI_FLASH_LOG_LEVEL
+	int "SPI Flash driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for spi flash driver.
+
+config MODBUSRTU_LOG_LEVEL
+	int "modbus rtu driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for modbus rtu.
+	  
+config EC_UCSI_LOG_LEVEL
+	int "EC ucsi driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec ucsi driver.
+	  
+config EC_UCSI_ENABLE
+	int "EC UCSI driver enable/disable"
+	depends on USBC_4CC
+	default 1
+	help
+	  Set the EC UCSI support for TI PD controller enable or disable
+	  
+config RTK_UCSI_LOG_LEVEL
+	int "rtk ucsi driver log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for rtk ucsi driver.
+	  
+config RTK_UCSI_ENABLE
+	int "RTK UCSI driver enable/disable"
+	depends on USBC_RTKPD
+	default 1
+	help
+	  Set the RTK UCSI support for RTK PD controller enable or disable
+	  
+endmenu
+
+menu "EC optional drivers logging control"
+
+config ADC_SENSORS_LOG_LEVEL
+	int "ADC thermal sensor driver log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for thermal sensor driver.
+
+endmenu
+
+menu "EC optional drivers"
+
+config MODBUSRTU
+	bool "modbus rtu driver"
+	default y
+	help
+	  Inlcude the Modbus rtu driver.
+endmenu
+
+menu "OOB message management drivers logging control"
+config OOB_MSG_MNGR
+	bool "Enable OOB manager support"
+	default n
+	help
+	  Enable EC support for OOB manager eSPI hub extension to tunnel all
+	  the OOB traffic through OOB manager APIs.
+
+config OOB_RPMC_LOG_LEVEL
+	int "EC RPMC over eSPI OOB log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec RPMC over eSPI OOB driver.
+
+config OOB_MISC_LOG_LEVEL
+	int "EC MISC over eSPI OOB log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec MISC over eSPI OOB driver.
+	  
+config OOB_RPMC_ROM_LOG_LEVEL
+	int "EC RPMC ROM log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec RPMC ROM driver.
+	  
+config OOB_MSG_LOG_LEVEL
+	int "EC OOB message log level"
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec OOB message management driver.	  
+endmenu
+
+menu "EC select the charger chip"
+config CHARGER_ISL9241
+	bool "charger driver"
+	default y
+	help
+	  Enable the charger ISL9241
+	  
+config CHARGER_MP2764
+	bool "charger driver"
+	default n
+	help
+	  Enable the charger MP2764
+endmenu

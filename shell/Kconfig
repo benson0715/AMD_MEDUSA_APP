@@ -1,0 +1,45 @@
+#;*****************************************************************************
+#; * Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+#; ******************************************************************************
+#; */
+
+config REBOOT_SHELL
+	bool "Enable reboot shell"
+	help
+	  This shell provides access to reboot systerm
+
+config AMD_EEPROM_SHELL
+	bool "Enable eeprom shell"
+	help
+	  This shell provides eeprom access to systerm
+
+config AMD_EEPROM_SHELL_BUFFER_SIZE
+	int "EEPROM shell buffer size"
+	default 256
+	depends on AMD_EEPROM_SHELL
+	help
+	  Size of the buffer used for EEPROM read/write commands in
+	  the EEPROM shell.
+config NVOPTION_SHELL
+	bool "Enable nv option shell"
+	help
+	  This shell provides nv option access to systerm
+config AMD_MEMORY_SHELL
+	bool "Enable memory shell"
+	help
+	  This shell provides memory access to systerm
+config AMD_MEMORY_SHELL_BUFFER_SIZE
+	int "Memory shell buffer size"
+	default 256
+	depends on AMD_MEMORY_SHELL
+	help
+	  Size of the buffer used for memory read/write commands in
+	  the memory shell.
+config AMD_GPIO_SHELL
+	bool "Enable gpio test shell"
+	help
+	  This shell provides gpio test access to systerm
+config AMD_SPIFLASH_SHELL
+	bool "Enable spi flash read shell"
+	help
+	  This shell provides spi flash read access to systerm

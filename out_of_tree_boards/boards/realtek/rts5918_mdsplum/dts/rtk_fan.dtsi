@@ -1,0 +1,65 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Fans (2) + TACH controllers.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * Phase 10.6: real PWM/TACH routing per Bison schematic.
+ *   FAN_CPU -> PWM01 (pwm1 / GPIO020) + TACH01 (tach1 / GPIO074)
+ *   FAN_GPU -> PWM06 (pwm6 / GPIO066) + TACH02 (tach2 / GPIO075)
+ *
+ * Phase 10.6 originally added a third FAN_3RD child here (pwm12 +
+ * tach4 per Bison schematic). Phase 10.7 removed it because Lenovo
+ * Jupiter/smc/HwFan.c hard-codes NUMBER_OF_FAN=2 and only knows
+ * FAN_CPU_ID/FAN_GPU_ID — there is no application call site that
+ * would ever invoke fan_hub_set_duty(FAN_3RD, ...) or
+ * fan_hub_get_rpm(FAN_3RD), so instantiating pwm12/tach4 was
+ * dead infrastructure. The pinctrl entries pwm12_gpio108 /
+ * tacho4_gpio115 stay in rts5918-pinctrl.dtsi (omit-if-no-ref),
+ * and the pwm12 + tach4 device nodes stay in rts5918.dtsi as
+ * status="disabled" — both are ready for re-enable if/when
+ * Lenovo HwFan.c grows 3-fan support.
+ *
+ * RTS5918 actually has 13 PWM controllers and 9 tach controllers
+ * (Phase 10.6 added all PWM4..12 and TACH1..9 nodes to rts5918.dtsi
+ * based on RL7088_SVD-master 3/RTS5918.h base addresses). Bison
+ * uses 2 of each for fan control; the rest stay disabled.
+ *
+ * `pulses-per-round = <2>` is the standard 4-wire fan convention; if
+ * the actual Bison fans differ this should be tuned per real RPM.
+ *
+ * Phase 10.7: tach4 (FAN_3RD tach) intentionally NOT enabled — same
+ * reason as pwm12 (no Lenovo application caller for FAN_3RD).
+ */
+
+/ {
+	poc_fans: poc-fans {
+		compatible = "vnd,poc-fans";
+		poc_fans_00: poc-fans-00 {
+			enum-name = "FAN_CPU";
+			pwms = <&pwm1 0 1000000 PWM_POLARITY_NORMAL>;
+			tach = <&tach1>;
+		};
+		poc_fans_01: poc-fans-01 {
+			enum-name = "FAN_GPU";
+			pwms = <&pwm6 0 1000000 PWM_POLARITY_NORMAL>;
+			tach = <&tach2>;
+		};
+	};
+};
+
+&tach1 {
+	status = "okay";
+	pinctrl-0 = <&tacho1_gpio074>;
+	pinctrl-names = "default";
+	pulses-per-round = <2>;
+};
+
+&tach2 {
+	status = "okay";
+	pinctrl-0 = <&tacho2_gpio075>;
+	pinctrl-names = "default";
+	pulses-per-round = <2>;
+};

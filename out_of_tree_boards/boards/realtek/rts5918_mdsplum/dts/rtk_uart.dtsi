@@ -1,0 +1,26 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Debug UART (UART02 on GPIO113/GPIO116) + SWJ port.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ */
+
+&uart2 { status = "disabled"; };
+&uart2_wrapper { status = "disabled"; };
+&uart1 { status = "disabled"; };
+&uart1_wrapper { status = "disabled"; };
+
+&uart0 {
+	status = "okay";
+	current-speed = <115200>;
+};
+
+&uart0_wrapper {
+	status = "okay";
+	pinctrl-0 = <&uart00_tx_gpio140>;
+	pinctrl-names = "default";
+};
+
+&swj_port { status = "okay"; };

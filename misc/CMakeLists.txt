@@ -1,0 +1,23 @@
+target_sources(app
+    PRIVATE
+    #[AMD]++
+    #${CMAKE_CURRENT_LIST_DIR}/flashhdr.c
+    ${CMAKE_CURRENT_LIST_DIR}/f_nv_options.c
+    ${CMAKE_CURRENT_LIST_DIR}/f_bram.c
+    ${CMAKE_CURRENT_LIST_DIR}/f_romSig.c
+    #[AMD]--
+    ${CMAKE_CURRENT_LIST_DIR}/softstrap.c
+    ${CMAKE_CURRENT_LIST_DIR}/task_handler.c
+    PUBLIC
+    #[AMD]++
+    #${CMAKE_CURRENT_LIST_DIR}/flashhdr.h
+    #[AMD]--
+    ${CMAKE_CURRENT_LIST_DIR}/softstrap.h
+    ${CMAKE_CURRENT_LIST_DIR}/task_handler.h
+    ${CMAKE_CURRENT_LIST_DIR}/memops.h
+    )
+
+target_include_directories(app
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    )

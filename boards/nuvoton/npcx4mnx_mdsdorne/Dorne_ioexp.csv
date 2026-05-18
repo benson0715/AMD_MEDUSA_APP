@@ -1,0 +1,67 @@
+,,,,,,,,,,,
+CHIP ID,SLAVE ADDR,I2C PORT,ACCESS SPEED,PIN INDEX,NET NAME,BUF TYPE,POR SETTING,CATEGORY,INT_EN,INT_HANDLER,DESCRIPTION
+U5100,0x21,I2C1,100K,0,EP_UART0_WLAN#_DBG_SEL,O,1,,,,"EC to select APU UART0 routing, low- WLAN, high - Serdes debug. "
+U5100,0x21,I2C1,100K,1,,,,,,,
+U5100,0x21,I2C1,100K,2,EP_CODEC_DEPOP_MUTE#,O,0,,,,To mute codec POP noise
+U5100,0x21,I2C1,100K,3,,,,,,,
+U5100,0x21,I2C1,100K,4,EP_SMB0_BUFF_EN,OD,1,,,,"EC to enable SMBus0 buffer (IPU), high active"
+U5100,0x21,I2C1,100K,5,EP_APU_PCC#,O,1,,,,"Reserved for APU PCC function, low active"
+U5100,0x21,I2C1,100K,6,EP_SSD0_PWREN,O,0,,,,"EC to enable M.2 SSD0 power, high active"
+U5100,0x21,I2C1,100K,7,EP_HDMI_RD_PD,O,0,,,,HDMI RD power down. High active.  L for normal operation
+U5100,0x21,I2C1,100K,8,EC_ESP32_RF_OFF,O,0,,,,"ESP32 RF off,  high active.  High-off, Low- on. "
+U5100,0x21,I2C1,100K,9,EP_MEM_8533_9600#_SEL,O,0,,,,"MEM VDD power selection for different speed, high - 8533, low - 9600.  "
+U5100,0x21,I2C1,100K,10,EP_WLAN_1V8_PWREN,O,0,,,,"EC to enable WLAN 1V8 power separately, high active"
+U5100,0x21,I2C1,100K,11,EP_WLAN_3V3_PWREN,O,0,,,,"EC to enable WLAN power, high active; "
+U5100,0x21,I2C1,100K,12,EP_WLAN_RADIO_DIS,O,0,,,,"To disable WLAN's raido, high active.  High-disable; "
+U5100,0x21,I2C1,100K,13,EP_WLAN_WIFI_RST,O,0,,,,"To reset WLAN module, high active"
+U5100,0x21,I2C1,100K,14,EP_BT_RADIO_DIS,O,0,,,,"To disable Bluetooth radio, high active"
+U5100,0x21,I2C1,100K,15,EP_M2_BT_WAKE,O,0,,,,EC to wake Blue Tooth module. high active
+U5101,0x22,I2C3,100K,0,EP_USBA_PWREN,O,1,,,,Load Switch EN for all USBA port. Enable=1 (Default); OFF=0.
+U5101,0x22,I2C3,100K,1,EP_SB_TSI_ESP32#_EC_SEL,O,0,,,,"To select SB-TSI routing. High- EC I2C0; low - ESP32, 0: Default, 1: when EC_IOT_3V3_SENSE_EN=1 "
+U5101,0x22,I2C3,100K,2,EP_FPR_PWREN,O,0,,,,"EC to enable Fingerprint power, high active"
+U5101,0x22,I2C3,100K,3,EP_TPM_PWREN,O,0,,,,"EC to enable TPM power, high active"
+U5101,0x22,I2C3,100K,4,EP_SENSOR_1V8_PWREN,O,1,,,,EC to enable 1.8V SFH PWR load switch. High active
+U5101,0x22,I2C3,100K,5,EP_SENSOR_3V3_PWREN,O,0,,,,EC to enable 3.3V SFH PWR load switch. High active
+U5101,0x22,I2C3,100K,6,EP_TPAD_PWREN,O,0,,,,EC to enable TPAD PWR load switch. High active
+U5101,0x22,I2C3,100K,7,EP_TPNL_PWREN,O,0,,,,"EC to enable Touch panel power, high active"
+U5101,0x22,I2C3,100K,8,EP_USBCAM_FW_WP#,O,0,,,,"Camera FW update write protect, low active, low for normal operation"
+U5101,0x22,I2C3,100K,9,EP_USBCAM_PRIV,O,0,,,,USBCAM Privacy. High active.
+U5101,0x22,I2C3,100K,10,EP_USBCAM_PWREN,O,0,,,,"EC to enable USB CAM power, high active"
+U5101,0x22,I2C3,100K,11,EP_USBMUX_USB20#_EUSB2V1_SEL,O,0,,,,"Drive it low when detect ""CAM_DET_USB2#_EV1""  low.
+Drive it high when detect ""CAM_DET_USB2#_EV1"" high.  "
+U5101,0x22,I2C3,100K,12,EP_ESP32_I2C_EN#,O,0,,,,"EC to control E3 on I2C0 buffer enable, low active"
+U5101,0x22,I2C3,100K,13,EP_HDMI_RD_PWREN,O,0,,,,To enable HDMI RD PWR load switch.  High active
+U5101,0x22,I2C3,100K,14,EP_DMIC_PWREN,O,0,,,,To enbale CAM DMIC PWR load switch. High active
+U5101,0x22,I2C3,100K,15,EP_USBC_RT_SMB_BUFF_EN,O,0,,,,EC to enable Re-timer I2C0/SMB1 buffer. Low- disable; high- enable for RT FW Update
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,

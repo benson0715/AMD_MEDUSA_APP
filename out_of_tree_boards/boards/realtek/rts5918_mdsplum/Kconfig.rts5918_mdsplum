@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2026 Realtek Semiconductor Corporation
+#
+# AMD MDS Plum hardware refreshed with the Realtek RTS5918 EC SoC in place
+# of the original Nuvoton NPCX4MNx. The board carries forward Plum's I2C
+# topology (4 buses) and sensor / VR / PD / IO-expander population; only
+# the EC silicon and its pin-mux change.
+
+config BOARD_RTS5918_MDSPLUM
+	select SOC_RTS5918
+	select CPU_HAS_FPU
+	select HAS_PM

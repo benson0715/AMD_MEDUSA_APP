@@ -1,0 +1,22 @@
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+identifier: npcx4mnx_boot
+name: Nuvoton NPCX4M8F EVB
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 114
+flash: 384
+supported:
+  - adc
+  - clock
+  - gpio
+  - i2c
+  - pm
+  - pwm
+  - psl
+  - tach
+  - uart
+  - watchdog

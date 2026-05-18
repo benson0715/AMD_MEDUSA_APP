@@ -1,0 +1,42 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ */
+
+/ {
+	poc_tsnsr_channels: poc_tsnsr_channels {
+		compatible = "vnd,poc-tsnsr-channels";
+		poc_tsnsr_channels_00: poc-tsnsr-channels-00 {
+			enum-name = "TSENSOR_CPU_DCDC";
+			channel = <0>;
+			adc-bus = <&poc_adc_channels_00>;
+		};
+		poc_tsnsr_channels_01: poc-tsnsr-channels-01 {
+			enum-name = "TSENSOR_GPU_DCDC";
+			channel = <1>;
+			adc-bus = <&poc_adc_channels_01>;
+		};
+		poc_tsnsr_channels_02: poc-tsnsr-channels-02 {
+			enum-name = "TSENSOR_VRAM";
+			channel = <2>;
+			adc-bus = <&poc_adc_channels_02>;
+		};
+		poc_tsnsr_channels_03: poc-tsnsr-channels-03 {
+			enum-name = "TSENSOR_DDR";
+			channel = <3>;
+			adc-bus = <&poc_adc_channels_03>;
+		};
+		poc_tsnsr_channels_04: poc-tsnsr-channels-04 {
+			enum-name = "TSENSOR_CHARGER";
+			channel = <4>;
+			adc-bus = <&poc_adc_channels_04>;
+		};
+		poc_tsnsr_channels_05: poc-tsnsr-channels-05 {
+			enum-name = "TSENSOR_FAN";
+			channel = <5>;
+			adc-bus = <&poc_adc_channels_05>;
+		};
+	};
+};
+

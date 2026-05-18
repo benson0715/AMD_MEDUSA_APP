@@ -1,0 +1,104 @@
+#EC boards build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "Optional board features"
+
+config DEPRECATED_HW_STRAP_BASED_PECI_MODE_SEL
+	bool "Enable HW Strap reading to determine peci mode only for ADL-S"
+	help
+	  Indicate if EC supporting HW strap reading or BIOS menu option.
+	  Remove this in future platforms and have only BIOS Menu option.
+
+config BOARD_ID_IO_EXPANDER
+	bool "IO Expander used for generating board ID"
+	default y
+	help
+	  Indicates if board ID is generated making use of an IO Expander.
+
+config POWER_SOURCE_MANAGEMENT
+	bool "Enable power source management"
+	help
+	  Indicate if EC supports power source management.
+
+config POWER_SOURCE_LOG_LEVEL
+	int "power source management log level"
+	depends on LOG
+	depends on POWER_SOURCE_MANAGEMENT
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for power source management.
+
+config BOARD_INIT_LOG_LEVEL
+	int "board platform init log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for board platform init.
+
+config IO_EXPANDER
+	bool "io expander support"
+	default n
+	help
+	  Enable io expander support
+
+config PLATFORM_INIT
+	bool "support platform init"
+	default y
+	help
+	  Enable platform init
+
+config SELECTABLE_DAC_VALUE
+	bool "support selectable dac value"
+	default n
+	help
+	  Enable selectable dac value
+
+config VR_CONFIG_TABLE
+	bool "Enable SVI3 VR Config"
+	default y
+	help
+	  Indicate if EC supports SVI3 VR Config update and get bable version.
+
+config VR_CONFIG_LOG_LEVEL
+	int "VR Config application log level"
+	depends on LOG
+	depends on VR_CONFIG_TABLE
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for VR Config application.
+	  
+config BOARD_PERIPH_LOG_LEVEL
+	int "board periph log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for board periph.
+
+config BOARD_THERMAL_LOG_LEVEL
+	int "board thermal log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for board thermal.
+
+config BOARD_SYS_CONFIG_LOG_LEVEL
+	int "board system config log level"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for board system config.
+
+config EC_MODULE
+	bool "EC Module"
+	default n
+	help
+	  Indicate if EC run on EC Module.
+
+endmenu

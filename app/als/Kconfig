@@ -1,0 +1,19 @@
+# EC ALS (Ambient Light Sensor) module build options
+
+# Copyright (C) 2025 Advanced Micro Devices, Inc. All rights reserved.
+
+config ALS
+	bool "Enable ALS (Ambient Light Sensor) feature"
+	default n
+	help
+	  Enable support for Ambient Light Sensor (OPT4048) with
+	  ACPI integration for Windows adaptive brightness.
+
+config ALS_LOG_LEVEL
+	int "ALS log level"
+	depends on ALS
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ALS module.

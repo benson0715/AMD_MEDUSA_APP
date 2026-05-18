@@ -1,0 +1,65 @@
+#EC debug build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+menu "EC_DEBUG"
+
+config ECDBGI_SUPPORT
+	bool "Enable ec debug interface"
+	default y
+	help
+	  Use acpi ec name space for debug. This debug interface can
+	  be accessed by using command 80h/81h through port 662h/666h.
+
+config ECDBGI_LOG_LEVEL
+	int "EC debug interface log level"
+	depends on ECDBGI_SUPPORT
+	depends on LOG
+	default 4 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for ec debug interface
+
+config ECDBGI_ESPI_SLAVE_CAPABILITIES
+	bool "Display part of EC slave capabilities"
+	depends on ECDBGI_SUPPORT
+	default y
+	help
+	  Display some eSPI registers, like General Capabilities and
+	  Configurations and mmio decode range.
+
+config ECDBGI_ESPI_PC_BUS_MASTER_TEST
+	bool "Peripheral channel bus master"
+	depends on ECDBGI_SUPPORT
+	default y
+	help
+	   It allows the target to generate bus mastering cycles on the
+	   peripheral channel which means EC can read data from specific
+	   memory offset.
+
+config ECDBGI_ESPI_VW_INFORMATION
+	bool "Virtual wires channel information"
+	depends on ECDBGI_SUPPORT
+	default y
+	help
+	   Collect virtual wires data of EC registers. Please check EC
+	   specification for more details.
+
+config ECDBGI_ESPI_OOB_TEST
+	bool "OOB (Tunneled SMBus) message channel test"
+	depends on ECDBGI_SUPPORT
+	depends on ESPI_OOB_CHANNEL
+	default y
+	help
+	   Quick test for OOB channel. Please check EC
+	   specification for more details.
+
+config ECDBGI_ESPI_FA_TEST
+	bool "Flash access channel test"
+	depends on ECDBGI_SUPPORT
+	default y
+	help
+	   Quick test for flash access channel(MAFS). Please check EC
+	   specification for more details.
+
+endmenu

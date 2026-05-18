@@ -1,0 +1,29 @@
+#;*****************************************************************************
+#; * Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+#; ******************************************************************************
+#; */
+
+
+
+config NVOPTIONS_LOG_LEVEL
+	int "Nvram log level feature"
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for Nvram feature.
+config BRAM_LOG_LEVEL
+	int "BRAM level feature"
+	depends on LOG
+	default 3 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for BRAM feature.
+config ROMSIG_LOG_LEVEL
+	int "Rom sign level feature"
+	depends on LOG
+	default 3 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for Rom Sign feature.
+

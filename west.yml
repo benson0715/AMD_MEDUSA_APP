@@ -1,0 +1,22 @@
+manifest:
+
+  remotes:
+    - name: zephyrproject
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    - name: zephyr_public
+      repo-path: zephyr.git
+      path: zephyr_base/zephyr_fork
+      remote: zephyrproject
+      revision: v3.7.1
+      clone-depth: 1
+      west-commands: scripts/west-commands.yml
+
+    - name: cmsis
+      remote: zephyrproject
+      revision: 4b96cbb174678dcd3ca86e11e1f24bc5f8726da0
+      path: zephyr_base/modules/hal/cmsis
+
+  self:
+    path: zephyr_base

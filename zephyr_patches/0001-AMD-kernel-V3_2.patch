@@ -1,0 +1,3472 @@
+From b9a85aae681cf3d45d6705ec5cf88b259e5a3de6 Mon Sep 17 00:00:00 2001
+From: Jiacheng Xu <Jiacheng.Xu@amd.com>
+Date: Wed, 10 Sep 2025 16:35:37 +0800
+Subject: [PATCH 1/2] AMD kernel V3_2
+
+---
+ drivers/bbram/bbram_npcx.c                    |  17 +-
+ drivers/clock_control/clock_control_npcx.c    |   2 -
+ drivers/crypto/crypto_npcx_sha.c              | 167 +++++--
+ drivers/espi/Kconfig.npcx                     |  26 +-
+ drivers/espi/espi_npcx.c                      | 190 ++++++--
+ drivers/espi/espi_taf_npcx.c                  | 226 ++++++---
+ drivers/espi/host_subs_npcx.c                 | 441 +++++++++++++-----
+ drivers/flash/flash_npcx_fiu_nor.c            |  99 ++++
+ drivers/flash/flash_npcx_fiu_qspi.c           |  35 ++
+ drivers/flash/flash_npcx_fiu_qspi.h           |   2 +
+ drivers/flash/spi_nor.h                       |   1 +
+ drivers/gpio/gpio_npcx.c                      |  12 +-
+ drivers/i2c/Kconfig.npcx                      |   9 +
+ .../nuvoton_tach_npcx/tach_nuvoton_npcx.c     | 119 ++---
+ drivers/serial/Kconfig.npcx                   |   2 +-
+ drivers/serial/uart_npcx.c                    |   2 +-
+ drivers/timer/npcx_itim_timer.c               |   4 -
+ dts/arm/nuvoton/npcx/npcx-espi-vws-map.dtsi   |  37 +-
+ dts/arm/nuvoton/npcx/npcx-miwus-wui-map.dtsi  |  12 +-
+ dts/arm/nuvoton/npcx/npcx4.dtsi               | 360 +++++++++++++-
+ .../nuvoton/npcx/npcx4/npcx4-alts-map.dtsi    |   3 +
+ .../npcx/npcx4/npcx4-miwus-wui-map.dtsi       |  14 +-
+ dts/bindings/espi/nuvoton,npcx-espi-taf.yaml  |  12 +
+ dts/bindings/power/npcx-hibernate-psl.yaml    |  30 ++
+ dts/bindings/tach/nuvoton,npcx-tach.yaml      |   4 +-
+ include/zephyr/crypto/sha_hmac_npcx.h         |  23 +
+ include/zephyr/drivers/espi.h                 |  78 +++-
+ .../zephyr/drivers/flash/npcx_flash_api_ex.h  |   2 +
+ include/zephyr/drivers/sensor/mft_tach_npcx.h |  18 +
+ include/zephyr/dt-bindings/sensor/npcx_tach.h |   4 +-
+ soc/arm/nuvoton_npcx/common/pinctrl_soc.h     |   1 +
+ soc/arm/nuvoton_npcx/common/reg/reg_def.h     |  42 +-
+ soc/arm/nuvoton_npcx/common/scfg.c            |  25 +
+ soc/arm/nuvoton_npcx/common/soc_espi_taf.h    |   7 +
+ soc/arm/nuvoton_npcx/common/soc_ncl.h         |  56 +++
+ soc/arm/nuvoton_npcx/common/soc_pins.h        |   4 +
+ 36 files changed, 1691 insertions(+), 395 deletions(-)
+ create mode 100644 dts/bindings/power/npcx-hibernate-psl.yaml
+ create mode 100644 include/zephyr/crypto/sha_hmac_npcx.h
+ create mode 100644 include/zephyr/drivers/sensor/mft_tach_npcx.h
+ create mode 100644 soc/arm/nuvoton_npcx/common/soc_ncl.h
+
+diff --git a/drivers/bbram/bbram_npcx.c b/drivers/bbram/bbram_npcx.c
+index b4df3ca01..6231d0b11 100644
+--- a/drivers/bbram/bbram_npcx.c
++++ b/drivers/bbram/bbram_npcx.c
+@@ -81,6 +81,13 @@ static int bbram_npcx_write(const struct device *dev, size_t offset, size_t size
+ 	bytecpy(((uint8_t *)config->base_addr + offset), data, size);
+ 	return 0;
+ }
++//amd
++int bram_npcx_init(const struct device *dev)
++{
++	ARG_UNUSED(dev);
++
++	return 0;
++}
+ 
+ static const struct bbram_driver_api bbram_npcx_driver_api = {
+ 	.check_invalid = bbram_npcx_check_invalid,
+@@ -91,17 +98,9 @@ static const struct bbram_driver_api bbram_npcx_driver_api = {
+ 	.write = bbram_npcx_write,
+ };
+ 
+-
+-static int bbram_npcx_init(const struct device *dev)
+-{
+-	ARG_UNUSED(dev);
+-
+-	return 0;
+-}
+-
+ #define BBRAM_INIT(inst)                                                                           \
+ 	BBRAM_NPCX_DECL_CONFIG(inst);                                                              \
+-	DEVICE_DT_INST_DEFINE(inst, bbram_npcx_init, NULL, NULL, &bbram_cfg_##inst, PRE_KERNEL_1,             \
++	DEVICE_DT_INST_DEFINE(inst, bram_npcx_init, NULL, NULL, &bbram_cfg_##inst, PRE_KERNEL_1,             \
+ 			      CONFIG_BBRAM_INIT_PRIORITY, &bbram_npcx_driver_api);
+ 
+ DT_INST_FOREACH_STATUS_OKAY(BBRAM_INIT);
+diff --git a/drivers/clock_control/clock_control_npcx.c b/drivers/clock_control/clock_control_npcx.c
+index dcc4a925c..41e83c933 100644
+--- a/drivers/clock_control/clock_control_npcx.c
++++ b/drivers/clock_control/clock_control_npcx.c
+@@ -115,7 +115,6 @@ static int npcx_clock_control_get_subsys_rate(const struct device *dev,
+ }
+ 
+ /* Platform specific clock controller functions */
+-#if defined(CONFIG_PM)
+ void npcx_clock_control_turn_on_system_sleep(bool is_deep, bool is_instant)
+ {
+ 	const struct device *const clk_dev = DEVICE_DT_GET(NPCX_CLK_CTRL_NODE);
+@@ -141,7 +140,6 @@ void npcx_clock_control_turn_off_system_sleep(void)
+ 
+ 	inst_pmc->PMCSR = 0;
+ }
+-#endif /* CONFIG_PM */
+ 
+ /* Clock controller driver registration */
+ static struct clock_control_driver_api npcx_clock_control_api = {
+diff --git a/drivers/crypto/crypto_npcx_sha.c b/drivers/crypto/crypto_npcx_sha.c
+index 7354ea587..f76e51bc3 100644
+--- a/drivers/crypto/crypto_npcx_sha.c
++++ b/drivers/crypto/crypto_npcx_sha.c
+@@ -6,34 +6,26 @@
+ 
+ #define DT_DRV_COMPAT nuvoton_npcx_sha
+ 
++#include "soc_ncl.h"
++
+ #include <errno.h>
+-#include <zephyr/kernel.h>
+-#include <zephyr/crypto/crypto.h>
+ 
++#include <zephyr/crypto/crypto.h>
++#include <zephyr/kernel.h>
+ #include <zephyr/logging/log.h>
++
+ LOG_MODULE_REGISTER(sha_npcx, CONFIG_CRYPTO_LOG_LEVEL);
+ 
+-#define NPCX_HASH_CAPS_SUPPORT  (CAP_SEPARATE_IO_BUFS | CAP_SYNC_OPS)
++#define NPCX_HASH_CAPS_SUPPORT	(CAP_SEPARATE_IO_BUFS | CAP_SYNC_OPS)
+ #define NPCX_SHA256_HANDLE_SIZE DT_INST_PROP(0, context_buffer_size)
+-#define NPCX_SHA_MAX_SESSION    1
+-
+-/* The status code returns from Nuvoton Cryptographic Library ROM APIs */
+-enum ncl_status {
+-	NCL_STATUS_OK = 0xA5A5,
+-	NCL_STATUS_FAIL = 0x5A5A,
+-	NCL_STATUS_INVALID_PARAM = 0x02,
+-	NCL_STATUS_PARAM_NOT_SUPPORTED,
+-	NCL_STATUS_SYSTEM_BUSY,
+-	NCL_STATUS_AUTHENTICATION_FAIL,
+-	NCL_STATUS_NO_RESPONSE,
+-	NCL_STATUS_HARDWARE_ERROR,
+-};
+-enum ncl_sha_type {
+-	NCL_SHA_TYPE_2_256 = 0,
+-	NCL_SHA_TYPE_2_384 = 1,
+-	NCL_SHA_TYPE_2_512 = 2,
+-	NCL_SHA_TYPE_NUM
+-};
++#define NPCX_SHA_MAX_SESSION	1
++
++typedef struct ncl_sha_hmac_key {
++	/// Key pointer
++	const uint8_t *key;
++	/// Key length
++	uint32_t keyLen;
++} ncl_sha_hmac_key;
+ 
+ /* The following table holds the function pointer for each SHA API in NPCX ROM. */
+ struct npcx_ncl_sha {
+@@ -60,12 +52,31 @@ struct npcx_ncl_sha {
+ 	/* Return the SHA result (digest.) */
+ 	enum ncl_status (*finish)(void *ctx, uint8_t *hashDigest);
+ 	/* Perform a complete SHA calculation */
+-	enum ncl_status (*calc)(void *ctx, enum ncl_sha_type type, const uint8_t *data,
+-				uint32_t Len, uint8_t *hashDigest);
++	enum ncl_status (*calc)(void *ctx, int module_num, enum ncl_sha_type type,
++				const uint8_t *data, uint32_t Len, uint8_t *hashDigest);
+ 	/* Power on/off the SHA module. */
+ 	enum ncl_status (*power)(void *ctx, uint8_t enable);
+ 	/* Reset the SHA hardware and terminate any in-progress operations. */
+ 	enum ncl_status (*reset)(void *ctx);
++	/*
++	 * Prepare the context buffer for a HMAC calculation -  by loading the
++	 * initial SHA-256/384/512 parameters.
++	 */
++	enum ncl_status (*hmac_start)(void *ctx, enum ncl_sha_type type,
++				      const struct ncl_sha_hmac_key *key, uint8_t *padKey);
++	/*
++	 * Updates the HMAC calculation with the additional data. When the
++	 * function returns, the hardware and memory buffer shall be ready to
++	 * accept new data * buffers for HMAC calculation and changes to the data
++	 * in data buffer should no longer effect the HMAC calculation.
++	 */
++	enum ncl_status (*hmac_update)(void *ctx, const uint8_t *data, uint32_t Len);
++	/* Return the HMAC result */
++	enum ncl_status (*hmac_finish)(void *ctx, uint8_t *padKey, uint8_t *hmac);
++	/* Perform a complete HMAC calculation */
++	enum ncl_status (*hmac_calc)(void *ctx, enum ncl_sha_type type,
++				     const struct ncl_sha_hmac_key *key, const uint8_t *data,
++				     uint32_t Len, uint8_t *hmac);
+ };
+ 
+ /* The start address of the SHA API table. */
+@@ -148,12 +159,59 @@ static int npcx_sha_compute(struct hash_ctx *ctx, struct hash_pkt *pkt, bool fin
+ 	return 0;
+ }
+ 
++int npcx_hmac_compute(const struct device *dev, struct hash_ctx *ctx, const uint8_t *key,
++		      uint32_t key_len, const uint8_t *msg, uint8_t msg_len, uint8_t *hmac)
++{
++	struct npcx_sha_session *npcx_session = ctx->drv_sessn_state;
++	struct npcx_sha_context *npcx_ctx = &npcx_session->npcx_sha_ctx;
++	enum ncl_status ret;
++	struct ncl_sha_hmac_key hmac_key;
++	enum ncl_sha_type sha_type;
++
++	LOG_DBG("HMAC compute");
++	switch (npcx_session->algo) {
++	case CRYPTO_HASH_ALGO_SHA256:
++		sha_type = NCL_SHA_TYPE_2_256;
++		break;
++	case CRYPTO_HASH_ALGO_SHA384:
++		sha_type = NCL_SHA_TYPE_2_384;
++		break;
++	case CRYPTO_HASH_ALGO_SHA512:
++		sha_type = NCL_SHA_TYPE_2_512;
++		break;
++	default:
++		LOG_ERR("Unexpected algo: %d", npcx_session->algo);
++		return -EINVAL;
++	}
++
++	hmac_key.key = key;
++	hmac_key.keyLen = key_len;
++
++	ret = NPCX_NCL_SHA->hmac_calc(npcx_ctx->handle, sha_type,
++				      (const struct ncl_sha_hmac_key *)&hmac_key, msg, msg_len,
++				      hmac);
++	if (ret != NCL_STATUS_OK) {
++		LOG_ERR("Could not compute the hmac, err:%d", ret);
++		return -EINVAL;
++	}
++
++	ret = NPCX_NCL_SHA->finalize_context(npcx_ctx->handle);
++	if (ret != NCL_STATUS_OK) {
++		LOG_ERR("Could not finalize the context, err:%d", ret);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int npcx_hash_session_setup(const struct device *dev, struct hash_ctx *ctx,
+ 				   enum hash_algo algo)
+ {
+ 	int ctx_idx;
+ 	struct npcx_sha_context *npcx_ctx;
++	enum ncl_status status;
+ 
++	LOG_INF("Hash session setup");
+ 	if (ctx->flags & ~(NPCX_HASH_CAPS_SUPPORT)) {
+ 		LOG_ERR("Unsupported flag");
+ 		return -EINVAL;
+@@ -178,25 +236,65 @@ static int npcx_hash_session_setup(const struct device *dev, struct hash_ctx *ct
+ 	ctx->hash_hndlr = npcx_sha_compute;
+ 
+ 	npcx_ctx = &npcx_sessions[ctx_idx].npcx_sha_ctx;
+-	NPCX_NCL_SHA->init_context(npcx_ctx->handle);
+-	NPCX_NCL_SHA->power(npcx_ctx->handle, 1);
+-	NPCX_NCL_SHA->init(npcx_ctx->handle);
+-	NPCX_NCL_SHA->reset(npcx_ctx->handle);
++	status = NPCX_NCL_SHA->init_context(npcx_ctx->handle);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to initial SHA context, err:%d", status);
++		return -EINVAL;
++	}
++
++	status = NPCX_NCL_SHA->power(npcx_ctx->handle, 1);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to power on the SHA module, err:%d", status);
++		return -ENOSR;
++	}
++
++	status = NPCX_NCL_SHA->init(npcx_ctx->handle);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to initiate the SHA hardware module, err:%d", status);
++		return -ENOSR;
++	}
++
++	status = NPCX_NCL_SHA->reset(npcx_ctx->handle);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to reset the SHA hardware, err:%d", status);
++		return -ENOSR;
++	}
+ 
+ 	return 0;
+ }
+ 
+ static int npcx_hash_session_free(const struct device *dev, struct hash_ctx *ctx)
+ {
++	int ret = 0;
++	enum ncl_status status;
+ 	struct npcx_sha_session *npcx_session = ctx->drv_sessn_state;
+ 	struct npcx_sha_context *npcx_ctx = &npcx_session->npcx_sha_ctx;
+ 
+-	NPCX_NCL_SHA->reset(npcx_ctx->handle);
+-	NPCX_NCL_SHA->power(npcx_ctx->handle, 0);
+-	NPCX_NCL_SHA->finalize_context(npcx_ctx->handle);
+-	npcx_session->in_use = false;
++	LOG_INF("Hash session free");
++	status = NPCX_NCL_SHA->power(npcx_ctx->handle, 0);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to power off the SHA module, err:%d", status);
++		ret = -ENOSR;
++		goto exit;
++	}
+ 
+-	return 0;
++	status = NPCX_NCL_SHA->reset(npcx_ctx->handle);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to reset the SHA hardware, err:%d", status);
++		ret = -ENOSR;
++		goto exit;
++	}
++
++	status = NPCX_NCL_SHA->finalize_context(npcx_ctx->handle);
++	if (status != NCL_STATUS_OK) {
++		LOG_ERR("fail to finalize SHA context, err:%d", status);
++		ret = -ENOSR;
++		goto exit;
++	}
++
++exit:
++	npcx_session->in_use = false;
++	return ret;
+ }
+ 
+ static int npcx_query_caps(const struct device *dev)
+@@ -209,6 +307,7 @@ static int npcx_hash_init(const struct device *dev)
+ 	uint32_t handle_size_required;
+ 
+ 	handle_size_required = NPCX_NCL_SHA->get_context_size();
++	LOG_INF("SHA context buffer size required: %d", handle_size_required);
+ 	if (handle_size_required != NPCX_SHA256_HANDLE_SIZE) {
+ 		LOG_ERR("Pre-alloc buf size doesn't match required buf size (%d)",
+ 			handle_size_required);
+@@ -218,7 +317,7 @@ static int npcx_hash_init(const struct device *dev)
+ 	return 0;
+ }
+ 
+-static struct crypto_driver_api npcx_crypto_api = {
++static const struct crypto_driver_api npcx_crypto_api = {
+ 	.hash_begin_session = npcx_hash_session_setup,
+ 	.hash_free_session = npcx_hash_session_free,
+ 	.query_hw_caps = npcx_query_caps,
+diff --git a/drivers/espi/Kconfig.npcx b/drivers/espi/Kconfig.npcx
+index 7f25ba53e..f8838f9b8 100644
+--- a/drivers/espi/Kconfig.npcx
++++ b/drivers/espi/Kconfig.npcx
+@@ -99,35 +99,39 @@ config ESPI_PERIPHERAL_ACPI_DATA_PORT_NUM
+ 
+ config ESPI_NPCX_PERIPHERAL_SHAW3
+ 	bool "Host I/O peripheral for shared access windows 3 in npcx series"
+-	default n
+-	help
++	help 
+ 	  This option enable the host and EC communicate over shared windows 3.
+ 
+ config ESPI_NPCX_PERIPHERAL_SHAW3_BASE
+     hex "Host I/O base address for shared windows 3 in npcx series"
+-	depends on ESPI_NPCX && ESPI_NPCX_PERIPHERAL_SHAW3
+-	default 0x400100a0
++	depends on ESPI_NPCX || ESPI_NPCX_PERIPHERAL_SHAW3
+ 	help
+-	  This is the port base address used by the Host and EC to communicate
++	  This is the port base address used by the Host and EC to communicate 
+ 	  over the shared memory region 3.
+ 
+ config ESPI_NPCX_PERIPHERAL_SHAW3_IO
+ 	bool "Host I/O transaction used for shared access windows 3 in npcx series"
+-	depends on ESPI_NPCX && ESPI_NPCX_PERIPHERAL_SHAW3
+-	default n
++	depends on ESPI_NPCX || ESPI_NPCX_PERIPHERAL_SHAW3
+ 	help
+-	  This is the I/O acceass type used by the Host and EC to communicate
++	  This is the I/O acceass type used by the Host and EC to communicate 
+ 	  over the shared memory region 3. default type is memory transaction.
+ 
+ config ESPI_NPCX_PERIPHERAL_SHAW3_SIZE
+ 	int "Host I/O peripheral port size for shared window 3 in npcx series"
+-	depends on ESPI_NPCX && ESPI_NPCX_PERIPHERAL_SHAW3
++	depends on ESPI_NPCX || ESPI_ESPI_NPCX_PERIPHERAL_SHAW3
+ 	default 8
+ 	help
+-	  This is the port size used by the Host and EC to communicate over the
+-	  shared memory region 3. Please notice the valid value in npcx ec series
++	  This is the port size used by the Host and EC to communicate over the 
++	  shared memory region 3. Please notice the valid value in npcx ec series 
+ 	  for this option is 8/16/32/64/128/256/512/1024/2048/4096 bytes.
+ 
++config ESPI_TAF_NPCX_RPMC_SUPPORT
++	bool "eSPI TAF RPMC support"
++	depends on ESPI_TAF_NPCX
++	select FLASH_EX_OP_ENABLED
++	help
++	  This option enable the handler for eSPI TAF RPMC request.
++
+ # The default value 'y' for the existing options if ESPI_NPCX is selected.
+ if ESPI_NPCX
+ 
+diff --git a/drivers/espi/espi_npcx.c b/drivers/espi/espi_npcx.c
+index cb9320395..0039ee226 100644
+--- a/drivers/espi/espi_npcx.c
++++ b/drivers/espi/espi_npcx.c
+@@ -81,6 +81,7 @@ struct espi_npcx_data {
+ #define NPCX_ESPI_OOB_MAX_PAYLOAD    64
+ #define NPCX_OOB_RX_PACKAGE_LEN(hdr) (((hdr & 0xff000000) >> 24) | \
+ 							((hdr & 0xf0000) >> 8))
++#define NPCX_OOB_RX_PACKAGE_TAG(hdr) ((hdr & 0xf00000) >> 20)
+ 
+ /* Flash channel maximum payload size */
+ #define NPCX_ESPI_FLASH_MAX_RX_PAYLOAD DT_INST_PROP(0, rx_plsize)
+@@ -108,6 +109,10 @@ struct espi_npcx_data {
+ #define ESPI_BM_SUCCESS_WITH_DATA_CYCLE_TYPE    0xf
+ #define ESPI_BM_SUCCESS_WITHOUT_DATA_CYCLE_TYPE 0x6
+ 
++/* Peripheral message cycle type */
++#define ESPI_BM_PM_CYCLE_TYPE 						  0x10 // Peripheral Message cycle type
++#define ESPI_BM_PM_MESSAGE_LTR 						  0x01 // Latency Tolerance Reporting
++
+ /* eSPI bus interrupt configuration structure and macro function */
+ struct espi_bus_isr {
+ 	uint8_t status_bit; /* bit order in ESPISTS register */
+@@ -155,9 +160,7 @@ static const struct npcx_vw_in_config vw_in_tbl[] = {
+ 
+ 	/* index 33h (In)  */
+ 	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_SLP_MSC, vw_slp_msc),
+-	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_Z8, vw_z8),
+-	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_Z9, vw_z9),
+-	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_Z10, vw_z10),
++	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_SOC_LP, vw_soc_lp),
+ 
+ 	/* index 41h (In)  */
+ 	NPCX_DT_VW_IN_CONF(ESPI_VWIRE_SIGNAL_SUS_WARN, vw_sus_warn),
+@@ -297,6 +300,7 @@ static void espi_npcx_flash_fake_request(const struct device *dev)
+ static void espi_bus_cfg_update_isr(const struct device *dev)
+ {
+ 	int chan;
++	uint8_t reported = 0;
+ 	struct espi_reg *const inst = HAL_INSTANCE(dev);
+ 	struct espi_npcx_data *const data = dev->data;
+ 	struct espi_event evt = { .evt_type = ESPI_BUS_EVENT_CHANNEL_READY,
+@@ -334,9 +338,24 @@ static void espi_bus_cfg_update_isr(const struct device *dev)
+ 				inst->ESPICFG &= ~BIT(chan);
+ 			}
+ 
++			reported++;
++			espi_send_callbacks(&data->callbacks, dev, evt);
++		}
++	}
++
++	/* If peripheral channel is enabled and ready */
++	if (!reported && (IS_BIT_SET(inst->ESPICFG, NPCX_ESPI_CH_PC) && IS_BIT_SET(inst->ESPICFG, NPCX_ESPI_HOST_CH_EN(NPCX_ESPI_CH_PC)))) {
++		/* If bus master is enabled */
++		if (IS_BIT_SET(inst->PERCFG, NPCX_PERCFG_BMMEN)) {
++			evt.evt_data = ESPI_PC_EVT_BUS_MASTER_ENABLE;
+ 			espi_send_callbacks(&data->callbacks, dev, evt);
+ 		}
++		/* no need to report it, the nuvoton driver set it to ready when VW pltrst desseret */
++		// evt.evt_data = IS_BIT_SET(inst->ESPICFG, NPCX_ESPI_HOST_CH_EN(NPCX_ESPI_CH_PC));
++		// evt.evt_details = BIT(NPCX_ESPI_CH_PC);
++		// espi_send_callbacks(&data->callbacks, dev, evt);
+ 	}
++
+ 	LOG_DBG("ESPI CFG EC Updated! 0x%02X", GET_FIELD(inst->ESPICFG,
+ 						NPCX_ESPICFG_CHANS_FIELD));
+ 
+@@ -368,12 +387,14 @@ static void espi_bus_oob_rx_isr(const struct device *dev)
+ 	struct espi_reg *const inst = HAL_INSTANCE(dev);
+ 	struct espi_event evt = {
+ 			.evt_type = ESPI_BUS_EVENT_OOB_RECEIVED,
+-			.evt_details = 0,
++			.evt_details = 0,	
+ 			.evt_data = 0,
+ 		};
+-
++	uint32_t hdr = inst->OOBRXBUF[0];
++	/* save the tag */
++	evt.evt_data |= NPCX_OOB_RX_PACKAGE_TAG(hdr);
+ 	/* Get received package length and set to additional detail of event */
+-	evt.evt_details = NPCX_OOB_RX_PACKAGE_LEN(inst->OOBRXBUF[0]);
++	evt.evt_details = NPCX_OOB_RX_PACKAGE_LEN(hdr);
+ 	espi_send_callbacks(&data->callbacks, dev, evt);
+ #else
+ 
+@@ -395,7 +416,12 @@ static uint32_t espi_taf_parse(const struct device *dev)
+ 	uint8_t i, roundsize;
+ 
+ 	/* Get type, length and tag from RX buffer */
+-	memcpy(&taf_head, (void *)&inst->FLASHRXBUF[0], sizeof(taf_head));
++	// memcpy(&taf_head, (void *)&inst->FLASHRXBUF[0], sizeof(taf_head));
++	uint32_t hdr = inst->FLASHRXBUF[0];
++	taf_head.pkt_len = (hdr & 0x000000ff);
++	taf_head.type = ((hdr & 0x0000ff00) >> 8);
++	taf_head.tag_hlen = ((hdr & 0x00ff0000) >> 16);
++	taf_head.llen = ((hdr & 0xff000000) >> 24);
+ 	taf_pckt.type = taf_head.type;
+ 	taf_pckt.len = (((uint16_t)taf_head.tag_hlen & 0xF) << 8) | taf_head.llen;
+ 	taf_pckt.tag = taf_head.tag_hlen >> 4;
+@@ -409,7 +435,9 @@ static uint32_t espi_taf_parse(const struct device *dev)
+ 	taf_pckt.addr = sys_cpu_to_be32(taf_addr);
+ 
+ 	/* Get written data if eSPI TAF write */
+-	if (taf_pckt.type == NPCX_ESPI_TAF_REQ_WRITE) {
++	if ((taf_pckt.type == NPCX_ESPI_TAF_REQ_WRITE) ||
++	    (IS_ENABLED(CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT) &&
++	     (taf_pckt.type == NPCX_ESPI_TAF_REQ_RPMC_OP1))) {
+ 		roundsize = DIV_ROUND_UP(taf_pckt.len, sizeof(uint32_t));
+ 		for (i = 0; i < roundsize; i++) {
+ 			taf_pckt.src[i] = inst->FLASHRXBUF[2 + i];
+@@ -618,6 +646,7 @@ static void espi_vw_notify_plt_rst(const struct device *dev)
+ 		inst->ESPICFG |= BIT(NPCX_ESPICFG_PCHANEN);
+ 		/* Configure all host sub-modules in host domain */
+ 		npcx_host_init_subs_host_domain();
++		npcx_lreset_pltrst_mode_sel(0);
+ 	}
+ 
+ 	/* PLT_RST will be received several times */
+@@ -688,9 +717,7 @@ static void espi_vw_generic_isr(const struct device *dev, struct npcx_wui *wui)
+ 	} else if (signal == ESPI_VWIRE_SIGNAL_PLTRST) {
+ 		espi_vw_notify_plt_rst(dev);
+ 	} else if (signal == ESPI_VWIRE_SIGNAL_SLP_MSC
+-			|| signal == ESPI_VWIRE_SIGNAL_Z8
+-			|| signal == ESPI_VWIRE_SIGNAL_Z9
+-			|| signal == ESPI_VWIRE_SIGNAL_Z10
++			|| signal == ESPI_VWIRE_SIGNAL_SOC_LP
+ 			|| signal == ESPI_VWIRE_SIGNAL_FL_ACK) {
+ 		notify_vw_status(dev, signal);
+ 	}
+@@ -740,6 +767,9 @@ static int espi_npcx_configure(const struct device *dev, struct espi_cfg *cfg)
+ 	case 50:
+ 		max_freq = NPCX_ESPI_MAXFREQ_50;
+ 		break;
++	case 66:
++		max_freq = NPCX_ESPI_MAXFREQ_66;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -939,7 +969,9 @@ static int espi_npcx_send_oob(const struct device *dev,
+ 	int sz_oob_tx = pckt->len;
+ 	int idx_tx_buf;
+ 	uint32_t oob_data;
+-
++	int tag_oob_tx = ESPI_OOB_TAG;
++	if (pckt->tag)
++		tag_oob_tx = pckt->tag;
+ 	/* Check out of OOB transmitted buffer size */
+ 	if (sz_oob_tx > NPCX_ESPI_OOB_MAX_PAYLOAD) {
+ 		LOG_ERR("Out of OOB transmitted buffer: %d", sz_oob_tx);
+@@ -963,7 +995,7 @@ static int espi_npcx_send_oob(const struct device *dev,
+ 	 */
+ 	inst->OOBTXBUF[0] = (sz_oob_tx + 3)
+ 			  | (ESPI_OOB_GET_CYCLE_TYPE << 8)
+-			  | (ESPI_OOB_TAG << 16)
++			  | (tag_oob_tx << 16)
+ 			  | (sz_oob_tx << 24);
+ 
+ 	/* Write GET_OOB data into 32-bits tx buffer in little endian */
+@@ -1354,7 +1386,7 @@ static void espi_npcx_bm_prepare_tx_header(const struct device *dev,
+ 		 * [0:7]   - SZ_PACK      Reserved. (Npcx only)
+ 		 */
+ 			inst->PBMTXBUF[0] = ((mem_len & 0xFF) << 24)
+-								| ((cyc_type & 0xFF) << 8)
++								| ((cyc_type & 0xFF) << 8) 
+ 								| (((mem_len >> 8) & 0x0F) << 16) ;
+ 		/*
+ 		 * Following 8 bytes of tager flash address in tx buffer
+@@ -1380,7 +1412,7 @@ static void espi_npcx_bm_prepare_tx_header(const struct device *dev,
+ 		 * [0:7]   - SZ_PACK      Reserved. (Npcx only)
+ 		 */
+ 			inst->PBMTXBUF[0] = ((mem_len & 0xFF) << 24)
+-								| ((cyc_type & 0xFF) << 8)
++								| ((cyc_type & 0xFF) << 8) 
+ 								| (((mem_len >> 8) & 0x0F) << 16) ;
+ 		/*
+ 		 * Following 4 bytes of tager flash address in tx buffer
+@@ -1393,10 +1425,10 @@ static void espi_npcx_bm_prepare_tx_header(const struct device *dev,
+ 	}
+ }
+ 
+-static int espi_npcx_bm_parse_completion(const struct device *dev)
+-{
+-	int cycle_type;
+-	struct espi_reg *const inst = HAL_INSTANCE(dev);
++// static int espi_npcx_bm_parse_completion(const struct device *dev)
++// {
++	// int cycle_type;
++	// struct espi_reg *const inst = HAL_INSTANCE(dev);
+ 
+ 	/*
+ 	 * First 4 bytes of bm cycle completion header in rx buffer
+@@ -1407,13 +1439,12 @@ static int espi_npcx_bm_parse_completion(const struct device *dev)
+ 	 * [8:15]  - CYCLE_TYPE   Cycle type
+ 	 * [0:7]   - SZ_PACK      Reserved. (Npcx only)
+ 	 */
+-	cycle_type = (inst->PBMRXBUF[0] & 0xff00) >> 8;
+-	if (cycle_type == ESPI_BM_SUCCESS_WITHOUT_DATA_CYCLE_TYPE) {
+-		return 0;
+-	}
+-
+-	return -EIO;
+-}
++	// cycle_type = (inst->PBMRXBUF[0] & 0xff00) >> 8;
++	// if (cycle_type == ESPI_BM_SUCCESS_WITHOUT_DATA_CYCLE_TYPE) {
++	// 	return 0;
++	// }
++	// return -EIO;
++// }
+ 
+ static int espi_npcx_bm_parse_completion_with_data(const struct device *dev,
+ 						struct espi_bm_packet *pckt)
+@@ -1433,6 +1464,7 @@ static int espi_npcx_bm_parse_completion_with_data(const struct device *dev,
+ 	 * The following is mem data/
+ 	 */
+ 	cycle_type = (inst->PBMRXBUF[0] & 0xff00) >> 8;
++	
+ 	sz_rx_payload  = ((inst->PBMRXBUF[0] >> 24) & 0xFF) | ((inst->PBMRXBUF[0] >> 8) & 0xF00);
+ 	if (cycle_type == ESPI_BM_SUCCESS_WITH_DATA_CYCLE_TYPE) {
+ 		volatile uint32_t *rx_buf = &inst->PBMRXBUF[1];
+@@ -1457,6 +1489,8 @@ static int espi_npcx_bm_parse_completion_with_data(const struct device *dev,
+ 			}
+ 		}
+ 
++		inst->PERCTL |= BIT(NPCX_PERCTL_PER_PC_FREE);
++
+ 		return 0;
+ 	}
+ 
+@@ -1483,7 +1517,7 @@ int espi_npcx_bm_read(const struct device *dev,
+ 	}
+ 
+ 	/* Check BM Transmit Queue is empty? */
+-	if (IS_BIT_SET(inst->PERCTL, NPCX_PERCTL_BM_PC_AVAIL)) {
++	if (IS_BIT_SET(inst->PERCTL, NPCX_PERCTL_BM_NP_AVAIL)) {
+ 		LOG_ERR("bus master is busy");
+ 		return -EBUSY;
+ 	}
+@@ -1491,18 +1525,18 @@ int espi_npcx_bm_read(const struct device *dev,
+ 	/* Prepare BM_READ header in tx buffer */
+ 	if (is64bit) {
+ 		inst->PERCTL |= BIT(NPCX_PERCTL_MEM64_ACCESS);
+-		espi_npcx_bm_prepare_tx_header(dev,
+-						ESPI_BM_MEM64_READ_CYCLE_TYPE,
++		espi_npcx_bm_prepare_tx_header(dev, 
++						ESPI_BM_MEM64_READ_CYCLE_TYPE, 
+ 						pckt->mem_addr,
+-						pckt->len,
++						pckt->len, 
+ 						1);
+ 		SET_FIELD(inst->PERCTL, NPCX_PERCTL_BMPKT_LEN, 11);
+ 	} else {
+ 		inst->PERCTL &= ~BIT(NPCX_PERCTL_MEM64_ACCESS);
+ 		espi_npcx_bm_prepare_tx_header(dev,
+-						 ESPI_BM_MEM32_READ_CYCLE_TYPE,
++						 ESPI_BM_MEM32_READ_CYCLE_TYPE, 
+ 						 pckt->mem_addr,
+-					     pckt->len,
++					     pckt->len, 
+ 						 0);
+ 		SET_FIELD(inst->PERCTL, NPCX_PERCTL_BMPKT_LEN, 7);
+ 	}
+@@ -1562,18 +1596,18 @@ int espi_npcx_bm_write(const struct device *dev,
+ 	/* Prepare BM_READ header in tx buffer */
+ 	if (is64bit) {
+ 		inst->PERCTL |= BIT(NPCX_PERCTL_MEM64_ACCESS);
+-		espi_npcx_bm_prepare_tx_header(dev,
+-						ESPI_BM_MEM64_WRITE_CYCLE_TYPE,
++		espi_npcx_bm_prepare_tx_header(dev, 
++						ESPI_BM_MEM64_WRITE_CYCLE_TYPE, 
+ 						pckt->mem_addr,
+-						pckt->len,
++						pckt->len, 
+ 						1);
+ 		SET_FIELD(inst->PERCTL, NPCX_PERCTL_BMPKT_LEN, pckt->len + 11);
+ 	} else {
+ 		inst->PERCTL &= ~BIT(NPCX_PERCTL_MEM64_ACCESS);
+ 		espi_npcx_bm_prepare_tx_header(dev,
+-						 ESPI_BM_MEM32_WRITE_CYCLE_TYPE,
++						 ESPI_BM_MEM32_WRITE_CYCLE_TYPE, 
+ 						 pckt->mem_addr,
+-					     pckt->len,
++					     pckt->len, 
+ 						 0);
+ 		SET_FIELD(inst->PERCTL, NPCX_PERCTL_BMPKT_LEN, pckt->len + 7);
+ 	}
+@@ -1609,11 +1643,87 @@ int espi_npcx_bm_write(const struct device *dev,
+ 
+ 	if (timeout > 0) {
+ 		/* Parse completion package in rx buffer */
+-		return espi_npcx_bm_parse_completion(dev);
++		return 0;
++	} else {
++		return -ETIMEDOUT;
++	}
++}
++
++#ifdef CONFIG_ENABLE_ESPI_LTR
++static void espi_npcx_pm_ltr_prepare_tx_header(const struct device *dev,
++	uint8_t rq,  uint8_t latency_scale, uint16_t latency_value)
++{
++	struct espi_reg *const inst = HAL_INSTANCE(dev);
++
++	/*
++	* First 4 bytes of peripheral message cycle command header in tx buffer
++	*
++	* [24:31] - LEN[0:7]     Data length of BM read request package
++	* [20:23] - TAG          Tag of BM read
++	* [16:19] - LEN[8:11]    Data length of BM read request package
++	* [8:15]  - CYCLE_TYPE   Cycle type
++	* [0:7]   - Message code  Note that the Message Code byte in the PBMTXBUFn registers is located at a different position than in the eSPI transaction.
++	*/
++	inst->PBMTXBUF[0] = (ESPI_BM_PM_MESSAGE_LTR & 0xFF)
++	                	| ((ESPI_BM_PM_CYCLE_TYPE & 0xFF) << 8);
++
++	/*
++	* Following 4 bytes of peripheral message LTR in tx buffer
++	* [31:16] - Reserved
++	* [15:8] - Latancy value[7:0]
++	* [7]    - Requirement (0: disable, 1: enable)
++	* [6:5]  - RSVD
++	* [4:2]  - Latency scale[2:0]
++	* [1:0]  - Latancy value[9:8]
++	*/
++	inst->PBMTXBUF[1] =  (((latency_value >> 8) & 0x03) << 0)
++						| ((latency_scale & 0x07) << 2)
++						| ((rq & 0x01) << 7)
++						| ((latency_value & 0xFF) << 8);
++}
++
++static int espi_npcx_send_ltr(const struct device *dev, struct ltr_cfg_pkt *req)
++{
++	struct espi_reg *const inst = HAL_INSTANCE(dev);
++
++	/* Check BM enabled? */
++	if (!IS_BIT_SET(inst->PERCFG, NPCX_PERCFG_BMMEN)) {
++		LOG_ERR("bus master disabled");
++		return -EACCES;
++	}
++
++	/* Check BM Transmit Queue is empty? */
++	if (IS_BIT_SET(inst->PERCTL, NPCX_PERCTL_BM_MSG_AVAIL)) {
++		LOG_ERR("bus master is busy");
++		return -EBUSY;
++	}
++
++	if (req->ltr_req) {
++		espi_npcx_pm_ltr_prepare_tx_header(dev, req->ltr_req, req->ltr_scale, req->latency);
++	} else {
++		espi_npcx_pm_ltr_prepare_tx_header(dev, 0, 0, 0);
++	}
++	SET_FIELD(inst->PERCTL, NPCX_PERCTL_BMPKT_LEN, 8);
++
++	/* Set the PERCTL.NPCX_PERCTL_BM_MSG_AVAIL bit to 1 to enqueue the packet */
++	inst->PERCTL |= BIT(NPCX_PERCTL_BM_MSG_AVAIL);
++
++	int timeout = 100;
++	do {
++		if (IS_BIT_SET(inst->ESPISTS, NPCX_ESPISTS_BMTXDONE))
++			break;
++		// k_msleep(1);
++		k_busy_wait(1000);
++	} while (--timeout);
++
++	if (timeout > 0) {
++		/* Parse completion package in rx buffer */
++		return 0;
+ 	} else {
+ 		return -ETIMEDOUT;
+ 	}
+ }
++#endif
+ 
+ /* eSPI driver registration */
+ static int espi_npcx_init(const struct device *dev);
+@@ -1635,6 +1745,10 @@ static const struct espi_driver_api espi_npcx_driver_api = {
+ 	.flash_write = espi_npcx_flash_write,
+ 	.flash_erase = espi_npcx_flash_erase,
+ #endif
++
++#ifdef CONFIG_ENABLE_ESPI_LTR
++	.send_ltr = espi_npcx_send_ltr,
++#endif
+ };
+ 
+ static struct espi_npcx_data espi_npcx_data;
+diff --git a/drivers/espi/espi_taf_npcx.c b/drivers/espi/espi_taf_npcx.c
+index e85f141e9..e5c911af0 100644
+--- a/drivers/espi/espi_taf_npcx.c
++++ b/drivers/espi/espi_taf_npcx.c
+@@ -10,6 +10,9 @@
+ #include <zephyr/drivers/espi.h>
+ #include <zephyr/drivers/espi_saf.h>
+ #include <zephyr/drivers/flash.h>
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++#include <zephyr/drivers/flash/npcx_flash_api_ex.h>
++#endif
+ #include <zephyr/kernel.h>
+ #include <zephyr/logging/log.h>
+ 
+@@ -31,8 +34,14 @@ struct espi_taf_npcx_config {
+ 	uintptr_t rx_plsz;
+ 	enum NPCX_ESPI_TAF_ERASE_BLOCK_SIZE erase_sz;
+ 	enum NPCX_ESPI_TAF_MAX_READ_REQ max_rd_sz;
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++	uint8_t rpmc_cnt_num;
++	uint8_t rpmc_op1_code;
++#endif
+ };
+ 
++#define MAX_TX_PAYLOAD_SIZE DT_PROP(DT_INST_PARENT(0), tx_plsize)
++
+ struct espi_taf_npcx_data {
+ 	sys_slist_t *callbacks;
+ 	const struct device *host_dev;
+@@ -41,6 +50,7 @@ struct espi_taf_npcx_data {
+ 	uint32_t address;
+ 	uint16_t length;
+ 	uint32_t src[16];
++	uint8_t read_buf[MAX_TX_PAYLOAD_SIZE];
+ 	struct k_work work;
+ };
+ 
+@@ -75,7 +85,9 @@ static void espi_taf_get_pckt(const struct device *dev, struct espi_taf_npcx_dat
+ 	pckt->taf_tag = data_ptr->tag;
+ 	pckt->address = data_ptr->addr;
+ 
+-	if (data_ptr->type == NPCX_ESPI_TAF_REQ_WRITE) {
++	if ((data_ptr->type == NPCX_ESPI_TAF_REQ_WRITE) ||
++	    (IS_ENABLED(CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT) &&
++	     (data_ptr->type == NPCX_ESPI_TAF_REQ_RPMC_OP1))) {
+ 		memcpy(pckt->src, data_ptr->src, sizeof(pckt->src));
+ 	}
+ }
+@@ -322,7 +334,6 @@ static int espi_taf_npcx_flash_read(const struct device *dev, struct espi_saf_pa
+ 	uint8_t flash_req_size = GET_FIELD(inst->FLASHCFG, NPCX_FLASHCFG_FLASHREQSIZE);
+ 	uint8_t target_max_size = GET_FIELD(inst->FLASHCFG, NPCX_FLASHCFG_FLREQSUP);
+ 	uint16_t max_read_req = 32 << flash_req_size;
+-	uint8_t read_buf[64];
+ 	int rc;
+ 
+ 	if (flash_req_size > target_max_size) {
+@@ -352,14 +363,14 @@ static int espi_taf_npcx_flash_read(const struct device *dev, struct espi_saf_pa
+ 	}
+ 
+ 	do {
+-		rc = flash_read(spi_dev, addr, &read_buf[0], len);
++		rc = flash_read(spi_dev, addr, npcx_espi_taf_data.read_buf, len);
+ 		if (rc) {
+ 			LOG_ERR("flash read fail 0x%x", rc);
+ 			return -EIO;
+ 		}
+ 
+ 		rc = taf_npcx_completion_handler(dev, cycle_type, taf_data_ptr->tag, len,
+-						 (uint32_t *)&read_buf[0]);
++						 (uint32_t *)npcx_espi_taf_data.read_buf);
+ 		if (rc) {
+ 			LOG_ERR("espi taf completion handler fail");
+ 			return rc;
+@@ -444,6 +455,73 @@ static int espi_taf_npcx_flash_erase(const struct device *dev, struct espi_saf_p
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++static int espi_taf_npcx_rpmc_op1(const struct device *dev, struct espi_saf_packet *pckt)
++{
++	struct espi_taf_npcx_pckt *taf_data_ptr = (struct espi_taf_npcx_pckt *)pckt->buf;
++	uint8_t *data_ptr = taf_data_ptr->data;
++	struct npcx_ex_ops_uma_in op_in = {
++		.opcode = ESPI_TAF_RPMC_OP1_CMD,
++		.tx_buf = data_ptr + 1,
++		.tx_count = (pckt->len) - 1,
++		.rx_count = 0,
++	};
++	int rc;
++
++	rc = flash_ex_op(spi_dev, FLASH_NPCX_EX_OP_EXEC_UMA, (uintptr_t)&op_in, NULL);
++	if (rc) {
++		LOG_ERR("flash RPMC OP1 fail");
++		return -EIO;
++	}
++
++	rc = taf_npcx_completion_handler(dev, CYC_SCS_CMP_WITHOUT_DATA, taf_data_ptr->tag, 0x0,
++					 NULL);
++	if (rc) {
++		LOG_ERR("espi taf completion handler fail");
++		return rc;
++	}
++
++	return 0;
++}
++
++static int espi_taf_npcx_rpmc_op2(const struct device *dev, struct espi_saf_packet *pckt)
++{
++	struct espi_taf_npcx_pckt *taf_data_ptr = (struct espi_taf_npcx_pckt *)pckt->buf;
++	uint8_t dummy_byte = 0;
++	struct npcx_ex_ops_uma_in op_in = {
++		.opcode = ESPI_TAF_RPMC_OP2_CMD,
++		.tx_buf = &dummy_byte,
++		.tx_count = 1,
++		.rx_count = pckt->len,
++	};
++	struct npcx_ex_ops_uma_out op_out = {
++		.rx_buf = npcx_espi_taf_data.read_buf,
++	};
++
++	int rc;
++
++	if (pckt->len > MAX_TX_PAYLOAD_SIZE) {
++		LOG_ERR("Invalid size");
++		return -EINVAL;
++	}
++
++	rc = flash_ex_op(spi_dev, FLASH_NPCX_EX_OP_EXEC_UMA, (uintptr_t)&op_in, &op_out);
++	if (rc) {
++		LOG_ERR("flash RPMC OP2 fail");
++		return -EIO;
++	}
++
++	rc = taf_npcx_completion_handler(dev, CYC_SCS_CMP_WITH_DATA_ONLY, taf_data_ptr->tag,
++					 pckt->len, (uint32_t *)npcx_espi_taf_data.read_buf);
++	if (rc) {
++		LOG_ERR("espi taf completion handler fail");
++		return rc;
++	}
++
++	return 0;
++}
++#endif
++
+ static int espi_taf_npcx_flash_unsuccess(const struct device *dev, struct espi_saf_packet *pckt)
+ {
+ 	struct espi_taf_npcx_pckt *taf_data_ptr = (struct espi_taf_npcx_pckt *)pckt->buf;
+@@ -461,7 +539,55 @@ static int espi_taf_npcx_flash_unsuccess(const struct device *dev, struct espi_s
+ 
+ static void espi_taf_work(struct k_work *item)
+ {
+-	struct espi_taf_npcx_data *info = CONTAINER_OF(item, struct espi_taf_npcx_data, work);
++// 	struct espi_taf_npcx_data *info = CONTAINER_OF(item, struct espi_taf_npcx_data, work);
++// 	int ret = 0;
++
++// 	struct espi_taf_npcx_pckt taf_data;
++// 	struct espi_saf_packet pckt_taf;
++// 	LOG_ERR("espi_taf_work 1 taf_type 0x%x",info->taf_type);
++// 	pckt_taf.flash_addr = info->address;
++// 	pckt_taf.len = info->length;
++// 	taf_data.tag = info->taf_tag;
++// 	if (info->taf_type == NPCX_ESPI_TAF_REQ_WRITE) {
++// 		taf_data.data = (uint8_t *)info->src;
++// 	LOG_ERR("espi_taf_work 2");
++// 	} else {
++// 		taf_data.data = NULL;
++// 	}
++// 	pckt_taf.buf = (uint8_t *)&taf_data;
++
++// 	switch (info->taf_type) {
++// #if defined(CONFIG_ESPI_TAF_MANUAL_MODE)
++// 	case NPCX_ESPI_TAF_REQ_READ:
++// 		ret = espi_taf_npcx_flash_read(info->host_dev, &pckt_taf);
++// 		break;
++// #endif
++// 	case NPCX_ESPI_TAF_REQ_ERASE:
++// 		ret = espi_taf_npcx_flash_erase(info->host_dev, &pckt_taf);
++// 		break;
++// 	case NPCX_ESPI_TAF_REQ_WRITE:
++// 		LOG_ERR("espi_taf_work 3");
++// 		ret = espi_taf_npcx_flash_write(info->host_dev, &pckt_taf);
++// 		break;
++// 	}
++
++// 	if (ret != 0) {
++// 		LOG_ERR("espi_taf_work 4");
++// 		ret = espi_taf_npcx_flash_unsuccess(info->host_dev, &pckt_taf);
++// 	}
++}
++
++static void espi_taf_event_handler(const struct device *dev, struct espi_callback *cb,
++				   struct espi_event event)
++{
++	if ((event.evt_type != ESPI_BUS_SAF_NOTIFICATION) ||
++	    (event.evt_details != ESPI_CHANNEL_FLASH)) {
++		return;
++	}
++
++	espi_taf_get_pckt(dev, &npcx_espi_taf_data, event);
++	// k_work_submit(&npcx_espi_taf_data.work);
++	struct espi_taf_npcx_data *info = &npcx_espi_taf_data;
+ 	int ret = 0;
+ 
+ 	struct espi_taf_npcx_pckt taf_data;
+@@ -470,7 +596,9 @@ static void espi_taf_work(struct k_work *item)
+ 	pckt_taf.flash_addr = info->address;
+ 	pckt_taf.len = info->length;
+ 	taf_data.tag = info->taf_tag;
+-	if (info->taf_type == NPCX_ESPI_TAF_REQ_WRITE) {
++	if ((info->taf_type == NPCX_ESPI_TAF_REQ_WRITE) ||
++	    (IS_ENABLED(CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT) &&
++	     (info->taf_type == NPCX_ESPI_TAF_REQ_RPMC_OP1))) {
+ 		taf_data.data = (uint8_t *)info->src;
+ 	} else {
+ 		taf_data.data = NULL;
+@@ -489,73 +617,22 @@ static void espi_taf_work(struct k_work *item)
+ 	case NPCX_ESPI_TAF_REQ_WRITE:
+ 		ret = espi_taf_npcx_flash_write(info->host_dev, &pckt_taf);
+ 		break;
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++	case NPCX_ESPI_TAF_REQ_RPMC_OP1:
++		ret = espi_taf_npcx_rpmc_op1(info->host_dev, &pckt_taf);
++		break;
++	case NPCX_ESPI_TAF_REQ_RPMC_OP2:
++		ret = espi_taf_npcx_rpmc_op2(info->host_dev, &pckt_taf);
++		break;
++#endif
+ 	}
+ 
++	
+ 	if (ret != 0) {
+ 		ret = espi_taf_npcx_flash_unsuccess(info->host_dev, &pckt_taf);
+ 	}
+ }
+ 
+-
+-// static void espi_taf_work(struct k_work *item)
+-// {
+-//     struct espi_taf_npcx_data *info = CONTAINER_OF(item, struct espi_taf_npcx_data, work);
+-//     int ret = 0;
+-//     struct espi_taf_npcx_pckt taf_data;
+-//     struct espi_saf_packet pckt_taf;
+-//     struct espi_reg *const inst = HAL_INSTANCE(info->host_dev);
+-//     struct espi_taf_pckt taf_pckt_l;
+-//     struct npcx_taf_head taf_head;
+-//     uint32_t taf_addr;
+-//     uint8_t i;
+-//     /* Get type, length and tag from RX buffer */
+-//     memcpy(&taf_head, (void *)&inst->FLASHRXBUF[0], sizeof(taf_head));
+-//     taf_pckt_l.type = taf_head.type;
+-//     taf_pckt_l.len = (((uint16_t)taf_head.tag_hlen & 0xF) << 8) | taf_head.llen;
+-//     taf_pckt_l.tag = taf_head.tag_hlen >> 4;
+-//     taf_addr = inst->FLASHRXBUF[1];
+-//     taf_pckt_l.addr = sys_cpu_to_be32(taf_addr);
+-//     for (i = 0; i < 16; i++) {
+-//         taf_pckt_l.src[i] = inst->FLASHRXBUF[2 + i];
+-//     }
+-//     taf_data.tag = taf_pckt_l.tag;
+-//     taf_data.data = (uint8_t *)taf_pckt_l.src;
+-//     pckt_taf.flash_addr = taf_pckt_l.addr;
+-//     pckt_taf.len = taf_pckt_l.len;
+-//     pckt_taf.buf = (uint8_t *)&taf_data;
+-//     LOG_ERR("espi taf work: type: %x \r\n", taf_pckt_l.type);
+-//     switch (taf_pckt_l.type) {
+-// #if defined(CONFIG_ESPI_TAF_MANUAL_MODE)
+-//     case NPCX_ESPI_TAF_REQ_READ:
+-//         ret = espi_taf_npcx_flash_read(info->host_dev, &pckt_taf);
+-//         break;
+-// #endif
+-//     case NPCX_ESPI_TAF_REQ_ERASE:
+-//         ret = espi_taf_npcx_flash_erase(info->host_dev, &pckt_taf);
+-//         break;
+-//     case NPCX_ESPI_TAF_REQ_WRITE:
+-//         ret = espi_taf_npcx_flash_write(info->host_dev, &pckt_taf);
+-//         break;
+-//     }
+-// LOG_ERR("espi taf work result: %x \r\n", ret);
+-//     if (ret != 0) {
+-//         ret = espi_taf_npcx_flash_unsuccess(info->host_dev, &pckt_taf);
+-//     }
+-// }
+-
+-
+-static void espi_taf_event_handler(const struct device *dev, struct espi_callback *cb,
+-				   struct espi_event event)
+-{
+-	if ((event.evt_type != ESPI_BUS_SAF_NOTIFICATION) ||
+-	    (event.evt_details != ESPI_CHANNEL_FLASH)) {
+-		return;
+-	}
+-
+-	espi_taf_get_pckt(dev, &npcx_espi_taf_data, event);
+-	k_work_submit(&npcx_espi_taf_data.work);
+-}
+-
+ int npcx_init_taf(const struct device *dev, sys_slist_t *callbacks)
+ {
+ 	espi_init_callback(&espi_taf_cb, espi_taf_event_handler, ESPI_BUS_SAF_NOTIFICATION);
+@@ -580,7 +657,20 @@ static int espi_taf_npcx_init(const struct device *dev)
+ 	SET_FIELD(inst->FLASHCFG, NPCX_FLASHCFG_FLREQSUP,
+ 		  config->max_rd_sz);
+ 	inst->FLASHBASE = config->mapped_addr;
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++	uint8_t count_num = 0;
+ 
++	/* RPMC_CFG1_CNTR is 0-based number, e.g. 0 indicates that 1 counter is supported, 1
++	 * indicates 2 counters, etc.
++	 */
++	if (config->rpmc_cnt_num > 0) {
++		count_num = config->rpmc_cnt_num - 1;
++	}
++
++	SET_FIELD(inst->FLASH_RPMC_CFG_1, NPCX_FLASH_RPMC_CFG1_CNTR, count_num);
++	SET_FIELD(inst->FLASH_RPMC_CFG_1, NPCX_FLASH_RPMC_CFG1_OP1, config->rpmc_op1_code);
++	SET_FIELD(inst->FLASH_RPMC_CFG_1, NPCX_FLASH_RPMC_CFG1_TRGRPMCSUP, config->rpmc_cnt_num);
++#endif
+ 	return 0;
+ }
+ 
+@@ -597,6 +687,10 @@ static const struct espi_taf_npcx_config espi_taf_npcx_config = {
+ 	.rx_plsz = DT_PROP(DT_INST_PARENT(0), rx_plsize),
+ 	.erase_sz = DT_INST_STRING_TOKEN(0, erase_sz),
+ 	.max_rd_sz = DT_INST_STRING_TOKEN(0, max_read_sz),
++#ifdef CONFIG_ESPI_TAF_NPCX_RPMC_SUPPORT
++	.rpmc_cnt_num = DT_INST_PROP(0, rpmc_cntr),
++	.rpmc_op1_code = DT_INST_PROP(0, rpmc_op1_code),
++#endif
+ };
+ 
+ DEVICE_DT_INST_DEFINE(0, &espi_taf_npcx_init, NULL,
+diff --git a/drivers/espi/host_subs_npcx.c b/drivers/espi/host_subs_npcx.c
+index b76dc6a29..16d75b7a8 100644
+--- a/drivers/espi/host_subs_npcx.c
++++ b/drivers/espi/host_subs_npcx.c
+@@ -124,7 +124,7 @@
+ #include "soc_host.h"
+ #include "soc_espi.h"
+ #include "soc_miwu.h"
+-
++#include "soc_pins.h"
+ #include <zephyr/logging/log.h>
+ #include <zephyr/irq.h>
+ LOG_MODULE_REGISTER(host_sub_npcx, LOG_LEVEL_ERR);
+@@ -191,6 +191,7 @@ struct host_sub_npcx_data host_sub_data;
+ #define NPCX_C2H_TRANSACTION_TIMEOUT_US 200
+ 
+ /* Logical Device Number Assignments */
++#define EC_CFG_LDN_SP    0x03
+ #define EC_CFG_LDN_MOUSE 0x05
+ #define EC_CFG_LDN_KBC   0x06
+ #define EC_CFG_LDN_SHM   0x0F
+@@ -206,6 +207,13 @@ struct host_sub_npcx_data host_sub_data;
+ #define EC_CFG_IDX_DATA_IO_ADDR_H  0x62
+ #define EC_CFG_IDX_DATA_IO_ADDR_L  0x63
+ 
++/* LDN Activation Enable */
++#define EC_CFG_IDX_CTRL_LDN_ENABLE 0x01
++
++/* Index of SuperI/O Control and Configuration Registers */
++#define EC_CFG_IDX_SUPERIO_SIOCF9      0x29
++#define EC_CFG_IDX_SUPERIO_SIOCF9_CKEN 2
++
+ /* Index of Special Logical Device Configuration (Shared Memory Module) */
+ #define EC_CFG_IDX_SHM_CFG             0xF1
+ #define EC_CFG_IDX_SHM_WND1_ADDR_0     0xF4
+@@ -228,6 +236,11 @@ struct host_sub_npcx_data host_sub_data;
+ #define EC_CFG_IDX_ESHM_WND4_ADDR_2    0xFA
+ #define EC_CFG_IDX_ESHM_WND4_ADDR_3    0xFB
+ 
++/* Index of Special Logical Device Configuration (Serial Port/Host UART) */
++#define EC_CFG_IDX_SP_CFG              0xF0
++/* Enable selection of bank 2 and 3 for the Serial Port */
++#define EC_CFG_IDX_SP_CFG_BK_SL_ENABLE 7
++
+ /* Host sub-device local inline functions */
+ static inline uint8_t host_shd_mem_wnd_size_sl(uint32_t size)
+ {
+@@ -253,55 +266,67 @@ static inline uint8_t host_shd_mem_wnd_size_sl(uint32_t size)
+ static void host_kbc_ibf_isr(const void *arg)
+ {
+ 	ARG_UNUSED(arg);
++// [AMD]++
+ 	struct kbc_reg *const inst_kbc = host_sub_cfg.inst_kbc;
+-	struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION,
+-		ESPI_PERIPHERAL_8042_KBC, ESPI_PERIPHERAL_NODATA
+-	};
+-	struct espi_evt_data_kbc *kbc_evt =
+-				(struct espi_evt_data_kbc *)&evt.evt_data;
+-
+-	/* KBC Input Buffer Full event */
+-	kbc_evt->evt = HOST_KBC_EVT_IBF;
+-	/* The data in KBC Input Buffer */
+-	kbc_evt->data = inst_kbc->HIKMDI;
+-	/*
+-	 * Indicates if the host sent a command or data.
+-	 * 0 = data
+-	 * 1 = Command.
+-	 */
+-	kbc_evt->type = IS_BIT_SET(inst_kbc->HIKMST, NPCX_HIKMST_A2);
++	// struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION,
++	// 	ESPI_PERIPHERAL_8042_KBC, ESPI_PERIPHERAL_NODATA
++	// };
++	// struct espi_evt_data_kbc *kbc_evt =
++	// 			(struct espi_evt_data_kbc *)&evt.evt_data;
++
++	// /* KBC Input Buffer Full event */
++	// kbc_evt->evt = HOST_KBC_EVT_IBF;
++	// /* The data in KBC Input Buffer */
++	// kbc_evt->data = inst_kbc->HIKMDI;
++	// /*
++	//  * Indicates if the host sent a command or data.
++	//  * 0 = data
++	//  * 1 = Command.
++	//  */
++	// kbc_evt->type = IS_BIT_SET(inst_kbc->HIKMST, NPCX_HIKMST_A2);
++
++	uint32_t isr_data = (IS_BIT_SET(inst_kbc->HIKMST, NPCX_HIKMST_A2) << 0U);
++	isr_data |= ((inst_kbc->HIKMDI & 0xFF) << 8U);
+ 
++	struct espi_event evt = {
++		.evt_type = ESPI_BUS_PERIPHERAL_NOTIFICATION,
++		.evt_details = ESPI_PERIPHERAL_8042_KBC,
++		.evt_data = isr_data
++	};
+ 	LOG_DBG("%s: kbc data 0x%02x", __func__, evt.evt_data);
+ 	espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev,
+ 							evt);
++// [AMD]--
+ }
+ 
+ static void host_kbc_obe_isr(const void *arg)
+ {
+ 	ARG_UNUSED(arg);
+-	struct kbc_reg *const inst_kbc = host_sub_cfg.inst_kbc;
+-	struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION,
+-		ESPI_PERIPHERAL_8042_KBC, ESPI_PERIPHERAL_NODATA
+-	};
+-	struct espi_evt_data_kbc *kbc_evt =
+-				(struct espi_evt_data_kbc *)&evt.evt_data;
+-
+-	/* Disable KBC OBE interrupt first */
+-	inst_kbc->HICTRL &= ~BIT(NPCX_HICTRL_OBECIE);
+-
+-	LOG_DBG("%s: kbc status 0x%02x", __func__, inst_kbc->HIKMST);
+-
+-	/*
+-	 * Notify application that host already read out data. The application
+-	 * might need to clear status register via espi_api_lpc_write_request()
+-	 * with E8042_CLEAR_FLAG opcode in callback.
+-	 */
+-	kbc_evt->evt = HOST_KBC_EVT_OBE;
+-	kbc_evt->data = 0;
+-	kbc_evt->type = 0;
+-
+-	espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev,
+-							evt);
++// [AMD]++
++	// struct kbc_reg *const inst_kbc = host_sub_cfg.inst_kbc;
++	// struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION,
++	// 	ESPI_PERIPHERAL_8042_KBC, ESPI_PERIPHERAL_NODATA
++	// };
++	// struct espi_evt_data_kbc *kbc_evt =
++	// 			(struct espi_evt_data_kbc *)&evt.evt_data;
++
++	// /* Disable KBC OBE interrupt first */
++	// inst_kbc->HICTRL &= ~BIT(NPCX_HICTRL_OBECIE);
++
++	// LOG_DBG("%s: kbc status 0x%02x", __func__, inst_kbc->HIKMST);
++
++	// /*
++	//  * Notify application that host already read out data. The application
++	//  * might need to clear status register via espi_api_lpc_write_request()
++	//  * with E8042_CLEAR_FLAG opcode in callback.
++	//  */
++	// kbc_evt->evt = HOST_KBC_EVT_OBE;
++	// kbc_evt->data = 0;
++	// kbc_evt->type = 0;
++
++	// espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev,
++	// 						evt);
++// [AMD]--
+ }
+ 
+ static void host_kbc_init(void)
+@@ -326,6 +351,9 @@ static void host_kbc_init(void)
+ 
+ 	/* Configure SIRQ 1/12 type (level + high) */
+ 	inst_kbc->HIIRQC = 0x00;
++// [AMD]++
++	irq_enable(DT_INST_IRQ_BY_NAME(0, kbc_ibf, irq));
++// [AMD]--
+ }
+ #endif
+ 
+@@ -333,25 +361,26 @@ static void host_kbc_init(void)
+ #if defined(CONFIG_ESPI_PERIPHERAL_HOST_IO)
+ static void host_acpi_process_input_data(uint8_t data)
+ {
+-	struct pmch_reg *const inst_acpi = host_sub_cfg.inst_pm_acpi;
++// [AMD]++
++	// struct pmch_reg *const inst_acpi = host_sub_cfg.inst_pm_acpi;
+ 	struct espi_event evt = {
+ 		.evt_type = ESPI_BUS_PERIPHERAL_NOTIFICATION,
+ 		.evt_details = ESPI_PERIPHERAL_HOST_IO,
+ 		.evt_data = ESPI_PERIPHERAL_NODATA
+ 	};
+-	struct espi_evt_data_acpi *acpi_evt =
+-				(struct espi_evt_data_acpi *)&evt.evt_data;
+-
+-	LOG_DBG("%s: acpi data 0x%02x", __func__, data);
+-
+-	/*
+-	 * Indicates if the host sent a command or data.
+-	 * 0 = data
+-	 * 1 = Command.
+-	 */
+-	acpi_evt->type = IS_BIT_SET(inst_acpi->HIPMST, NPCX_HIPMST_CMD);
+-	acpi_evt->data = data;
+-
++	// struct espi_evt_data_acpi *acpi_evt =
++	// 			(struct espi_evt_data_acpi *)&evt.evt_data;
++
++	// LOG_DBG("%s: acpi data 0x%02x", __func__, data);
++
++	// /*
++	//  * Indicates if the host sent a command or data.
++	//  * 0 = data
++	//  * 1 = Command.
++	//  */
++	// acpi_evt->type = IS_BIT_SET(inst_acpi->HIPMST, NPCX_HIPMST_CMD);
++	// acpi_evt->data = data;
++// [AMD]--
+ 	espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev,
+ 							evt);
+ }
+@@ -390,11 +419,16 @@ static uint8_t	shm_host_cmd[CONFIG_ESPI_NPCX_PERIPHERAL_HOST_CMD_PARAM_SIZE]
+ /* Host command sub-device local functions */
+ static void host_hcmd_process_input_data(uint8_t data)
+ {
+-	struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION,
+-		ESPI_PERIPHERAL_EC_HOST_CMD, ESPI_PERIPHERAL_NODATA
++	struct espi_event evt = {
++		.evt_type = ESPI_BUS_PERIPHERAL_NOTIFICATION,
++#ifdef CONFIG_ESPI_PERIPHERAL_EC_HOST_CMD
++		.evt_details = ESPI_PERIPHERAL_EC_HOST_CMD,
++#else
++		.evt_details = ESPI_PERIPHERAL_HOST_IO_PVT,
++#endif
++		.evt_data = ESPI_PERIPHERAL_NODATA
+ 	};
+ 
+-	evt.evt_data = data;
+ 	LOG_DBG("%s: host cmd data 0x%02x", __func__, evt.evt_data);
+ 	espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev,
+ 							evt);
+@@ -434,8 +468,9 @@ static void host_hcmd_init(void)
+ 
+ #if defined(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION)
+ /* Host command argument and memory map buffers */
+-static uint8_t shm_acpi_mmap[CONFIG_ESPI_NPCX_PERIPHERAL_ACPI_SHD_MEM_SIZE]
+-	__aligned(8);
++// [AMD]++
++__attribute__ ((aligned(256))) uint8_t gs_eSpiMmioSpace[256] = {[0 ...(256 - 1)] = 0xFF,};
++// [AMD]--
+ static void host_shared_mem_region_init(void)
+ {
+ 	struct shm_reg *const inst_shm = host_sub_cfg.inst_shm;
+@@ -450,21 +485,21 @@ static void host_shared_mem_region_init(void)
+ 	/* Configure Win2 size for ACPI shared mem region. */
+ 	SET_FIELD(inst_shm->WIN_SIZE, NPCX_WIN_SIZE_RWIN2_SIZE_FIELD,
+ 		host_shd_mem_wnd_size_sl(win_size));
+-	inst_shm->WIN_BASE2 = (uint32_t)shm_acpi_mmap;
+-	/* Enable write protect of Share memory window 2 */
+-	inst_shm->WIN2_WR_PROT = 0xFF;
+-
++	inst_shm->WIN_BASE2 = (uint32_t)gs_eSpiMmioSpace;
++// [AMD]++
++	/* Disable write protect of Share memory window 2 */
++	// inst_shm->WIN2_WR_PROT = 0xFF;
++// [AMD]--
+ 	/*
+-	 * TODO: Initialize shm_acpi_mmap buffer for host command flags. We
++	 * TODO: Initialize gs_eSpiMmioSpace buffer for host command flags. We
+ 	 * might use EACPI_GET_SHARED_MEMORY in espi_api_lpc_read_request()
+ 	 * instead of setting host command flags here directly.
+ 	 */
+ }
+ #endif
+-
+ #if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3)
+ /* Host command argument and memory map buffers */
+-static uint8_t shm_win3_mmap[CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_SIZE] 
++uint8_t shm_win3_mmap[CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_SIZE] 
+ 	__aligned(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_SIZE);
+ 
+ static void host_shared_window_3_init(void)
+@@ -485,6 +520,26 @@ static void host_shared_window_3_init(void)
+ }
+ #endif
+ 
++/* Host command argument and memory map buffers */
++__attribute__ ((aligned(256))) volatile uint8_t _s_eSpiSramBuf[256];
++
++static void host_shared_window_4_init(void)
++{
++	struct shm_reg *const inst_shm = host_sub_cfg.inst_shm;
++	uint32_t win_size = 256;
++
++	/* Don't stall SHM transactions */
++	inst_shm->SHM_CTL &= ~0x40;
++	/* Disable Window 4 protection */
++	inst_shm->WIN4_WR_PROT = 0;
++	inst_shm->WIN4_RD_PROT = 0;
++
++	/* Configure Win4 size. */
++	SET_FIELD(inst_shm->WINE_SIZE, NPCX_WIN_SIZE_RWIN4_SIZE_FIELD,
++		host_shd_mem_wnd_size_sl(win_size));
++	inst_shm->WIN_BASE4 = (uint32_t) _s_eSpiSramBuf;
++}
++
+ #if defined(CONFIG_ESPI_PERIPHERAL_HOST_IO) || \
+ 				defined(CONFIG_ESPI_PERIPHERAL_EC_HOST_CMD)
+ /* Host pm (host io) sub-module isr function for all channels such as ACPI. */
+@@ -494,13 +549,13 @@ static void host_pmch_ibf_isr(const void *arg)
+ 	struct pmch_reg *const inst_acpi = host_sub_cfg.inst_pm_acpi;
+ 	struct pmch_reg *const inst_hcmd = host_sub_cfg.inst_pm_hcmd;
+ 	uint8_t in_data;
+-
++// [AMD]++
+ 	/* Host put data on input buffer of ACPI channel */
+ 	if (IS_BIT_SET(inst_acpi->HIPMST, NPCX_HIPMST_IBF)) {
+ 		/* Set processing flag before reading command byte */
+-		inst_acpi->HIPMST |= BIT(NPCX_HIPMST_F0);
++		// inst_acpi->HIPMST |= BIT(NPCX_HIPMST_F0);
+ 		/* Read out input data and clear IBF pending bit */
+-		in_data = inst_acpi->HIPMDI;
++		// in_data = inst_acpi->HIPMDI;
+ #if defined(CONFIG_ESPI_PERIPHERAL_HOST_IO)
+ 		host_acpi_process_input_data(in_data);
+ #endif
+@@ -509,13 +564,15 @@ static void host_pmch_ibf_isr(const void *arg)
+ 	/* Host put data on input buffer of HOSTCMD channel */
+ 	if (IS_BIT_SET(inst_hcmd->HIPMST, NPCX_HIPMST_IBF)) {
+ 		/* Set processing flag before reading command byte */
+-		inst_hcmd->HIPMST |= BIT(NPCX_HIPMST_F0);
++		// inst_hcmd->HIPMST |= BIT(NPCX_HIPMST_F0);
+ 		/* Read out input data and clear IBF pending bit */
+-		in_data = inst_hcmd->HIPMDI;
++		// in_data = inst_hcmd->HIPMDI;
+ #if defined(CONFIG_ESPI_PERIPHERAL_EC_HOST_CMD)
+ 		host_hcmd_process_input_data(in_data);
+ #endif
+ 	}
++// [AMD]--
++irq_disable(DT_INST_IRQ_BY_NAME(0, pmch_ibf, irq));
+ }
+ #endif
+ 
+@@ -578,16 +635,41 @@ static void host_port80_isr(const void *arg)
+ 	}
+ 	k_work_submit(&host_sub_data.work);
+ #else
+-	struct espi_event evt = {ESPI_BUS_PERIPHERAL_NOTIFICATION,
+-				 (ESPI_PERIPHERAL_INDEX_0 << 16) | ESPI_PERIPHERAL_DEBUG_PORT80,
+-				 ESPI_PERIPHERAL_NODATA};
+-
++// [AMD]++
++	struct espi_event evt = { ESPI_BUS_PERIPHERAL_NOTIFICATION, 0,
++				  ESPI_PERIPHERAL_NODATA };
++	uint32_t dattr = 0;
+ 	/* Read out port80 data continuously if FIFO is not empty */
+ 	while (IS_BIT_SET(inst_shm->DP80STS, NPCX_DP80STS_FNE)) {
+-		LOG_DBG("p80: %04x", inst_shm->DP80BUF);
+-		evt.evt_data = inst_shm->DP80BUF;
+-		espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev, evt);
++		dattr = inst_shm->DP80BUF;
++		LOG_DBG("p80: %04x", dattr);
++		evt.evt_data = (dattr & 0xffu);
++		switch (dattr & 0x0300u) {
++		case 0x0000u:
++			evt.evt_details |= (ESPI_PERIPHERAL_INDEX_0 << 16) |
++					   ESPI_PERIPHERAL_DEBUG_PORT80;
++			break;
++		case 0x0100u:
++			evt.evt_details |= (ESPI_PERIPHERAL_INDEX_1 << 16) |
++					   ESPI_PERIPHERAL_DEBUG_PORT80;
++			break;
++		case 0x0200u:
++			evt.evt_details |= (ESPI_PERIPHERAL_INDEX_2 << 16) |
++					   ESPI_PERIPHERAL_DEBUG_PORT80;
++			break;
++		case 0x0300u:
++			evt.evt_details |= (ESPI_PERIPHERAL_INDEX_3 << 16) |
++					   ESPI_PERIPHERAL_DEBUG_PORT80;
++			break;
++		default:
++			break;
++		}
++		if (evt.evt_details) {
++			espi_send_callbacks(host_sub_data.callbacks, host_sub_data.host_bus_dev, evt);
++			evt.evt_details = 0;
++		}
+ 	}
++// [AMD]--
+ #endif
+ 	LOG_DBG("%s: p80 status 0x%02X", __func__, status);
+ 
+@@ -619,6 +701,9 @@ static void host_port80_init(void)
+ 	 */
+ 	inst_shm->DP80CTL = BIT(NPCX_DP80CTL_CIEN) | BIT(NPCX_DP80CTL_RAA)
+ 			| BIT(NPCX_DP80CTL_DP80EN) | BIT(NPCX_DP80CTL_SYNCEN);
++// [AMD]++
++	irq_enable(DT_INST_IRQ_BY_NAME(0, p80_fifo, irq));
++// [AMD]--
+ }
+ #endif
+ 
+@@ -686,8 +771,10 @@ void host_uart_init(void)
+ {
+ 	struct c2h_reg *const inst_c2h = host_sub_cfg.inst_c2h;
+ 
++#if 0
+ 	/* Configure pin-mux for serial port device */
+ 	pinctrl_apply_state(huart_cfg, PINCTRL_STATE_DEFAULT);
++#endif
+ 
+ 	/* Make sure unlock host access of serial port */
+ 	inst_c2h->LKSIOHA &= ~BIT(NPCX_LKSIOHA_LKSPHA);
+@@ -822,6 +909,29 @@ uint8_t host_c2h_read_io_cfg_reg(uint8_t reg_index)
+ 	return data_val;
+ }
+ 
++void host_c2h_write_sp_reg(uint8_t reg_index, uint8_t reg_data)
++{
++    struct c2h_reg *const inst_c2h = host_sub_cfg.inst_c2h;
++    /* Disable interrupts */
++    unsigned int key = irq_lock();
++    /* Lock host access EC configuration registers (0x4E/0x4F) */
++    inst_c2h->LKSIOHA |= BIT(NPCX_LKSIOHA_LKSPHA);
++    /* Enable Core-to-Host access CFG module */
++    inst_c2h->CRSMAE |= BIT(NPCX_CRSMAE_SPAE);
++    /* Verify core-to-host modules is not in progress */
++    host_c2h_wait_read_done();
++    host_c2h_wait_write_done();
++    inst_c2h->IHIOA = reg_index;
++    inst_c2h->IHD = reg_data;
++    host_c2h_wait_write_done();
++    /* Disable Core-to-Host access CFG module */
++    inst_c2h->CRSMAE &= ~BIT(NPCX_CRSMAE_SPAE);
++    /* Unlock host access EC configuration registers (0x4E/0x4F) */
++    inst_c2h->LKSIOHA &= ~BIT(NPCX_LKSIOHA_LKSPHA);
++    /* Enable interrupts */
++    irq_unlock(key);
++}
++
+ /* Platform specific host sub modules functions */
+ int npcx_host_periph_read_request(enum lpc_peripheral_opcode op,
+ 								uint32_t *data)
+@@ -876,16 +986,14 @@ int npcx_host_periph_read_request(enum lpc_peripheral_opcode op,
+ 			break;
+ #if defined(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION)
+ 		case EACPI_GET_SHARED_MEMORY:
+-			*data = (uint32_t)shm_acpi_mmap;
++			*data = (uint32_t)gs_eSpiMmioSpace;
+ 			break;
+ #endif /* CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION */
+-
+-#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3)
++#if (CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3)
+ 		case EACPI_GET_SHARED_MEMORY_3:
+ 			*data = (uint32_t)shm_win3_mmap;
+ 			break;
+ #endif
+-
+ 		default:
+ 			return -EINVAL;
+ 		}
+@@ -897,9 +1005,9 @@ int npcx_host_periph_read_request(enum lpc_peripheral_opcode op,
+ 		case ECUSTOM_HOST_CMD_GET_PARAM_MEMORY:
+ 			*data = (uint32_t)shm_host_cmd;
+ 			break;
+-		case ECUSTOM_HOST_CMD_GET_PARAM_MEMORY_SIZE:
+-			*data = CONFIG_ESPI_NPCX_PERIPHERAL_HOST_CMD_PARAM_SIZE;
+-			break;
++		// case ECUSTOM_HOST_CMD_GET_PARAM_MEMORY_SIZE:
++		// 	*data = CONFIG_ESPI_NPCX_PERIPHERAL_HOST_CMD_PARAM_SIZE;
++		// 	break;
+ 		default:
+ 			return -EINVAL;
+ 		}
+@@ -1044,11 +1152,10 @@ void npcx_host_init_subs_host_domain(void)
+ 
+ 	if (IS_ENABLED(CONFIG_ESPI_PERIPHERAL_HOST_IO)) {
+ 		/*
+-		* Select ACPI bank which LDN are 0x11 (PM Channel 1) and enable
+-		* module by setting bit 0 in its Control (index is 0x30) reg.
+-		*/
++		 * Select ACPI bank which LDN are 0x11 (PM Channel 1) and enable
++		 * module by setting bit 0 in its Control (index is 0x30) reg.
++		 */
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_ACPI);
+-		/* Configure IO address of CMD portt (default: 0x662) */
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_CMD_IO_ADDR_H, 
+ 		                          (CONFIG_ESPI_PERIPHERAL_ACPI_DATA_PORT_NUM >> 8) & 0xff);
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_CMD_IO_ADDR_L, 
+@@ -1083,9 +1190,12 @@ void npcx_host_init_subs_host_domain(void)
+ 
+ 		/* Select 'Shared Memory' bank which LDN are 0x0F */
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_SHM);
+-		/* WIN 1 & 2 mapping to IO space */
++// [AMD]++
++#if 0
++		/* WIN 1 & 2 mapping to mem space */
+ 		host_c2h_write_io_cfg_reg(0xF1,
+ 				host_c2h_read_io_cfg_reg(0xF1) | 0x30);
++
+ 		/* WIN1 as Host Command on the IO address (default: 0x0800) */
+ #if defined(CONFIG_ESPI_PERIPHERAL_HOST_CMD_PARAM_PORT_NUM)
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND1_ADDR_1,
+@@ -1093,48 +1203,30 @@ void npcx_host_init_subs_host_domain(void)
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND1_ADDR_0,
+ 		CONFIG_ESPI_PERIPHERAL_HOST_CMD_PARAM_PORT_NUM & 0xff);
+ #endif
++#endif
++// [AMD]--
+ 		/* Set WIN2 as MEMMAP on the configured IO address */
+ #if defined(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION_PORT_NUM)
++// [AMD]++
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND2_ADDR_3,
++		(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION_PORT_NUM >> 24) & 0xff);
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND2_ADDR_2,
++		(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION_PORT_NUM >> 16) & 0xff);
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND2_ADDR_1,
+ 		(CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION_PORT_NUM >> 8) & 0xff);
+ 		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_WND2_ADDR_0,
+ 		CONFIG_ESPI_PERIPHERAL_ACPI_SHM_REGION_PORT_NUM & 0xff);
++// [AMD]--
+ #endif
+-		if (IS_ENABLED(CONFIG_ESPI_NPCX_PERIPHERAL_DEBUG_PORT_80_MULTI_BYTE)) {
++// [AMD]++
++		// if (IS_ENABLED(CONFIG_ESPI_NPCX_PERIPHERAL_DEBUG_PORT_80_MULTI_BYTE)) {
+ 			host_c2h_write_io_cfg_reg(EC_CFG_IDX_SHM_DP80_ADDR_RANGE, 0x0f);
+-		}
++		// }
++// [AMD]--
+ 	/* Enable SHM direct memory access */
+ 	host_c2h_write_io_cfg_reg(EC_CFG_IDX_CTRL, 0x01);
+ 	}
+ 
+-#if CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3
+-	/* Select 'extended Shared Memory' bank which LDN are 0x1D */
+-	host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_ESHM);
+-
+-	#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_IO)
+-	#if CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_IO
+-	/* WIN 3 mapping to IO space */
+-	host_c2h_write_io_cfg_reg(0xF1, 
+-			host_c2h_read_io_cfg_reg(0xF1) | 0x10);
+-	#else
+-	host_c2h_write_io_cfg_reg(0xF1, 
+-			host_c2h_read_io_cfg_reg(0xF1) & ~0x10);
+-	#endif
+-	#endif
+-
+-	/* WIN3 as Host Command on the IO address */
+-	#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE)
+-	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_3,
+-		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 24) & 0xff);
+-	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_2,
+-		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 16) & 0xff);
+-	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_1,
+-		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 8) & 0xff);
+-	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_0,
+-		CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE & 0xff);
+-	#endif
+-#endif
+-
+ 	LOG_DBG("Hos sub-modules configurations are done!");
+ }
+ 
+@@ -1208,6 +1300,9 @@ int npcx_host_init_subs_core_domain(const struct device *host_bus_dev,
+ #if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3)
+ 	host_shared_window_3_init();
+ #endif
++
++	host_shared_window_4_init();
++
+ #if defined(CONFIG_ESPI_PERIPHERAL_DEBUG_PORT_80)
+ 	host_port80_init();
+ #if defined(CONFIG_ESPI_NPCX_PERIPHERAL_DEBUG_PORT_80_MULTI_BYTE)
+@@ -1262,3 +1357,109 @@ int npcx_host_init_subs_core_domain(const struct device *host_bus_dev,
+ 
+ 	return 0;
+ }
++
++#if CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3
++void npcx_host_init_shaw3(void)
++{
++
++	/* Select 'extended Shared Memory' bank which LDN are 0x1D */
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_ESHM);
++
++	#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_IO)
++	#if CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_IO
++	/* WIN 3 mapping to IO space */
++	host_c2h_write_io_cfg_reg(0xF1, 
++			host_c2h_read_io_cfg_reg(0xF1) | 0x10);
++	#else
++	host_c2h_write_io_cfg_reg(0xF1, 
++			host_c2h_read_io_cfg_reg(0xF1) & ~0x10);
++	#endif
++	#endif
++
++	/* WIN3 as Host Command on the IO address */
++	#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE)
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_3,
++		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 24) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_2,
++		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 16) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_1,
++		(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE >> 8) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_0,
++		CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE & 0xff);
++	#endif
++}
++
++void npcx_host_disable_shaw3(void)
++{
++	/* Select 'extended Shared Memory' bank which LDN are 0x1D */
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_ESHM);
++
++	/* WIN3 as Host Command on the IO address */
++	#if defined(CONFIG_ESPI_NPCX_PERIPHERAL_SHAW3_BASE)
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_3,
++		0x0);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_2,
++		0x0);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_1,
++		0x0);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND3_ADDR_0,
++		0x0);
++	#endif
++}
++#endif
++
++void npcx_host_init_shaw4_test_ram_base(uint32_t base)
++{
++
++	/* Select 'extended Shared Memory' bank which LDN are 0x1D */
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_ESHM);
++
++	/* WIN 4 mapping to mem space */
++	host_c2h_write_io_cfg_reg(0xF1, 
++			host_c2h_read_io_cfg_reg(0xF1) & ~0x08);
++
++	/* WIN4 as test ram memory address */
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND4_ADDR_3,
++		(base >> 24) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND4_ADDR_2,
++		(base >> 16) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND4_ADDR_1,
++		(base >> 8) & 0xff);
++	host_c2h_write_io_cfg_reg(EC_CFG_IDX_ESHM_WND4_ADDR_0,
++		base & 0xff);
++}
++
++void npcx_host_init_sp_base(void)
++{
++	if (IS_ENABLED(CONFIG_ESPI_PERIPHERAL_UART)) {
++		/* Configure pin-mux for serial port device */
++		pinctrl_apply_state(huart_cfg, PINCTRL_STATE_DEFAULT);
++		npcx_config_sio_clk_sel();
++		/* Select Serial Port banks which LDN are 0x03. */
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_SP);
++		/* Enable SIO_CLK */
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SUPERIO_SIOCF9,
++					  host_c2h_read_io_cfg_reg(EC_CFG_IDX_SUPERIO_SIOCF9) |
++						  BIT(EC_CFG_IDX_SUPERIO_SIOCF9_CKEN));
++		/* Enable Bank Select */
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_SP_CFG,
++					  host_c2h_read_io_cfg_reg(EC_CFG_IDX_SP_CFG) |
++						  BIT(EC_CFG_IDX_SP_CFG_BK_SL_ENABLE));
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_CTRL, EC_CFG_IDX_CTRL_LDN_ENABLE);
++		host_c2h_write_sp_reg(0x03, 0x80);
++		host_c2h_write_sp_reg(0x01, 0x00);
++		host_c2h_write_sp_reg(0x00, 0x01);
++		host_c2h_write_sp_reg(0x03, 0x03);
++		host_c2h_write_sp_reg(0x02, 0x06);
++		host_c2h_write_sp_reg(0x04, 0x00);
++	}
++}
++
++void npcx_host_disable_sp(void)
++{
++	if (IS_ENABLED(CONFIG_ESPI_PERIPHERAL_UART)) {
++		/* Select Serial Port banks which LDN are 0x03. */
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_LDN, EC_CFG_LDN_SP);
++		host_c2h_write_io_cfg_reg(EC_CFG_IDX_CTRL, 0);
++	}
++}
+\ No newline at end of file
+diff --git a/drivers/flash/flash_npcx_fiu_nor.c b/drivers/flash/flash_npcx_fiu_nor.c
+index e42aa82f8..ef8f604f6 100644
+--- a/drivers/flash/flash_npcx_fiu_nor.c
++++ b/drivers/flash/flash_npcx_fiu_nor.c
+@@ -372,6 +372,34 @@ flash_npcx_nor_get_parameters(const struct device *dev)
+ };
+ 
+ #ifdef CONFIG_FLASH_EX_OP_ENABLED
++static int flash_npcx_spi_recovery(const struct device *dev)
++{
++	const struct flash_npcx_nor_config *config = dev->config;
++	struct flash_npcx_nor_data *data = dev->data;
++	int ret;
++
++	/* Lock SPI bus and configure it if needed */
++	qspi_npcx_fiu_mutex_lock_configure(config->qspi_bus, &config->qspi_cfg,
++					   data->operation);
++
++	/* Execute SPI init */
++	ret = qspi_npcx_fiu_recovery(config->qspi_bus);
++
++	/* Unlock SPI bus */
++	qspi_npcx_fiu_mutex_unlock(config->qspi_bus);
++
++	return ret;
++}
++
++static int flash_npcx_nor_read_unique_id(const struct device *dev, uint8_t *id)
++{
++	if (id == NULL) {
++		return -EINVAL;
++	}
++
++	return flash_npcx_uma_read(dev, SPI_NOR_CMD_UQID, id, 16);
++}
++
+ static int flash_npcx_nor_ex_exec_uma(const struct device *dev,
+ 				      const struct npcx_ex_ops_uma_in *op_in,
+ 				      const struct npcx_ex_ops_uma_out *op_out)
+@@ -434,6 +462,70 @@ static int flash_npcx_nor_ex_get_spi_spec(const struct device *dev,
+ 	op_out->oper = data->operation;
+ 	return 0;
+ }
++					  
++static int flash_npcx_nor_reset(const struct device *dev)
++{
++	const struct flash_npcx_nor_config *config = dev->config;
++	int ret;
++
++	if (!IS_ENABLED(CONFIG_FLASH_NPCX_FIU_NOR_INIT)) {
++		return 0;
++	}
++
++	/* Enable quad access of spi NOR flash */
++	if (config->qspi_cfg.qer_type != JESD216_DW15_QER_NONE) {
++		uint8_t qe_idx, qe_bit, sts_reg[2];
++		/* Read status registers first */
++		ret = flash_npcx_nor_read_status_regs(dev, sts_reg);
++		if (ret != 0) {
++			LOG_ERR("Enable quad access: read reg failed %d!", ret);
++			return ret;
++		}
++		switch (config->qspi_cfg.qer_type) {
++		case JESD216_DW15_QER_S1B6:
++			qe_idx = 1;
++			qe_bit = 6;
++			break;
++		case JESD216_DW15_QER_S2B1v1:
++			__fallthrough;
++		case JESD216_DW15_QER_S2B1v4:
++			__fallthrough;
++		case JESD216_DW15_QER_S2B1v5:
++			qe_idx = 2;
++			qe_bit = 1;
++			break;
++		default:
++			return -ENOTSUP;
++		}
++		/* Set QE bit in status register */
++		sts_reg[qe_idx - 1] |= BIT(qe_bit);
++		ret = flash_npcx_nor_write_status_regs(dev, sts_reg);
++		if (ret != 0) {
++			LOG_ERR("Enable quad access: write reg failed %d!", ret);
++			return ret;
++		}
++	}
++
++	/* Enable 4-byte address of spi NOR flash */
++	if (config->qspi_cfg.enter_4ba != 0) {
++		bool wr_en = (config->qspi_cfg.enter_4ba & 0x02) != 0;
++
++		if (wr_en) {
++			ret = flash_npcx_uma_cmd_only(dev, SPI_NOR_CMD_WREN);
++			if (ret != 0) {
++				LOG_ERR("Enable 4byte addr: WREN failed %d!", ret);
++				return ret;
++			}
++		}
++		ret = flash_npcx_uma_cmd_only(dev, SPI_NOR_CMD_4BA);
++		if (ret != 0) {
++			LOG_ERR("Enable 4byte addr: 4BA failed %d!", ret);
++			return ret;
++		}
++	}
++
++	return 0;
++}
+ 
+ static int flash_npcx_nor_ex_op(const struct device *dev, uint16_t code,
+ 				const uintptr_t in, void *out)
+@@ -500,6 +592,13 @@ static int flash_npcx_nor_ex_op(const struct device *dev, uint16_t code,
+ #endif
+ 		break;
+ 	}
++	case FLASH_NPCX_EX_OP_SPI_RESET:
++		ret = flash_npcx_spi_recovery(dev);
++		flash_npcx_nor_reset(dev);
++		break;
++	case FLASH_NPCX_EX_OP_SPI_UID:
++		ret = flash_npcx_nor_read_unique_id(dev, out);
++		break;
+ 	default:
+ 		ret = -ENOTSUP;
+ 		break;
+diff --git a/drivers/flash/flash_npcx_fiu_qspi.c b/drivers/flash/flash_npcx_fiu_qspi.c
+index 39e699bbe..c4e5dfef4 100644
+--- a/drivers/flash/flash_npcx_fiu_qspi.c
++++ b/drivers/flash/flash_npcx_fiu_qspi.c
+@@ -244,6 +244,41 @@ void qspi_npcx_fiu_mutex_unlock(const struct device *dev)
+ 	k_sem_give(&data->lock_sem);
+ }
+ 
++int qspi_npcx_fiu_recovery(const struct device *dev)
++{
++	const struct npcx_qspi_fiu_config *const config = dev->config;
++	struct npcx_qspi_fiu_data *const data = dev->data;
++	const struct device *const clk_dev = DEVICE_DT_GET(NPCX_CLK_CTRL_NODE);
++	int ret;
++
++	if (!device_is_ready(clk_dev)) {
++		LOG_ERR("%s device not ready", clk_dev->name);
++		return -ENODEV;
++	}
++
++	/* Turn on device clock first and get source clock freq. */
++	ret = clock_control_on(clk_dev,
++			       (clock_control_subsys_t)&config->clk_cfg);
++	if (ret < 0) {
++		LOG_ERR("Turn on FIU clock fail %d", ret);
++		return ret;
++	}
++
++	/* initialize mutex for qspi controller */
++	k_sem_init(&data->lock_sem, 1, 1);
++
++	/* Enable direct access for 2 external SPI devices */
++	if (config->en_direct_access_2dev) {
++#if defined(CONFIG_FLASH_NPCX_FIU_SUPP_DRA_2_DEV)
++		struct fiu_reg *const inst = HAL_INSTANCE(dev);
++
++		inst->FIU_EXT_CFG |= BIT(NPCX_FIU_EXT_CFG_SPI1_2DEV);
++#endif
++	}
++
++	return 0;
++}
++
+ static int qspi_npcx_fiu_init(const struct device *dev)
+ {
+ 	const struct npcx_qspi_fiu_config *const config = dev->config;
+diff --git a/drivers/flash/flash_npcx_fiu_qspi.h b/drivers/flash/flash_npcx_fiu_qspi.h
+index 1136684d4..fb743312f 100644
+--- a/drivers/flash/flash_npcx_fiu_qspi.h
++++ b/drivers/flash/flash_npcx_fiu_qspi.h
+@@ -81,6 +81,8 @@ void qspi_npcx_fiu_mutex_lock_configure(const struct device *dev,
+  */
+ void qspi_npcx_fiu_mutex_unlock(const struct device *dev);
+ 
++int qspi_npcx_fiu_recovery(const struct device *dev);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/drivers/flash/spi_nor.h b/drivers/flash/spi_nor.h
+index 7d0843573..27159e87e 100644
+--- a/drivers/flash/spi_nor.h
++++ b/drivers/flash/spi_nor.h
+@@ -62,6 +62,7 @@
+ #define SPI_NOR_CMD_PP_4B        0x12  /* Page Program 4 Byte Address */
+ #define SPI_NOR_CMD_PP_1_1_4_4B  0x34  /* Quad Page program (1-1-4) 4 Byte Address */
+ #define SPI_NOR_CMD_PP_1_4_4_4B  0x3e  /* Quad Page program (1-4-4) 4 Byte Address */
++#define SPI_NOR_CMD_UQID         0x4B    /* Get unique Id */
+ 
+ /* Flash octal opcodes */
+ #define SPI_NOR_OCMD_SE         0x21DE  /* Octal Sector erase */
+diff --git a/drivers/gpio/gpio_npcx.c b/drivers/gpio/gpio_npcx.c
+index 08287dd90..0edff6dc9 100644
+--- a/drivers/gpio/gpio_npcx.c
++++ b/drivers/gpio/gpio_npcx.c
+@@ -73,9 +73,11 @@ void npcx_gpio_enable_io_pads(const struct device *dev, int pin)
+ 	 * If this pin is configured as a GPIO interrupt source, do not
+ 	 * implement bypass. Or ec cannot wake up via this event.
+ 	 */
+-	if (pin < NPCX_GPIO_PORT_PIN_NUM && !npcx_miwu_irq_get_state(io_wui)) {
++	 //AMD change move to application layer
++	//if (pin < NPCX_GPIO_PORT_PIN_NUM && !npcx_miwu_irq_get_state(io_wui)) {
+ 		npcx_miwu_io_enable(io_wui);
+-	}
++	//}
++
+ }
+ 
+ void npcx_gpio_disable_io_pads(const struct device *dev, int pin)
+@@ -92,9 +94,11 @@ void npcx_gpio_disable_io_pads(const struct device *dev, int pin)
+ 	 * If this pin is configured as a GPIO interrupt source, do not
+ 	 * implement bypass. Or ec cannot wake up via this event.
+ 	 */
+-	if (pin < NPCX_GPIO_PORT_PIN_NUM && !npcx_miwu_irq_get_state(io_wui)) {
++	 //AMD change move to application layer
++	//if (pin < NPCX_GPIO_PORT_PIN_NUM && !npcx_miwu_irq_get_state(io_wui)) { 
+ 		npcx_miwu_io_disable(io_wui);
+-	}
++	//}
++
+ }
+ 
+ /* GPIO api functions */
+diff --git a/drivers/i2c/Kconfig.npcx b/drivers/i2c/Kconfig.npcx
+index c02f54440..cc4ae1f50 100644
+--- a/drivers/i2c/Kconfig.npcx
++++ b/drivers/i2c/Kconfig.npcx
+@@ -19,3 +19,12 @@ config I2C_NPCX_PORT_INIT_PRIORITY
+ 	help
+ 	  Initialization priority for the I2C port on an NPCX device, must be
+ 	  set to a lower priority than the controller one (I2C_INIT_PRIORITY).
++
++config I2C_NPCX_CTRL
++	bool "Nuvoton NPCX embedded controller (EC) I2C controller driver"
++	default y
++	depends on DT_HAS_NUVOTON_NPCX_I2C_PORT_ENABLED
++	help
++	  This option enables the I2C controller driver for NPCX family of
++	  processors.
++	  Say y if you wish to use I2C modules on NPCX MCU.
+\ No newline at end of file
+diff --git a/drivers/sensor/nuvoton_tach_npcx/tach_nuvoton_npcx.c b/drivers/sensor/nuvoton_tach_npcx/tach_nuvoton_npcx.c
+index fa8f48c45..69b81faed 100644
+--- a/drivers/sensor/nuvoton_tach_npcx/tach_nuvoton_npcx.c
++++ b/drivers/sensor/nuvoton_tach_npcx/tach_nuvoton_npcx.c
+@@ -44,6 +44,7 @@
+ #include <zephyr/drivers/clock_control.h>
+ #include <zephyr/drivers/pinctrl.h>
+ #include <zephyr/drivers/sensor.h>
++#include <zephyr/drivers/sensor/mft_tach_npcx.h>
+ #include <zephyr/dt-bindings/sensor/npcx_tach.h>
+ #include <soc.h>
+ #include <zephyr/logging/log.h>
+@@ -59,9 +60,10 @@ struct tach_npcx_config {
+ 	/* sampling clock frequency of tachometer */
+ 	uint32_t sample_clk;
+ 	/* selected port of tachometer */
+-	int port;
++	int port[NPCX_TACH_PORT_MAX];
++	int port_num;
+ 	/* number of pulses (holes) per round of tachometer's input (encoder) */
+-	int pulses_per_round;
++	int pulses_per_round[NPCX_TACH_PORT_MAX];
+ 	/* pinmux configuration */
+ 	const struct pinctrl_dev_config *pcfg;
+ };
+@@ -71,7 +73,9 @@ struct tach_npcx_data {
+ 	/* Input clock for tachometers */
+ 	uint32_t input_clk;
+ 	/* Captured counts of tachometer */
+-	uint32_t capture;
++	uint32_t capture[NPCX_TACH_PORT_MAX];
++	/* number of pulses (holes) per round of tachometer's input (encoder) */
++	int pulses_per_round[NPCX_TACH_PORT_MAX];
+ };
+ 
+ /* Driver convenience defines */
+@@ -137,9 +141,9 @@ static inline void tach_npcx_start_port_b(const struct device *dev)
+ 		  ? NPCX_CLKSEL_LFCLK : NPCX_CLKSEL_APBCLK);
+ }
+ 
+-static inline bool tach_npcx_is_underflow(const struct device *dev)
++static inline bool tach_npcx_is_underflow(const struct device *dev, int port)
+ {
+-	const struct tach_npcx_config *const config = dev->config;
++	//const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_reg *const inst = HAL_INSTANCE(dev);
+ 
+ 	LOG_DBG("port A is underflow %d, port b is underflow %d",
+@@ -150,28 +154,28 @@ static inline bool tach_npcx_is_underflow(const struct device *dev)
+ 	 * In mode 5, the flag TCPND or TDPND indicates the TCNT1 or TCNT2
+ 	 * is under underflow situation. (No edges are detected.)
+ 	 */
+-	if (config->port == NPCX_TACH_PORT_A) {
++	if (port == NPCX_TACH_PORT_A) {
+ 		return IS_BIT_SET(inst->TECTRL, NPCX_TECTRL_TCPND);
+ 	} else {
+ 		return IS_BIT_SET(inst->TECTRL, NPCX_TECTRL_TDPND);
+ 	}
+ }
+ 
+-static inline void tach_npcx_clear_underflow_flag(const struct device *dev)
++static inline void tach_npcx_clear_underflow_flag(const struct device *dev, int port)
+ {
+-	const struct tach_npcx_config *const config = dev->config;
++	//const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_reg *const inst = HAL_INSTANCE(dev);
+ 
+-	if (config->port == NPCX_TACH_PORT_A) {
++	if (port == NPCX_TACH_PORT_A) {
+ 		inst->TECLR = BIT(NPCX_TECLR_TCCLR);
+ 	} else {
+ 		inst->TECLR = BIT(NPCX_TECLR_TDCLR);
+ 	}
+ }
+ 
+-static inline bool tach_npcx_is_captured(const struct device *dev)
++static inline bool tach_npcx_is_captured(const struct device *dev, int port)
+ {
+-	const struct tach_npcx_config *const config = dev->config;
++	//const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_reg *const inst = HAL_INSTANCE(dev);
+ 
+ 	LOG_DBG("port A is captured %d, port b is captured %d",
+@@ -182,31 +186,31 @@ static inline bool tach_npcx_is_captured(const struct device *dev)
+ 	 * In mode 5, the flag TAPND or TBPND indicates a input captured on
+ 	 * TAn or TBn transition.
+ 	 */
+-	if (config->port == NPCX_TACH_PORT_A) {
++	if (port == NPCX_TACH_PORT_A) {
+ 		return IS_BIT_SET(inst->TECTRL, NPCX_TECTRL_TAPND);
+ 	} else {
+ 		return IS_BIT_SET(inst->TECTRL, NPCX_TECTRL_TBPND);
+ 	}
+ }
+ 
+-static inline void tach_npcx_clear_captured_flag(const struct device *dev)
++static inline void tach_npcx_clear_captured_flag(const struct device *dev,  int port)
+ {
+-	const struct tach_npcx_config *const config = dev->config;
++	//const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_reg *const inst = HAL_INSTANCE(dev);
+ 
+-	if (config->port == NPCX_TACH_PORT_A) {
++	if (port == NPCX_TACH_PORT_A) {
+ 		inst->TECLR = BIT(NPCX_TECLR_TACLR);
+ 	} else {
+ 		inst->TECLR = BIT(NPCX_TECLR_TBCLR);
+ 	}
+ }
+ 
+-static inline uint16_t tach_npcx_get_captured_count(const struct device *dev)
++static inline uint16_t tach_npcx_get_captured_count(const struct device *dev, int port)
+ {
+-	const struct tach_npcx_config *const config = dev->config;
++	//const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_reg *const inst = HAL_INSTANCE(dev);
+ 
+-	if (config->port == NPCX_TACH_PORT_A) {
++	if (port == NPCX_TACH_PORT_A) {
+ 		return inst->TCRA;
+ 	} else {
+ 		return inst->TCRB;
+@@ -254,25 +258,26 @@ int tach_npcx_sample_fetch(const struct device *dev, enum sensor_channel chan)
+ {
+ 	ARG_UNUSED(chan);
+ 	struct tach_npcx_data *const data = dev->data;
++	int port = (chan == (enum sensor_channel) NPCX_TACH_CHAN_RPM_A ? NPCX_TACH_PORT_A : NPCX_TACH_PORT_B);
+ 
+ 	/* Check whether underflow flag of tachometer is occurred */
+-	if (tach_npcx_is_underflow(dev)) {
++	if (tach_npcx_is_underflow(dev, port)) {
+ 		/* Clear pending flags */
+-		tach_npcx_clear_underflow_flag(dev);
++		tach_npcx_clear_underflow_flag(dev, port);
+ 		/* Clear stale captured data */
+-		tach_npcx_clear_captured_flag(dev);
+-		data->capture = 0;
++		tach_npcx_clear_captured_flag(dev, port);
++		data->capture[port] = 0;
+ 
+ 		return 0;
+ 	}
+ 
+ 	/* Check whether capture flag of tachometer is set */
+-	if (tach_npcx_is_captured(dev)) {
++	if (tach_npcx_is_captured(dev, port)) {
+ 		/* Clear pending flags */
+-		tach_npcx_clear_captured_flag(dev);
++		tach_npcx_clear_captured_flag(dev, port);
+ 		/* Save captured count */
+-		data->capture = NPCX_TACHO_CNT_MAX -
+-					tach_npcx_get_captured_count(dev);
++		data->capture[port] = NPCX_TACHO_CNT_MAX -
++					tach_npcx_get_captured_count(dev, port);
+ 	}
+ 
+ 	return 0;
+@@ -284,26 +289,29 @@ static int tach_npcx_channel_get(const struct device *dev,
+ {
+ 	const struct tach_npcx_config *const config = dev->config;
+ 	struct tach_npcx_data *const data = dev->data;
+-
+-	if (chan != SENSOR_CHAN_RPM) {
++	int port = (chan == (enum sensor_channel) NPCX_TACH_CHAN_RPM_A ? NPCX_TACH_PORT_A : NPCX_TACH_PORT_B);
++
++	switch ((enum npcx_tach_sensor_channel) chan) {
++	case NPCX_TACH_CHAN_RPM_A:
++	case NPCX_TACH_CHAN_RPM_B:
++		if (data->capture[port] > 0) {
++			/*
++			 * RPM = (f * 60) / (n * TACH)
++			 *   n = Pulses per round
++			 *   f = Tachometer operation frequency (Hz)
++			 *   TACH = Captured counts of tachometer
++			 */
++			val->val1 = (config->sample_clk * 60) /
++				(data->pulses_per_round[port] * data->capture[port]);
++		} else {
++			val->val1 = 0U;
++		}
++		val->val2 = 0U;
++		break;
++	default:
+ 		return -ENOTSUP;
+ 	}
+ 
+-	if (data->capture > 0) {
+-		/*
+-		 * RPM = (f * 60) / (n * TACH)
+-		 *   n = Pulses per round
+-		 *   f = Tachometer operation frequency (Hz)
+-		 *   TACH = Captured counts of tachometer
+-		 */
+-		val->val1 = (config->sample_clk * 60) /
+-			(config->pulses_per_round * data->capture);
+-	} else {
+-		val->val1 = 0U;
+-	}
+-
+-	val->val2 = 0U;
+-
+ 	return 0;
+ }
+ 
+@@ -315,6 +323,7 @@ static int tach_npcx_init(const struct device *dev)
+ 	struct tach_npcx_data *const data = dev->data;
+ 	const struct device *const clk_dev = DEVICE_DT_GET(NPCX_CLK_CTRL_NODE);
+ 	int ret;
++	int index;
+ 
+ 	if (!device_is_ready(clk_dev)) {
+ 		LOG_ERR("clock control device not ready");
+@@ -343,21 +352,24 @@ static int tach_npcx_init(const struct device *dev)
+ 		return ret;
+ 	}
+ 
+-
+ 	/* Configure tachometer and its operate freq. */
+ 	ret = tach_npcx_configure(dev);
+ 	if (ret < 0) {
+-		LOG_ERR("Config tachometer port %d failed", config->port);
++		LOG_ERR("Config tachometer failed");
+ 		return ret;
+ 	}
+ 
+ 	/* Start tachometer sensor */
+-	if (config->port == NPCX_TACH_PORT_A) {
+-		tach_npcx_start_port_a(dev);
+-	} else if (config->port == NPCX_TACH_PORT_B) {
+-		tach_npcx_start_port_b(dev);
+-	} else {
+-		return -EINVAL;
++	for (index = 0; index < config->port_num; index++) {
++		if (config->port[index] == NPCX_TACH_PORT_A) {
++			data->pulses_per_round[NPCX_TACH_PORT_A] = config->pulses_per_round[index];
++			tach_npcx_start_port_a(dev);
++		} else if (config->port[index] == NPCX_TACH_PORT_B) {
++			data->pulses_per_round[NPCX_TACH_PORT_B] = config->pulses_per_round[index];
++			tach_npcx_start_port_b(dev);
++		} else {
++			return -EINVAL;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -376,13 +388,14 @@ static const struct sensor_driver_api tach_npcx_driver_api = {
+ 		.clk_cfg = NPCX_DT_CLK_CFG_ITEM(inst),                         \
+ 		.sample_clk = DT_INST_PROP(inst, sample_clk),                  \
+ 		.port = DT_INST_PROP(inst, port),                              \
++		.port_num = DT_INST_PROP_LEN(inst, port),                      \
+ 		.pulses_per_round = DT_INST_PROP(inst, pulses_per_round),      \
+ 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(inst),                  \
+ 	};                                                                     \
+ 									       \
+ 	static struct tach_npcx_data tach_data_##inst;                         \
+ 									       \
+-	DEVICE_DT_INST_DEFINE(inst,                                            \
++	DEVICE_DT_INST_DEFINE(inst,                                     \
+ 			      tach_npcx_init,                                  \
+ 			      NULL,                                            \
+ 			      &tach_data_##inst,                               \
+@@ -391,4 +404,4 @@ static const struct sensor_driver_api tach_npcx_driver_api = {
+ 			      CONFIG_SENSOR_INIT_PRIORITY,                     \
+ 			      &tach_npcx_driver_api);
+ 
+-DT_INST_FOREACH_STATUS_OKAY(NPCX_TACH_INIT)
++DT_INST_FOREACH_STATUS_OKAY(NPCX_TACH_INIT)
+\ No newline at end of file
+diff --git a/drivers/serial/Kconfig.npcx b/drivers/serial/Kconfig.npcx
+index d17604bb6..21fbb62d7 100644
+--- a/drivers/serial/Kconfig.npcx
++++ b/drivers/serial/Kconfig.npcx
+@@ -21,4 +21,4 @@ config UART_NPCX_USE_MDMA
+ 	depends on UART_NPCX
+ 	select SERIAL_SUPPORT_ASYNC
+ 	help
+-	  Enable support for npcx UART DMA mode.
++	  Enable support for npcx UART DMA mode.
+\ No newline at end of file
+diff --git a/drivers/serial/uart_npcx.c b/drivers/serial/uart_npcx.c
+index 085f7cccd..e81b8c69d 100644
+--- a/drivers/serial/uart_npcx.c
++++ b/drivers/serial/uart_npcx.c
+@@ -1168,4 +1168,4 @@ void npcx_uart_enable_access_interrupt(void)
+ void npcx_uart_disable_access_interrupt(void)
+ {
+ 	DT_INST_FOREACH_STATUS_OKAY(DISABLE_MIWU_CRIN_IRQ)
+-}
++}
+\ No newline at end of file
+diff --git a/drivers/timer/npcx_itim_timer.c b/drivers/timer/npcx_itim_timer.c
+index 50de8445a..def529004 100644
+--- a/drivers/timer/npcx_itim_timer.c
++++ b/drivers/timer/npcx_itim_timer.c
+@@ -213,7 +213,6 @@ static void npcx_itim_evt_isr(const struct device *dev)
+ 	}
+ }
+ 
+-#if defined(CONFIG_PM)
+ static inline uint32_t npcx_itim_get_evt_cyc32(void)
+ {
+ 	uint32_t cnt1, cnt2;
+@@ -246,7 +245,6 @@ static uint32_t npcx_itim_evt_elapsed_cyc32(void)
+ 	/* Return elapsed cycles of 32-bit counter of event timer  */
+ 	return cnt2;
+ }
+-#endif /* CONFIG_PM */
+ 
+ /* System timer api functions */
+ void sys_clock_set_timeout(int32_t ticks, bool idle)
+@@ -304,7 +302,6 @@ uint64_t sys_clock_cycle_get_64(void)
+ }
+ 
+ /* Platform specific system timer functions */
+-#if defined(CONFIG_PM)
+ void npcx_clock_capture_low_freq_timer(void)
+ {
+ 	cyc_evt_enter_deep_idle = npcx_itim_evt_elapsed_cyc32();
+@@ -323,7 +320,6 @@ uint64_t npcx_clock_get_sleep_ticks(void)
+ {
+ 	return  cyc_sys_compensated / SYS_CYCLES_PER_TICK;
+ }
+-#endif /* CONFIG_PM */
+ 
+ static int sys_clock_driver_init(const struct device *dev)
+ {
+diff --git a/dts/arm/nuvoton/npcx/npcx-espi-vws-map.dtsi b/dts/arm/nuvoton/npcx/npcx-espi-vws-map.dtsi
+index 7bd9e5576..e208a4b6b 100644
+--- a/dts/arm/nuvoton/npcx/npcx-espi-vws-map.dtsi
++++ b/dts/arm/nuvoton/npcx/npcx-espi-vws-map.dtsi
+@@ -26,7 +26,12 @@
+  * | 06h[S] | VWEVSM2 | HOST_RST_ACK | Reserved     | SMI#      | SCI#        |
+  * | 40h[P] | VWEVSM3 | Reserved     | Reserved     | Reserved  | SUS_ACK#    |
+  * |--------------------------------------------------------------------------|
+- *  [S] System-/[P] Platform-Specific Virtual Wires
++ * AMD CRB specific virtual wires
++ * -----------------------------------------------------------------------------------|
++ *  33h   | VWEVMS8 | Z10          | Z9           | Z8                 | SLP_MSC     |
++ *  35h   | VWEVSM6 | res          | res          | RTC_TIME_REQ       | CPU_TEMP_REQ|
++ *  43h   | VWEVMS5 | res          | res          | res                | SPI_ROM_GNT |
++ *  45h   | VWEVSM4 | res          | res          | ATOMIC_SPI_ROM_REQ | SPI_ROM_REQ |
+  */
+ 
+ / {
+@@ -73,19 +78,11 @@
+ 			vw-reg = <NPCX_VWEVMS8 0x01>;
+ 			vw-wui = <&wui_vw_slp_msc>;
+ 		};
+-		vw-z8 {
++		vw-soc-lp {
+ 			vw-reg = <NPCX_VWEVMS8 0x02>;
+-			vw-wui = <&wui_vw_z8>;
++			vw-wui = <&wui_vw_soc_lp>;
+ 		};
+-		vw-z9 {
+-			vw-reg = <NPCX_VWEVMS8 0x04>;
+-			vw-wui = <&wui_vw_z9>;
+-		};
+-		vw-z10 {
+-			vw-reg = <NPCX_VWEVMS8 0x08>;
+-			vw-wui = <&wui_vw_z10>;
+-		};
+-
++		
+ 		/* index 41h (In) */
+ 		vw-sus-warn {
+ 			vw-reg = <NPCX_VWEVMS3 0x01>;
+@@ -115,13 +112,13 @@
+ 			vw-reg = <NPCX_VWEVMS5 0x01>;
+ 			vw-wui = <&wui_vw_fl_ack>;
+ 		};
+-
++		
+ 		/* index 47h (In) */
+ 		vw-host-c10 {
+ 			vw-reg = <NPCX_VWEVMS7 0x01>;
+ 			vw-wui = <&wui_vw_host_c10>;
+ 		};
+-
++		
+ 		/* eSPI Virtual Vire (VW) output configuration */
+ 		/* index 04h (Out) */
+ 		vw-oob-rst-ack {
+@@ -163,6 +160,11 @@
+ 			vw-reg = <NPCX_VWEVSM2 0x08>;
+ 		};
+ 
++		/* index 40h (Out) */
++		vw-sus-ack {
++			vw-reg = <NPCX_VWEVSM3 0x01>;
++		};
++
+ 		/* index 35h (Out) */
+ 		vw-cpu-temp-read {
+ 			vw-reg = <NPCX_VWEVSM6 0x01>;
+@@ -171,12 +173,7 @@
+ 			vw-reg = <NPCX_VWEVSM6 0x02>;
+ 		};
+ 
+-		/* index 40h (Out) */
+-		vw-sus-ack {
+-			vw-reg = <NPCX_VWEVSM3 0x01>;
+-		};
+-
+-		/* index 40h (Out) */
++		/* index 45h (Out) */
+ 		vw-fl-req {
+ 			vw-reg = <NPCX_VWEVSM4 0x01>;
+ 		};
+diff --git a/dts/arm/nuvoton/npcx/npcx-miwus-wui-map.dtsi b/dts/arm/nuvoton/npcx/npcx-miwus-wui-map.dtsi
+index b79929a43..44ec9086e 100644
+--- a/dts/arm/nuvoton/npcx/npcx-miwus-wui-map.dtsi
++++ b/dts/arm/nuvoton/npcx/npcx-miwus-wui-map.dtsi
+@@ -473,16 +473,10 @@
+ 
+ 		/* MIWU group E */
+ 		wui_vw_slp_msc: wui2-5-0 {
+-			miwus = <&miwu2 4 0>;
++			miwus = <&miwu2 4 0>; /* SLP_MSC */
+ 		};
+-		wui_vw_z8: wui2-5-1 {
+-			miwus = <&miwu2 4 1>;
+-		};
+-		wui_vw_z9: wui2-5-2 {
+-			miwus = <&miwu2 4 2>;
+-		};
+-		wui_vw_z10: wui2-5-3 {
+-			miwus = <&miwu2 4 3>;
++		wui_vw_soc_lp: wui2-5-1 {
++			miwus = <&miwu2 4 1>; /* SOC_LP */
+ 		};
+ 
+ 		/* MIWU group F */
+diff --git a/dts/arm/nuvoton/npcx/npcx4.dtsi b/dts/arm/nuvoton/npcx/npcx4.dtsi
+index ecd054a6a..dbb429567 100644
+--- a/dts/arm/nuvoton/npcx/npcx4.dtsi
++++ b/dts/arm/nuvoton/npcx/npcx4.dtsi
+@@ -356,4 +356,362 @@
+ 		chip-id = <0x0a>;
+ 		revision-reg = <0x0000FFFC 4>;
+ 	};
+-};
++};/*
++ * Copyright (c) 2023 Nuvoton Technology Corporation.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++/* npcx4 series pinmux mapping table */
++#include "npcx4/npcx4-alts-map.dtsi"
++/* npcx4 series mapping table between MIWU wui bits and source device */
++#include "npcx4/npcx4-miwus-wui-map.dtsi"
++/* npcx4 series mapping table between MIWU groups and interrupts */
++#include "npcx4/npcx4-miwus-int-map.dtsi"
++/* npcx4 series eSPI VW mapping table */
++#include "npcx4/npcx4-espi-vws-map.dtsi"
++/* npcx4 series low-voltage io controls mapping table */
++#include "npcx4/npcx4-lvol-ctrl-map.dtsi"
++
++/* Device tree declarations of npcx soc family */
++#include "npcx.dtsi"
++
++/ {
++	def-io-conf-list {
++		pinmux = <&alt0_gpio_no_spip
++			  &alt0_gpio_no_fpip
++			  &alt1_no_pwrgd
++			  &alt7_no_ksi0_sl
++			  &alt7_no_ksi1_sl
++			  &alt7_no_ksi2_sl
++			  &alt7_no_ksi3_sl
++			  &alt7_no_ksi4_sl
++			  &alt7_no_ksi5_sl
++			  &alt7_no_ksi6_sl
++			  &alt7_no_ksi7_sl
++			  &alt8_no_kso00_sl
++			  &alt8_no_kso01_sl
++			  &alt8_no_kso02_sl
++			  &alt8_no_kso03_sl
++			  &alt8_no_kso04_sl
++			  &alt8_no_kso05_sl
++			  &alt8_no_kso06_sl
++			  &alt8_no_kso07_sl
++			  &alt9_no_kso08_sl
++			  &alt9_no_kso09_sl
++			  &alt9_no_kso10_sl
++			  &alt9_no_kso11_sl
++			  &alt9_no_kso12_sl
++			  &alt9_no_kso13_sl
++			  &alt9_no_kso14_sl
++			  &alt9_no_kso15_sl
++			  &alta_no_kso16_sl
++			  &alta_no_kso17_sl
++			  &alta_no_peci_en
++			  &altc_gpio97_sl_inv
++			  &altd_npsl_in1_sl
++			  &altd_npsl_in2_sl
++			  &altd_psl_in3_sl
++			  &altd_psl_in4_sl
++			  &altg_psl_gpo_sl>;
++	};
++
++	soc {
++		compatible = "nuvoton,npcx4", "nuvoton,npcx", "simple-bus";
++
++		/* Specific soc devices in npcx4 series */
++		itims: timer@400b0000 {
++			compatible = "nuvoton,npcx-itim-timer";
++			reg = <0x400b0000 0x2000
++			       0x400be000 0x2000>;
++			reg-names = "evt_itim", "sys_itim";
++			clocks = <&pcc NPCX_CLOCK_BUS_LFCLK NPCX_PWDWN_CTL4 0
++				  &pcc NPCX_CLOCK_BUS_APB2 NPCX_PWDWN_CTL7 5>;
++			interrupts = <28 1>; /* Event timer interrupt */
++		};
++
++		uart1: serial@400e0000 {
++			compatible = "nuvoton,npcx-uart";
++			/* Index 0: UART1 register, Index 1: MDMA1 register */
++			reg = <0x400E0000 0x2000 0x40011100 0x100>;
++			interrupts = <33 3>;
++			/* Index 0: UART1 clock, Index 1: MDMA1 clock */
++			clocks = <&pcc NPCX_CLOCK_BUS_APB4 NPCX_PWDWN_CTL1 4
++				  &pcc NPCX_CLOCK_BUS_CORE NPCX_PWDWN_CTL9 0>;
++			uart-rx = <&wui_cr_sin1>;
++			status = "disabled";
++		};
++
++		uart2: serial@400e2000 {
++			compatible = "nuvoton,npcx-uart";
++			/* Index 0: UART2 register, Index 1: MDMA2 register */
++			reg = <0x400E2000 0x2000 0x40011200 0x100>;
++			interrupts = <32 3>;
++			clocks = <&pcc NPCX_CLOCK_BUS_APB4 NPCX_PWDWN_CTL7 6
++				  &pcc NPCX_CLOCK_BUS_CORE NPCX_PWDWN_CTL9 1>;
++
++			uart-rx = <&wui_cr_sin2>;
++			status = "disabled";
++		};
++
++		uart3: serial@400e4000 {
++			compatible = "nuvoton,npcx-uart";
++			/* Index 0: UART3 register, Index 1: MDMA3 register */
++			reg = <0x400E4000 0x2000 0x40011300 0x100>;
++			interrupts = <38 3>;
++			/* Index 0: UART3 clock, Index 1: MDMA3 clock */
++			clocks = <&pcc NPCX_CLOCK_BUS_APB4 NPCX_PWDWN_CTL7 4
++				  &pcc NPCX_CLOCK_BUS_CORE NPCX_PWDWN_CTL9 2>;
++			uart-rx = <&wui_cr_sin3>;
++			status = "disabled";
++		};
++
++		uart4: serial@400e6000 {
++			compatible = "nuvoton,npcx-uart";
++			/* Index 0: UART4 register, Index 1: MDMA4 register */
++			reg = <0x400E6000 0x2000 0x40011400 0x100>;
++			interrupts = <39 3>;
++			/* Index 0: UART4 clock, Index 1: MDMA4 clock */
++			clocks = <&pcc NPCX_CLOCK_BUS_APB4 NPCX_PWDWN_CTL7 3
++				  &pcc NPCX_CLOCK_BUS_CORE NPCX_PWDWN_CTL9 3>;
++			uart-rx = <&wui_cr_sin4>;
++			status = "disabled";
++		};
++
++		/* Default clock and power settings in npcx4 series */
++		pcc: clock-controller@4000d000 {
++			clock-frequency = <DT_FREQ_M(120)>; /* OFMCLK runs at 120MHz */
++			core-prescaler = <8>; /* CORE_CLK runs at 15MHz */
++			apb1-prescaler = <8>; /* APB1_CLK runs at 15MHz */
++			apb2-prescaler = <8>; /* APB2_CLK runs at 15MHz */
++			apb3-prescaler = <8>; /* APB3_CLK runs at 15MHz */
++			apb4-prescaler = <8>; /* APB4_CLK runs at 15MHz */
++			ram-pd-depth = <8>; /* Valid bit-depth of RAM_PDn reg */
++			pwdwn-ctl-val = <0xfb
++					 0xff
++					 0x1f /* No GDMA1_PD/GDMA2_PD */
++					 0xff
++					 0xfa
++					 0x7f /* No ESPI_PD */
++					 0xff
++					 0xcf>; /* No FIU_PD */
++		};
++
++		/* Wake-up input source mapping for GPIOs in npcx4 series */
++		gpio0: gpio@40081000 {
++			wui-maps = <&wui_io00 &wui_io01 &wui_io02 &wui_io03
++				    &wui_io04 &wui_io05 &wui_io06 &wui_io07>;
++
++			lvol-maps = <&lvol_io00 &lvol_io01 &lvol_io02 &lvol_io03
++				     &lvol_io04 &lvol_io05 &lvol_io06 &lvol_io07>;
++		};
++
++		gpio1: gpio@40083000 {
++			wui-maps = <&wui_io10 &wui_io11 &wui_io12 &wui_io13
++				    &wui_io14 &wui_io15 &wui_io16 &wui_io17>;
++
++			lvol-maps = <&lvol_io10 &lvol_io11 &lvol_none &lvol_io13
++				     &lvol_io14 &lvol_io15 &lvol_io16 &lvol_io17>;
++		};
++
++		gpio2: gpio@40085000 {
++			wui-maps = <&wui_io20 &wui_io21 &wui_io22 &wui_io23
++				    &wui_io24 &wui_io25 &wui_io26 &wui_io27>;
++
++			lvol-maps = <&lvol_io20 &lvol_io21 &lvol_io22 &lvol_io23
++				     &lvol_none &lvol_none &lvol_none &lvol_none>;
++		};
++
++		gpio3: gpio@40087000 {
++			wui-maps = <&wui_io30 &wui_io31 &wui_none &wui_io33
++				    &wui_io34 &wui_none &wui_io36 &wui_io37>;
++
++			lvol-maps = <&lvol_none &lvol_none &lvol_none &lvol_io33
++				     &lvol_io34 &lvol_none &lvol_io36 &lvol_io37>;
++		};
++
++		gpio4: gpio@40089000 {
++			wui-maps = <&wui_io40 &wui_io41 &wui_io42 &wui_io43
++				    &wui_io44 &wui_io45 &wui_io46 &wui_io47>;
++
++			lvol-maps = <&lvol_io40 &lvol_io41 &lvol_io42 &lvol_io43
++				     &lvol_io44 &lvol_io45 &lvol_none &lvol_none>;
++		};
++
++		gpio5: gpio@4008b000 {
++			wui-maps = <&wui_io50 &wui_io51 &wui_io52 &wui_io53
++				    &wui_io54 &wui_io55 &wui_io56 &wui_io57>;
++
++			lvol-maps = <&lvol_io50 &lvol_none &lvol_none &lvol_none
++				     &lvol_none &lvol_none &lvol_none &lvol_none>;
++		};
++
++		gpio6: gpio@4008d000 {
++			wui-maps = <&wui_io60 &wui_io61 &wui_io62 &wui_io63
++				    &wui_io64 &wui_none &wui_io66 &wui_io67>;
++
++			lvol-maps = <&lvol_io60 &lvol_io61 &lvol_io62 &lvol_io63
++				     &lvol_io64 &lvol_none &lvol_io66 &lvol_io67>;
++		};
++
++		gpio7: gpio@4008f000 {
++			wui-maps = <&wui_io70 &wui_none &wui_io72 &wui_io73
++				    &wui_io74 &wui_io75 &wui_io76 &wui_none>;
++
++			lvol-maps = <&lvol_io70 &lvol_none &lvol_io72 &lvol_io73
++				     &lvol_io74 &lvol_io75 &lvol_io76 &lvol_none>;
++		};
++
++		gpio8: gpio@40091000 {
++			wui-maps = <&wui_io80 &wui_io81 &wui_io82 &wui_io83
++				    &wui_none &wui_none &wui_none &wui_io87>;
++
++			lvol-maps = <&lvol_io80 &lvol_none &lvol_io82 &lvol_io83
++				     &lvol_none &lvol_none &lvol_none &lvol_io87>;
++		};
++
++		gpio9: gpio@40093000 {
++			wui-maps = <&wui_io90 &wui_io91 &wui_io92 &wui_io93
++				    &wui_io94 &wui_io95 &wui_io96 &wui_io97>;
++
++			lvol-maps = <&lvol_io90 &lvol_io91 &lvol_io92 &lvol_none
++				     &lvol_none &lvol_none &lvol_none &lvol_none>;
++		};
++
++		gpioa: gpio@40095000 {
++			wui-maps = <&wui_ioa0 &wui_ioa1 &wui_ioa2 &wui_ioa3
++				    &wui_ioa4 &wui_ioa5 &wui_ioa6 &wui_ioa7>;
++
++			lvol-maps = <&lvol_none &lvol_none &lvol_none &lvol_none
++				     &lvol_none &lvol_none &lvol_none &lvol_none>;
++		};
++
++		gpiob: gpio@40097000 {
++			wui-maps = <&wui_iob0 &wui_iob1 &wui_iob2 &wui_iob3
++				    &wui_iob4 &wui_iob5 &wui_iob6 &wui_iob7>;
++
++			lvol-maps = <&lvol_none &lvol_iob1 &lvol_iob2 &lvol_iob3
++				     &lvol_iob4 &lvol_iob5 &lvol_iob6 &lvol_iob7>;
++		};
++
++		gpioc: gpio@40099000 {
++			wui-maps = <&wui_ioc0 &wui_ioc1 &wui_ioc2 &wui_ioc3
++				    &wui_ioc4 &wui_ioc5 &wui_ioc6 &wui_ioc7>;
++
++			lvol-maps = <&lvol_ioc0 &lvol_ioc1 &lvol_ioc2 &lvol_ioc3
++				     &lvol_ioc4 &lvol_ioc5 &lvol_ioc6 &lvol_ioc7>;
++		};
++
++		gpiod: gpio@4009b000 {
++			wui-maps = <&wui_iod0 &wui_iod1 &wui_iod2 &wui_iod3
++				    &wui_iod4 &wui_iod5 &wui_iod6 &wui_none>;
++
++			lvol-maps = <&lvol_iod0 &lvol_iod1 &lvol_iod2 &lvol_iod3
++				     &lvol_iod4 &lvol_iod5 &lvol_iod6 &lvol_none>;
++		};
++
++		gpioe: gpio@4009d000 {
++			wui-maps = <&wui_ioe0 &wui_ioe1 &wui_ioe2 &wui_ioe3
++				    &wui_ioe4 &wui_ioe5 &wui_none &wui_ioe7>;
++
++			lvol-maps = <&lvol_ioe0 &lvol_ioe1 &lvol_ioe2 &lvol_ioe3
++				     &lvol_ioe4 &lvol_ioe5 &lvol_none &lvol_ioe7>;
++		};
++
++		gpiof: gpio@4009f000 {
++			wui-maps = <&wui_iof0 &wui_iof1 &wui_iof2 &wui_iof3
++				    &wui_iof4 &wui_iof5 &wui_none &wui_none>;
++
++			lvol-maps = <&lvol_iof0 &lvol_iof1 &lvol_iof2 &lvol_iof3
++				     &lvol_iof4 &lvol_iof5 &lvol_none &lvol_none>;
++		};
++
++		/* ADC0 comparator configuration in npcx4 series */
++		adc0: adc@400d1000 {
++			channel-count = <26>;
++			threshold-count = <6>;
++		};
++
++		/* ADC1 which reference voltage is AVCC */
++		adc1: adc@400d5000 {
++			compatible = "nuvoton,npcx-adc";
++			#io-channel-cells = <1>;
++			reg = <0x400d5000 0x2000>;
++			interrupts = <22 3>;
++			clocks = <&pcc NPCX_CLOCK_BUS_APB1 NPCX_PWDWN_CTL4 3>;
++			vref-mv = <3300>;
++			channel-count = <26>;
++			threshold-count = <6>;
++			status = "disabled";
++		};
++
++		/* FIU0 configuration in npcx4 series */
++		qspi_fiu0: quadspi@40020000 {
++			clocks = <&pcc NPCX_CLOCK_BUS_FIU0 NPCX_PWDWN_CTL8 5>;
++		};
++
++		/* FIU1 configuration in npcx4 series */
++		qspi_fiu1: quadspi@40021000 {
++			compatible = "nuvoton,npcx-fiu-qspi";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			reg = <0x40021000 0x1000>;
++			clocks = <&pcc NPCX_CLOCK_BUS_FIU0 NPCX_PWDWN_CTL8 6>;
++		};
++
++		sha0: sha@148 {
++			compatible = "nuvoton,npcx-sha";
++			reg = <0x148 0x4c>;
++			context-buffer-size = <240>;
++			status = "disabled";
++		};
++
++		shi0: shi@4000f000 {
++			compatible = "nuvoton,npcx-shi-enhanced";
++			reg = <0x4000f000 0x120>;
++			interrupts = <18 1>;
++			clocks = <&pcc NPCX_CLOCK_BUS_APB3 NPCX_PWDWN_CTL5 1>;
++			status = "disabled";
++			buffer-rx-size = <128>;
++			buffer-tx-size = <128>;
++			shi-cs-wui =<&wui_io53>;
++		};
++
++		espi0: espi@4000a000 {
++			rx-plsize = <64>;
++			tx-plsize = <64>;
++
++			espi_taf: espitaf@4000a000 {
++				compatible = "nuvoton,npcx-espi-taf";
++				reg = <0x4000a000 0x2000>;
++				status = "disabled";
++			};
++		};
++	};
++
++	soc-if {
++		i2c4_0: io_i2c_ctrl4_port0 {
++			compatible = "nuvoton,npcx-i2c-port";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port = <0x40>;
++			controller = <&i2c_ctrl4>;
++			status = "disabled";
++		};
++
++		i2c7_1: io_i2c_ctrl7_port1 {
++			compatible = "nuvoton,npcx-i2c-port";
++			#address-cells = <1>;
++			#size-cells = <0>;
++			port = <0x71>;
++			controller = <&i2c_ctrl7>;
++			status = "disabled";
++		};
++	};
++
++	soc-id {
++		family-id = <0x23>;
++		chip-id = <0x0a>;
++		revision-reg = <0x0000FFFC 4>;
++	};
++};
+\ No newline at end of file
+diff --git a/dts/arm/nuvoton/npcx/npcx4/npcx4-alts-map.dtsi b/dts/arm/nuvoton/npcx/npcx4/npcx4-alts-map.dtsi
+index b5e8c5b88..588acb71a 100644
+--- a/dts/arm/nuvoton/npcx/npcx4/npcx4-alts-map.dtsi
++++ b/dts/arm/nuvoton/npcx/npcx4/npcx4-alts-map.dtsi
+@@ -115,6 +115,9 @@
+ 		altj_cr_sout2_sl: altj5 {
+ 			alts = <&scfg 0x12 0x5 0>;
+ 		};
++		altj_cr_sout2_sl_disable: altj5_disable {
++			alts = <&scfg 0x12 0x5 1>;
++		};
+ 		altj_cr_sin3_sl: altj6 {
+ 			alts = <&scfg 0x12 0x6 0>;
+ 		};
+diff --git a/dts/arm/nuvoton/npcx/npcx4/npcx4-miwus-wui-map.dtsi b/dts/arm/nuvoton/npcx/npcx4/npcx4-miwus-wui-map.dtsi
+index ace5d4b15..bba30c5ab 100644
+--- a/dts/arm/nuvoton/npcx/npcx4/npcx4-miwus-wui-map.dtsi
++++ b/dts/arm/nuvoton/npcx/npcx4/npcx4-miwus-wui-map.dtsi
+@@ -32,17 +32,11 @@
+ 
+ 		/* MIWU table 2 */
+ 		/* MIWU group E */
+-		wui_slp_msc: wui2-5-0 {
+-			miwus = <&miwu2 4 0>; /* SLP_MSC */
++		wui_vw_slp_msc: wui2-5-0 {
++			miwus = <&miwu2 4 0>;
+ 		};
+-		wui_z8: wui2-5-1 {
+-			miwus = <&miwu2 4 1>; /* Z8 */
+-		};
+-		wui_z9: wui2-5-2 {
+-			miwus = <&miwu2 4 2>; /* Z9 */
+-		};
+-		wui_z10: wui2-5-3 {
+-			miwus = <&miwu2 4 3>; /* Z10 */
++		wui_vw_soc_lp: wui2-5-1 {
++			miwus = <&miwu2 4 1>;
+ 		};
+ 
+ 		/* MIWU group F */
+diff --git a/dts/bindings/espi/nuvoton,npcx-espi-taf.yaml b/dts/bindings/espi/nuvoton,npcx-espi-taf.yaml
+index 115f8e5e4..8a065abf6 100644
+--- a/dts/bindings/espi/nuvoton,npcx-espi-taf.yaml
++++ b/dts/bindings/espi/nuvoton,npcx-espi-taf.yaml
+@@ -58,3 +58,15 @@ properties:
+       - "NPCX_ESPI_TAF_MAX_READ_REQ_1024B"
+       - "NPCX_ESPI_TAF_MAX_READ_REQ_2048B"
+       - "NPCX_ESPI_TAF_MAX_READ_REQ_4096B"
++
++  rpmc-cntr:
++    type: int
++    description: |
++      RPMC counter on RPMC flash devices.
++    default: 0
++
++  rpmc-op1-code:
++    type: int
++    description: |
++      RPMC OP1 opcode on RPMC flash devices.
++    default: 0
+diff --git a/dts/bindings/power/npcx-hibernate-psl.yaml b/dts/bindings/power/npcx-hibernate-psl.yaml
+new file mode 100644
+index 000000000..e29a2b9e1
+--- /dev/null
++++ b/dts/bindings/power/npcx-hibernate-psl.yaml
+@@ -0,0 +1,30 @@
++# Copyright (c) 2022 Nuvoton Technology Corporation.
++# SPDX-License-Identifier: Apache-2.0
++
++description: NPCX Power Switch Logic (PSL) control node for hibernating
++
++compatible: "npcx-hibernate-psl"
++
++include: [base.yaml, pinctrl-device.yaml]
++
++properties:
++  psl-driven-type:
++    required: true
++    type: string
++    description: |
++      PSL_OUT is driven by GPIO or FW Control bit
++    enum:
++      - "gpio-driven"
++      - "fw-ctrl-driven"
++
++  enable-gpios:
++    type: phandle-array
++    description: |
++      GPIO to used to turn on/off the Core Domain power supply (VCC1) of NPCX
++      embedded controller (EC)
++
++  pinctrl-0:
++    required: true
++
++  pinctrl-names:
++    required: true
+diff --git a/dts/bindings/tach/nuvoton,npcx-tach.yaml b/dts/bindings/tach/nuvoton,npcx-tach.yaml
+index 8a2c35ae0..b397fcfc7 100644
+--- a/dts/bindings/tach/nuvoton,npcx-tach.yaml
++++ b/dts/bindings/tach/nuvoton,npcx-tach.yaml
+@@ -22,8 +22,8 @@ properties:
+       sampling clock frequency of tachometer. Please notice that it must be
+       fixed to 32768 if bus in clocks property is NPCX_CLOCK_BUS_LFCLK.
+   port:
+-    type: int
++    type: array
+     description: selected port of tachometer (port-A is 0 and port-B is 1)
+   pulses-per-round:
+-    type: int
++    type: array
+     description: number of pulses (holes) per round of tachometer's input (encoder)
+diff --git a/include/zephyr/crypto/sha_hmac_npcx.h b/include/zephyr/crypto/sha_hmac_npcx.h
+new file mode 100644
+index 000000000..e9c90e9ac
+--- /dev/null
++++ b/include/zephyr/crypto/sha_hmac_npcx.h
+@@ -0,0 +1,23 @@
++/*
++ * Copyright (c) 2022 Intel Corporation
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++ #ifndef _SHA_HMAC_NPCX_H_
++ #define _SHA_HMAC_NPCX_H_
++ 
++ #include <zephyr/device.h>
++ #include <zephyr/crypto/crypto.h>
++ #include <zephyr/crypto/hash.h>
++ #include "soc_ncl.h"
++ 
++ int npcx_hmac_compute(const struct device *dev, 
++     struct hash_ctx *ctx,
++     const uint8_t *key,
++     uint32_t key_len,
++     const uint8_t *msg,
++     uint8_t msg_len,
++     uint8_t *hmac);
++ 
++ #endif /* _SHA_HMAC_NPCX_H_ */
+\ No newline at end of file
+diff --git a/include/zephyr/drivers/espi.h b/include/zephyr/drivers/espi.h
+index 55898e378..c6e10b733 100644
+--- a/include/zephyr/drivers/espi.h
++++ b/include/zephyr/drivers/espi.h
+@@ -120,6 +120,20 @@ enum espi_bus_event {
+ 	ESPI_BUS_SAF_NOTIFICATION           = BIT(5),
+ };
+ 
++/**
++ * @brief eSPI LTR Scale
++ *
++ * eSPI LTR scale value used for LTR register programming
++ */
++enum espi_ltr_scale {
++	ESPI_LTR_SCALE_1NSEC = 0,
++	ESPI_LTR_SCALE_32NSEC = BIT(0),
++	ESPI_LTR_SCALE_1024NSEC = BIT(1),
++	ESPI_LTR_SCALE_32USEC = BIT(0) | BIT(1),
++	ESPI_LTR_SCALE_1MSEC = BIT(2),
++	ESPI_LTR_SCALE_33MSEC = BIT(0) | BIT(2),
++};
++
+ /**
+  * @brief eSPI peripheral channel events.
+  *
+@@ -137,6 +151,9 @@ enum espi_pc_event {
+ #define ESPI_PERIPHERAL_INDEX_0  0ul
+ #define ESPI_PERIPHERAL_INDEX_1  1ul
+ #define ESPI_PERIPHERAL_INDEX_2  2ul
++// [AMD]++
++#define ESPI_PERIPHERAL_INDEX_3  3ul
++// [AMD]--
+ 
+ #define ESPI_TARGET_TO_CONTROLLER   0ul
+ #define ESPI_CONTROLLER_TO_TARGET   1ul
+@@ -210,9 +227,7 @@ enum espi_vwire_signal {
+ 	ESPI_VWIRE_SIGNAL_SLP_A,
+ 	ESPI_VWIRE_SIGNAL_SUS_PWRDN_ACK,
+     ESPI_VWIRE_SIGNAL_SLP_MSC,
+-    ESPI_VWIRE_SIGNAL_Z8,
+-    ESPI_VWIRE_SIGNAL_Z9,
+-    ESPI_VWIRE_SIGNAL_Z10,
++    ESPI_VWIRE_SIGNAL_SOC_LP,
+ 	ESPI_VWIRE_SIGNAL_SUS_WARN,
+ 	ESPI_VWIRE_SIGNAL_SLP_WLAN,
+ 	ESPI_VWIRE_SIGNAL_SLP_LAN,
+@@ -371,6 +386,7 @@ struct espi_request_packet {
+ struct espi_oob_packet {
+ 	uint8_t *buf;
+ 	uint16_t len;
++	uint8_t tag;
+ };
+ 
+ /**
+@@ -382,6 +398,24 @@ struct espi_flash_packet {
+ 	uint16_t len;
+ };
+ 
++struct espi_bm_packet {
++	uint8_t *buf;
++	uint64_t mem_addr;
++	uint16_t len;
++};
++
++/**
++ * @brief eSPI LTR configuration parameters
++ */
++struct ltr_cfg_pkt {
++	/** Latency scale */
++	enum espi_ltr_scale ltr_scale;
++	/** Latency value in unit of scale */
++	uint16_t latency;
++	/** LTR Required bit 1-ltr as per scale, 0 -Infinite latency */
++	uint8_t ltr_req;
++};
++
+ struct espi_callback;
+ 
+ /**
+@@ -444,6 +478,8 @@ typedef int (*espi_api_lpc_read_request)(const struct device *dev,
+ typedef int (*espi_api_lpc_write_request)(const struct device *dev,
+ 					  enum lpc_peripheral_opcode op,
+ 					  uint32_t *data);
++typedef int (*espi_api_ltr_write_request)(const struct device *dev,
++					  struct ltr_cfg_pkt *req);
+ /* Logical Channel 1 APIs */
+ typedef int (*espi_api_send_vwire)(const struct device *dev,
+ 				   enum espi_vwire_signal vw,
+@@ -475,6 +511,7 @@ __subsystem struct espi_driver_api {
+ 	espi_api_write_request write_request;
+ 	espi_api_lpc_read_request read_lpc_request;
+ 	espi_api_lpc_write_request write_lpc_request;
++	espi_api_ltr_write_request send_ltr;
+ 	espi_api_send_vwire send_vwire;
+ 	espi_api_receive_vwire receive_vwire;
+ 	espi_api_send_oob send_oob;
+@@ -503,6 +540,7 @@ __subsystem struct espi_driver_api {
+  * will be used by eSPI master to determine minimum common capabilities with
+  * eSPI slave then send via SET_CONFIGURATION command.
+  *
++ * @code
+  * +--------+   +---------+     +------+          +---------+   +---------+
+  * |  eSPI  |   |  eSPI   |     | eSPI |          |  eSPI   |   |  eSPI   |
+  * |  slave |   | driver  |     |  bus |          |  driver |   |  host   |
+@@ -526,6 +564,7 @@ __subsystem struct espi_driver_api {
+  *     |              |            |  accept           |             |
+  *     |              |            +------------------>+             |
+  *     +              +            +                   +             +
++ * @endcode
+  *
+  * @param dev Pointer to the device structure for the driver instance.
+  * @param cfg the device runtime configuration for the eSPI controller.
+@@ -697,6 +736,37 @@ static inline int z_impl_espi_write_lpc_request(const struct device *dev,
+ 	return api->write_lpc_request(dev, op, data);
+ }
+ 
++
++/**
++ * @brief Send LTR request to eSPI host which generates an eSPI transaction.
++ *
++ * This routine provides a generic interface to send ltr value to eSPI host
++ * which triggers an eSPI transaction. The eSPI packet is assembled by the
++ * hardware block.
++ *
++ * @param dev Pointer to the device structure for the driver instance.
++ * @param req Address of a structure representing LTR configuration request.
++ *
++ * @retval 0 If successful.
++ * @retval -ENOTSUP espi master has not enabled LTR.
++ */
++__syscall int espi_send_ltr(const struct device *dev,
++			    struct ltr_cfg_pkt *req);
++
++static inline int z_impl_espi_send_ltr(const struct device *dev,
++				       struct ltr_cfg_pkt *req)
++{
++	const struct espi_driver_api *api =
++		(const struct espi_driver_api *)dev->api;
++
++	if (!api->send_ltr) {
++		return -ENOTSUP;
++	}
++
++	return api->send_ltr(dev, req);
++}
++
++
+ /**
+  * @brief Sends system/platform signal as a virtual wire packet.
+  *
+@@ -894,6 +964,7 @@ static inline int z_impl_espi_flash_erase(const struct device *dev,
+ /**
+  * Callback model
+  *
++ * @code
+  *+-------+                  +-------------+   +------+     +---------+
+  *|  App  |                  | eSPI driver |   |  HW  |     |eSPI Host|
+  *+---+---+                  +-------+-----+   +---+--+     +----+----+
+@@ -949,6 +1020,7 @@ static inline int z_impl_espi_flash_erase(const struct device *dev,
+  *    <------------------------------+             |             |
+  *    | App executes                 |             |             |
+  *    + power mgmt policy            |             |             |
++ * @endcode
+  */
+ 
+ /**
+diff --git a/include/zephyr/drivers/flash/npcx_flash_api_ex.h b/include/zephyr/drivers/flash/npcx_flash_api_ex.h
+index c640a2864..bc922930a 100644
+--- a/include/zephyr/drivers/flash/npcx_flash_api_ex.h
++++ b/include/zephyr/drivers/flash/npcx_flash_api_ex.h
+@@ -37,6 +37,8 @@ enum flash_npcx_ex_ops {
+ 	 * It returns current specific operation for Quad-SPI nor flash.
+ 	 */
+ 	FLASH_NPCX_EX_OP_GET_QSPI_OPER,
++	FLASH_NPCX_EX_OP_SPI_RESET,
++	FLASH_NPCX_EX_OP_SPI_UID,
+ };
+ 
+ /* Structures used by FLASH_NPCX_EX_OP_EXEC_UMA */
+diff --git a/include/zephyr/drivers/sensor/mft_tach_npcx.h b/include/zephyr/drivers/sensor/mft_tach_npcx.h
+new file mode 100644
+index 000000000..b8a83845c
+--- /dev/null
++++ b/include/zephyr/drivers/sensor/mft_tach_npcx.h
+@@ -0,0 +1,18 @@
++/*
++ * Copyright (c) 2022 Intel Corporation
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++ #ifndef _MFT_TACH_NPCX_H_
++ #define _MFT_TACH_NPCX_H_
++ 
++ #include <zephyr/drivers/sensor.h>
++ 
++ /** Additional channels supported by the NPCX Tach */
++ enum npcx_tach_sensor_channel {
++     NPCX_TACH_CHAN_RPM_A = SENSOR_CHAN_PRIV_START,
++     NPCX_TACH_CHAN_RPM_B,
++ };
++ 
++ #endif /* _MFT_TACH_NPCX_H_ */
+\ No newline at end of file
+diff --git a/include/zephyr/dt-bindings/sensor/npcx_tach.h b/include/zephyr/dt-bindings/sensor/npcx_tach.h
+index 226737632..a51b19dcc 100644
+--- a/include/zephyr/dt-bindings/sensor/npcx_tach.h
++++ b/include/zephyr/dt-bindings/sensor/npcx_tach.h
+@@ -10,7 +10,9 @@
+ #define NPCX_TACH_PORT_A     0
+ #define NPCX_TACH_PORT_B     1
+ 
++#define NPCX_TACH_PORT_MAX   2
++
+ /* NPCX tachometer specific operate frequency */
+ #define NPCX_TACH_FREQ_LFCLK 32768
+ 
+-#endif /* ZEPHYR_INCLUDE_DT_BINDINGS_SENSOR_NPCX_TACH_H_ */
++#endif /* ZEPHYR_INCLUDE_DT_BINDINGS_SENSOR_NPCX_TACH_H_ */
+\ No newline at end of file
+diff --git a/soc/arm/nuvoton_npcx/common/pinctrl_soc.h b/soc/arm/nuvoton_npcx/common/pinctrl_soc.h
+index 8f03faa82..97d178262 100644
+--- a/soc/arm/nuvoton_npcx/common/pinctrl_soc.h
++++ b/soc/arm/nuvoton_npcx/common/pinctrl_soc.h
+@@ -277,4 +277,5 @@ typedef struct npcx_pinctrl pinctrl_soc_pin_t;
+ #define Z_PINCTRL_STATE_PINS_INIT(node_id, prop)	\
+ 	{DT_FOREACH_PROP_ELEM(node_id, prop, Z_PINCTRL_STATE_PIN_INIT)}
+ 
++void npcx_lreset_pltrst_mode_sel(bool enable);
+ #endif /* _NUVOTON_PINCTRL_SOC_H_ */
+diff --git a/soc/arm/nuvoton_npcx/common/reg/reg_def.h b/soc/arm/nuvoton_npcx/common/reg/reg_def.h
+index 1b3b2eda6..d50f98b65 100644
+--- a/soc/arm/nuvoton_npcx/common/reg/reg_def.h
++++ b/soc/arm/nuvoton_npcx/common/reg/reg_def.h
+@@ -210,16 +210,20 @@ struct scfg_reg {
+ 	volatile uint8_t STRPST;
+ 	/* 0x002: Reset Control and Status */
+ 	volatile uint8_t RSTCTL;
+-	volatile uint8_t reserved1[3];
++	volatile uint8_t reserved1;
++	/* 0x004: Device Control 3*/
++	volatile uint8_t DEV_CTL3;
++
++	volatile uint8_t reserved2;
+ 	/* 0x006: Device Control 4 */
+ 	volatile uint8_t DEV_CTL4;
+-	volatile uint8_t reserved2[9];
++	volatile uint8_t reserved3[9];
+ 	/* 0x010 - 1F: Device Alternate Function 0 - F */
+ 	volatile uint8_t DEVALT0[16];
+-	volatile uint8_t reserved3[6];
++	volatile uint8_t reserved4[6];
+ 	/* 0x026: Low-Voltage GPIO Pins Control 5 */
+ 	volatile uint8_t LV_GPIO_CTL5[1];
+-	volatile uint8_t reserved4;
++	volatile uint8_t reserved5;
+ 	/* 0x028: Pull-Up/Pull-Down Enable 0 */
+ 	volatile uint8_t PUPD_EN0;
+ 	/* 0x029: Pull-Up/Pull-Down Enable 1 */
+@@ -265,6 +269,15 @@ struct scfg_reg {
+ #define NPCX_DEVPU0_I2C2_0_PUE                4
+ #define NPCX_DEVPU0_I2C3_0_PUE                6
+ #define NPCX_DEVPU1_F_SPI_PUD_EN              7
++#define NPCX_DEV_CTL3_SIO_CLK_SEL             FIELD(6, 2)
++
++/* Supported VOSCCLK frequency for SIO_CLK_SEL FILED in DEV_CTL3 register. */
++enum npcx_voscclk_type {
++    NPCX_VOSCCLK_96MHz,
++    NPCX_VOSCCLK_100MHz,
++    NPCX_VOSCCLK_120MHz,
++    NPCX_VOSCCLK_90MHz,
++};
+ 
+ /* Supported host interface type for HIF_TYP_SEL FILED in DEVCNT register. */
+ enum npcx_hif_type {
+@@ -636,7 +649,12 @@ struct espi_reg {
+ 	volatile uint32_t reserved10[14];
+ 	/* 0x4FC: Flash Channel Control used in 'direct' mode */
+ 	volatile uint32_t FLASHCTL_DIRECT;
+-	volatile uint32_t reserved12[64];
++	/* 0x500 - 543: Peripheral Bus Master Receive Buffer 0-17 */
++	volatile uint32_t PBMRXBUF[18];
++	volatile uint32_t reserved11[14];
++	/* 0x580 - 547: Peripheral Bus Master Transmit Buffer 0-18 */
++	volatile uint32_t PBMTXBUF[19];
++	volatile uint32_t reserved12[13];
+ 	/* 0x600 - 63F */
+ 	volatile uint32_t FLASH_PRTR_BADDR[16];
+ 	/* 0x640 - 67F */
+@@ -737,10 +755,12 @@ struct espi_reg {
+ #define NPCX_VWSWIRQ_EDGE_IRQ            28
+ #define NPCX_VWEVMS_WIRE                 FIELD(0, 4)
+ #define NPCX_VWEVMS_VALID                FIELD(4, 4)
++#define NPCX_VWEVMS_INDEX                FIELD(8, 7)
+ #define NPCX_VWEVMS_IE                   18
+ #define NPCX_VWEVMS_WE                   20
+ #define NPCX_VWEVSM_WIRE                 FIELD(0, 4)
+ #define NPCX_VWEVSM_VALID                FIELD(4, 4)
++#define NPCX_VWEVSM_INDEX                FIELD(8, 7)
+ #define NPCX_VWEVSM_BIT_VALID(n)         (4+n)
+ #define NPCX_VWEVSM_HW_WIRE              FIELD(24, 4)
+ #define NPCX_VWGPSM_INDEX_EN             15
+@@ -774,10 +794,19 @@ struct espi_reg {
+ #define NPCX_FLASH_PRTR_HADDR            FIELD(12, 15)
+ #define NPCX_FLASH_TAG_OVR_RPR           FIELD(16, 16)
+ #define NPCX_FLASH_TAG_OVR_WPR           FIELD(0, 16)
++#define NPCX_FLASH_RPMC_CFG1_CNTR        FIELD(0, 4)
++#define NPCX_FLASH_RPMC_CFG1_OP1         FIELD(4, 8)
++#define NPCX_FLASH_RPMC_CFG1_TRGRPMCSUP  FIELD(26, 6)
+ #define NPCX_ONLY_ESPI_REG1_UNLOCK_REG2         0x55
+ #define NPCX_ONLY_ESPI_REG1_LOCK_REG2           0
+ #define NPCX_ONLY_ESPI_REG2_TRANS_END_CONFIG    4
+-
++#define NPCX_PERCFG_BMMEN                 2
++#define NPCX_PERCTL_PER_PC_FREE           0
++#define NPCX_PERCTL_BM_NP_AVAIL           19
++#define NPCX_PERCTL_BM_PC_AVAIL           20
++#define NPCX_PERCTL_BM_MSG_AVAIL          21
++#define NPCX_PERCTL_MEM64_ACCESS          14
++#define NPCX_PERCTL_BMPKT_LEN           FIELD(24, 8)
+ /*
+  * Mobile System Wake-Up Control (MSWC) device registers
+  */
+@@ -1112,6 +1141,7 @@ struct c2h_reg {
+ #define NPCX_LKSIOHA_LKSPHA              2
+ #define NPCX_LKSIOHA_LKHIKBD             11
+ #define NPCX_CRSMAE_CFGAE                0
++#define NPCX_CRSMAE_SPAE                 2
+ #define NPCX_CRSMAE_HIKBDAE              11
+ #define NPCX_SIOLV_SPLV                  2
+ #define NPCX_SIBCTRL_CSAE                0
+diff --git a/soc/arm/nuvoton_npcx/common/scfg.c b/soc/arm/nuvoton_npcx/common/scfg.c
+index 05625aae3..a447b6248 100644
+--- a/soc/arm/nuvoton_npcx/common/scfg.c
++++ b/soc/arm/nuvoton_npcx/common/scfg.c
+@@ -155,4 +155,29 @@ static int npcx_scfg_init(const struct device *dev)
+ 	return 0;
+ }
+ 
++void npcx_config_sio_clk_sel(void)
++{
++	struct scfg_reg *inst_scfg = HAL_SFCG_INST();
++
++	if ((OFMCLK == MHZ(96)) || (OFMCLK == MHZ(48))) {
++		SET_FIELD(inst_scfg->DEV_CTL3, NPCX_DEV_CTL3_SIO_CLK_SEL, 0);
++	} else if ((OFMCLK == MHZ(100)) || (OFMCLK == MHZ(50))) {
++		SET_FIELD(inst_scfg->DEV_CTL3, NPCX_DEV_CTL3_SIO_CLK_SEL, 1);
++	} else if ((OFMCLK == MHZ(120)) || (OFMCLK == MHZ(60))) {
++		SET_FIELD(inst_scfg->DEV_CTL3, NPCX_DEV_CTL3_SIO_CLK_SEL, 2);
++	} else if ((OFMCLK == MHZ(90)) || (OFMCLK == MHZ(45))) {
++		SET_FIELD(inst_scfg->DEV_CTL3, NPCX_DEV_CTL3_SIO_CLK_SEL, 3);
++	}
++}
++
++void npcx_lreset_pltrst_mode_sel(bool enable)
++{
++	struct scfg_reg *inst_scfg = HAL_SFCG_INST();
++	if (enable) {
++		inst_scfg->RSTCTL &= ~BIT(NPCX_RSTCTL_LRESET_PLTRST_MODE);
++	} else {
++		inst_scfg->RSTCTL |= BIT(NPCX_RSTCTL_LRESET_PLTRST_MODE);
++	}
++}
++
+ SYS_INIT(npcx_scfg_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+diff --git a/soc/arm/nuvoton_npcx/common/soc_espi_taf.h b/soc/arm/nuvoton_npcx/common/soc_espi_taf.h
+index 90b98cbb6..2796e9c2b 100644
+--- a/soc/arm/nuvoton_npcx/common/soc_espi_taf.h
++++ b/soc/arm/nuvoton_npcx/common/soc_espi_taf.h
+@@ -55,6 +55,11 @@ extern "C" {
+ /* Unsuccessful Only Completion Without Data */
+ #define CYC_UNSCS_CMP_WITHOUT_DATA_ONLY            0x0E
+ 
++/* ESPI TAF RPMC OP1 instruction */
++#define ESPI_TAF_RPMC_OP1_CMD                      0x9B
++/* ESPI TAF RPMC OP2 instruction */
++#define ESPI_TAF_RPMC_OP2_CMD                      0x96
++
+ /* Timeout for checking transmit buffer available and no completion was sent */
+ #define NPCX_FLASH_CHK_TIMEOUT                     10000
+ 
+@@ -144,7 +149,9 @@ struct npcx_taf_head {
+ 	uint8_t llen;
+ };
+ 
++#if defined(CONFIG_ESPI_FLASH_CHANNEL) && defined(CONFIG_ESPI_SAF)
+ int npcx_init_taf(const struct device *dev, sys_slist_t *callbacks);
++#endif
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/soc/arm/nuvoton_npcx/common/soc_ncl.h b/soc/arm/nuvoton_npcx/common/soc_ncl.h
+new file mode 100644
+index 000000000..e9426d32b
+--- /dev/null
++++ b/soc/arm/nuvoton_npcx/common/soc_ncl.h
+@@ -0,0 +1,56 @@
++/*
++ * Copyright (c) 2024 Nuvoton Technology Corporation.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++ #ifndef _NUVOTON_NPCX_SOC_NCL_H_
++ #define _NUVOTON_NPCX_SOC_NCL_H_
++ 
++ #ifdef __cplusplus
++ extern "C" {
++ #endif
++ 
++ /* The status code returns from Nuvoton Cryptographic Library ROM APIs */
++ enum ncl_status {
++     NCL_STATUS_OK = 0xA5A5,
++     NCL_STATUS_FAIL = 0x5A5A,
++     NCL_STATUS_INVALID_PARAM = 0x02,
++     NCL_STATUS_PARAM_NOT_SUPPORTED = 0x03,
++     NCL_STATUS_SYSTEM_BUSY = 0x04,
++     NCL_STATUS_AUTHENTICATION_FAIL = 0x05,
++     NCL_STATUS_NO_RESPONSE = 0x06,
++     NCL_STATUS_HARDWARE_ERROR = 0x07
++ };
++ 
++ enum ncl_sha_type {
++     NCL_SHA_TYPE_2_256 = 0,
++     NCL_SHA_TYPE_2_384 = 1,
++     NCL_SHA_TYPE_2_512 = 2,
++     NCL_SHA_TYPE_NUM
++ };
++ 
++ /*
++  * This enum defines the security strengths supported by this DRBG mechanism.
++  * The internally generated entropy and nonce sizes are derived from these
++  * values. The supported actual sizes:
++  *       Security strength (bits)    112 128 192 256 128_Test 256_Test
++  *
++  *       Entropy size (Bytes)        32  48  64  96  111      128
++  *       Nonce size (Bytes)          16  16  24  32  16       0
++  */
++ enum ncl_drbg_security_strength {
++     NCL_DRBG_SECURITY_STRENGTH_112B = 0,
++     NCL_DRBG_SECURITY_STRENGTH_128B,
++     NCL_DRBG_SECURITY_STRENGTH_192B,
++     NCL_DRBG_SECURITY_STRENGTH_256B,
++     NCL_DRBG_SECURITY_STRENGTH_128B_TEST,
++     NCL_DRBG_SECURITY_STRENGTH_256B_TEST,
++     NCL_DRBG_MAX_SECURITY_STRENGTH
++ };
++ 
++ #ifdef __cplusplus
++ }
++ #endif
++ 
++ #endif /* _NUVOTON_NPCX_SOC_NCL_H_ */
+\ No newline at end of file
+diff --git a/soc/arm/nuvoton_npcx/common/soc_pins.h b/soc/arm/nuvoton_npcx/common/soc_pins.h
+index 93b5d601c..3baef59d6 100644
+--- a/soc/arm/nuvoton_npcx/common/soc_pins.h
++++ b/soc/arm/nuvoton_npcx/common/soc_pins.h
+@@ -85,6 +85,10 @@ bool npcx_lvol_get_detect_level(int lvol_ctrl, int lvol_bit);
+  */
+ void npcx_host_interface_sel(enum npcx_hif_type hif_type);
+ 
++/**
++ * @brief Select the sio clk
++ */
++void npcx_config_sio_clk_sel(void);
+ #ifdef __cplusplus
+ }
+ #endif
+-- 
+2.43.0
+
+
+From 23ed21c724693b5a89b29d38a31f2813abd43bf8 Mon Sep 17 00:00:00 2001
+From: River Zheng <River.Zheng@amd.com>
+Date: Tue, 2 Dec 2025 11:41:19 +0800
+Subject: [PATCH 2/2] FWDEV-145052: [MDS1][EC] Request a test EC FW to trigger
+ upstream peripheral message
+
+---
+ drivers/espi/espi_npcx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/espi/espi_npcx.c b/drivers/espi/espi_npcx.c
+index 0039ee226..5db02adf6 100644
+--- a/drivers/espi/espi_npcx.c
++++ b/drivers/espi/espi_npcx.c
+@@ -347,6 +347,7 @@ static void espi_bus_cfg_update_isr(const struct device *dev)
+ 	if (!reported && (IS_BIT_SET(inst->ESPICFG, NPCX_ESPI_CH_PC) && IS_BIT_SET(inst->ESPICFG, NPCX_ESPI_HOST_CH_EN(NPCX_ESPI_CH_PC)))) {
+ 		/* If bus master is enabled */
+ 		if (IS_BIT_SET(inst->PERCFG, NPCX_PERCFG_BMMEN)) {
++			evt.evt_details = BIT(NPCX_ESPI_CH_PC);
+ 			evt.evt_data = ESPI_PC_EVT_BUS_MASTER_ENABLE;
+ 			espi_send_callbacks(&data->callbacks, dev, evt);
+ 		}
+-- 
+2.43.0
+

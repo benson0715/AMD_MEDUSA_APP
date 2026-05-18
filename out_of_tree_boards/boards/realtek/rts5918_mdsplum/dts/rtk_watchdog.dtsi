@@ -1,0 +1,22 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Watchdog: poc_watchdog_devs hub + &wdog enable.
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * Phase 6.2 already wired this to the real RTS5918 wdog node.
+ */
+
+/ {
+	poc_watchdog_devs: poc-watchdog-devs {
+		compatible = "vnd,poc-watchdog-devs";
+		poc_watchdog_devs_0: poc-watchdog-devs-0 {
+			enum-name = "WATCHDOG0";
+			watchdog-dev = <&wdog>;
+		};
+	};
+};
+
+&wdog { status = "okay"; };

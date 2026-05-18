@@ -1,0 +1,15 @@
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+if BOARD_npcx4mnx_boot
+
+config BOARD
+	default "npcx4mnx_boot"
+
+endif # BOARD_npcx4mnx_boot
+
+config SYS_CLOCK_TICKS_PER_SEC
+	default 1000
+
+config INPUT
+	bool "Input configuration option"
+	default y if KSCAN

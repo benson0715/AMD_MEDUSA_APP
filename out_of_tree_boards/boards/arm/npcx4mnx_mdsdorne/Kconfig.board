@@ -1,0 +1,9 @@
+#;*****************************************************************************
+#;
+#; Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+#;
+#;******************************************************************************
+
+config BOARD_NPCX4MNX_MDSDORNE
+	bool "AMD NPCX4MNX Medusa FP10 DORNE CRB"
+	depends on SOC_NPCX4M8F

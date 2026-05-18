@@ -1,0 +1,127 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * Nor flashes (3 enums) + SAF flash topology (CS27 schematic page 25).
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ *
+ * Phase 5.4 — Bison wiring uses BOTH SPIC controllers:
+ *
+ *   SPIC0 (flash_controller)  -- CS0: BIOS_ROM (FLASH_SHARED)   W25Q512
+ *                             \- CS1: EC_ROM   (FLASH_BACKUP)   W25Q256
+ *   SPIC1 (flash_controller1) -- CS0: PRIVATE  (FLASH_PRIVATE)
+ *
+ * HwFlashInterface.c dispatches on `enum flash_dev` to (dev, cs) and
+ * uses FLASH_RTS5918_EX_OP_SELECT_CS to tell the driver which CS line
+ * to drive on SER before each flash_read/write/erase call. Each chip
+ * has its own offset space starting at 0 — no more linear addressing
+ * hack across CS0/CS1 boundary.
+ *
+ *
+ * SAF flash topology (CS27 schematic page 25):
+ *
+ *   SAF BIOS ROM   64 MB  W25Q512JVEIN (close-to-EC)  CS = SPIC01_CS0
+ *   SAF EC ROM     32 MB  W25Q256JVEIN (close-to-EC)  CS = SPIC01_CS1
+ *
+ * eSPI SAF RX path (espi_realtek_rts5918.c) uses this topology to
+ * route host-side flash traffic; the hub below is the firmware's own
+ * access path.
+ */
+
+/*
+ * SPIC0 pinctrl for the external SAF BIOS+EC chips.
+ *
+ * Schematic CS27 page 25 (CS27_BISON_PRE_EVT) wires both W25Q chips to
+ * SPIC01 through nets:
+ *
+ *   EC_SHD_CS0 = GPIO122  (BIOS_ROM / FLASH_SHARED)
+ *   EC_SHD_CS1 = GPIO121  (EC_ROM   / FLASH_BACKUP)
+ *   EC_SHD_CLK = GPIO125
+ *   EC_SHD_IO0 = GPIO123
+ *   EC_SHD_IO1 = GPIO124
+ *   EC_SHD_IO2 = GPIO119
+ *   EC_SHD_IO3 = GPIO120
+ *
+ * The upstream pinctrl labels `spic01_cs0{a..h}_gpio###` are list-order
+ * enumerations, not CS-index indicators. Each GPIO only has ONE SPIC01
+ * alt-function per rts5918_pin_function (GPIO121 → SPIC01_CS1 only,
+ * GPIO122 → SPIC01_CS0 only), so `spic01_cs0d_gpio121` with FUNC1
+ * routes GPIO121 to SPIC01_CS1, and `spic01_cs0e_gpio122` with FUNC1
+ * routes GPIO122 to SPIC01_CS0 — matching our wiring.
+ *
+ * flash_controller1 (SPIC1) drives the internal 1 MB eflash
+ * (FLASH_PRIVATE). No external pins, so no pinctrl-0; the driver is
+ * patched to tolerate an absent default state for that instance.
+ */
+&flash_controller {
+	pinctrl-0 = <
+		&spic01_cs0e_gpio122                                    /* CS0 → SPI_CS0 */
+		&spic01_cs0d_intr_gpio121                               /* CS1 → GPIO */
+		&spic01_clk0c_gpio125                                   /* CLK */
+		&spic01_io0b_gpio123 &spic01_io0b_gpio123_pin_sel       /* IO0 */
+		&spic01_io1b_gpio124 &spic01_io1b_gpio124_pin_sel       /* IO1 */
+		&spic01_io2b_gpio119 &spic01_io2b_gpio119_pin_sel       /* IO2 */
+		&spic01_io3b_gpio120 &spic01_io3b_gpio120_pin_sel       /* IO3 */
+	>;
+	/*
+	 * CS0/CS1 pinctrl states are mutually exclusive on the mux. Each
+	 * state puts its own pin in SPIC function (FUNC1) AND demotes the
+	 * other to GPIO (FUNC0) so we never have both gpio121 and gpio122
+	 * driving SPI_CS simultaneously — which would happen if the state
+	 * only touched its own pin and left the last applied SPIC mux in
+	 * place.
+	 */
+	pinctrl-1 = <
+		&spic01_cs0e_gpio122                                /* CS0 → SPI_CS0 */
+		&spic01_cs0d_intr_gpio121                           /* CS1 → GPIO */
+	>;
+	pinctrl-2 = <
+		&spic01_cs0d_gpio121                                /* CS1 → SPI_CS1 */
+		&spic01_cs0e_intr_gpio122                           /* CS0 → GPIO */
+	>;
+	pinctrl-names = "default", "cs0", "cs1";
+};
+
+/ {
+	poc_nor_flashes: poc-nor-flashes {
+		compatible = "vnd,poc-nor-flashes";
+		poc_nor_flashes_0: poc-nor-flashes-0 {
+			enum-name = "FLASH_SHARED";
+			nor-flash = <&flash_controller>;
+			cs = <0>;
+			size = <(64 * 1024 * 1024)>;
+		};
+		poc_nor_flashes_1: poc-nor-flashes-1 {
+			enum-name = "FLASH_BACKUP";
+			nor-flash = <&flash_controller>;
+			cs = <1>;
+			size = <(32 * 1024 * 1024)>;
+			saf-default;
+		};
+		poc_nor_flashes_2: poc-nor-flashes-2 {
+			enum-name = "FLASH_PRIVATE";
+			nor-flash = <&flash_controller1>;
+			cs = <0>;
+		};
+	};
+
+	bison_saf_flash: bison-saf-flash {
+		compatible = "vnd,bison-saf-flash";
+		status = "okay";
+
+		bios_rom: bios-rom {
+			label = "BIOS_ROM";
+			size-mb = <64>;
+			chip = "W25Q512JVEIN";
+			cs = <0>;
+		};
+
+		ec_rom: ec-rom {
+			label = "EC_ROM";
+			size-mb = <32>;
+			chip = "W25Q256JVEIN";
+			cs = <1>;
+		};
+	};
+};

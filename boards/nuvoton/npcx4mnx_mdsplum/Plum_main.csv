@@ -1,0 +1,156 @@
+,,,,,,,,,,,,,,,,,,,##,"Auto
+Gen
+FLAG",NET NAME,CATEGORY,POR SETTINGS,,,,,RUNTIME STATUS,,,,ACPI SPACE,,INT HANDLER,MODULAR CARD INFO,,,,COMMENTS
+,,,FUNCTIONS,,,,,,(if not GPIO),(if not IN),PAD TYPES,,,,,,GIRQ (for GPIO),,##,,,,"SELECTED
+FUN","INTERNAL
+PAD",DIR/VAL,INT TYPE,"PIN
+POWER",,,,,,,,SLOT,IDX,"PIN
+NAME",,
+PIN,PIN NAME,PWR RAIL,FUN1,FUN2,FUN3,FUN4,FUN5,FUN6,DEFAULT FUN,DDEFAULT STATE,TYPE1,TYPE2,TYPE3,TYPE4,TYPE5,TYPE6,GROUP,BIT,##,,,,,,,,,G3,S5/S4,S3,S0,GROUP,BIT,,,,,,
+L5,32KXIN/32KCLKIN,,32KXIN,32KCLKIN,GPIOE7,,,,32KXIN,,PIO,,,,,,GIRQ11,11,##,,,chip,,,,,,,,,,,,,,,,,
+M5,32KXOUT,,32KXOUT,,,,,,32KXOUT,,PIO,,,,,,GIRQ11,10,##,,,chip,,,,,,,,,,,,,,,,,
+D1,AVCC,,AVCC,,,,,,AVCC,,PIO,,,,,,GIRQ9,20,##,,,chip,,,,,,,,,,,,,,,,,
+E1,AVSS,,AVSS,,,,,,AVSS,,PWR,,,,,,,,##,,,chip,,,,,,,,,,,,,,,,,
+A6,CAP,,CAP,,,,,,CAP,,PIO,,,,,,GIRQ8,18,##,,,chip,,,,,,,,,,,,,,,,,
+G11,F_CS0#/FLM_CSIO#/GPIOA0,VSPI,F_CS0#,FLM_CSIO#,GPIOA0,,,,F_CS0#,,PIO,,,,,,GIRQ9,0,##,,SPI_EC_ROM_CS0#,SYS_BUS,FLM,,,,,,,,,,,,J3,7,,,"Quad SPI Controller Chip Select, Shared SPI port. 172x: Boot Source select strap, must use as RSMRST# for MAFS."
+H11,F_DIO0/FLM_DI0/GPIOA4/TB1,VSPI,F_DIO0,FLM_DI0,GPIOA4,TB1,,,F_DIO0,,PIO,,,,,,GIRQ11,15,##,,SPI_EC_ROM_D0,SYS_BUS,FLM,,,,,,,,,,,,J1,24,,,"Quad SPI Controller Data 0, Shared SPI port"
+G12,F_DIO1/FLM_DI1/GPIO96,VSPI,F_DIO1,FLM_DI1,GPIO96,,,,F_DIO1,,PWR,,,,,,,,##,,SPI_EC_ROM_D1,SYS_BUS,FLM,,,,,,,,,,,,J1,20,,,"Quad SPI Controller Data 1, Shared SPI port"
+F12,F_SCLK/FLM_SCLK/GPIOA2,VSPI,F_SCLK,FLM_SCLK,GPIOA2,,,,F_SCLK,,PWR,,,,,,,,##,,SPI_EC_ROM_CLK,SYS_BUS,FLM,,,,,,,,,,,,J1,18,,,"Quad SPI Controller Clock, Shared SPI port"
+E6,GPIO01/PSL_IN3#,VCIO,GPIO01,PSL_IN3#,,,,,,,PIO,,,,,,GIRQ9,18,##,,GPIO01,UNUSED,GPIO,,,,,,,,,,,,,,,,
+F7,GPIO02/PSL_IN4#,VCIO,GPIO02,PSL_IN4#,,,,,,,PIO,,,,,,GIRQ10,7,##,,GPIO02,UNUSED,GPIO,,,,,,,,,,,,,,,,
+E4,GPIO32/TRIS#,VCC1,GPIO32,TRIS#,,,,,,,PIO,,,,,,GIRQ10,5,##,,EC_SCROLL_LED#,Keyboard,GPIO,,OD_1,,,,,,,,,,J5,29,,,"To light SCROLL LED, low active"
+D5,GPIO33/I2C5_SCL0/CTS#,VCC1,GPIO33,I2C5_SCL0,CTS#,,,,,,PIO,,,,,,GIRQ10,16,##,,SYS_RST#,PWRSEQ,GPIO,,OD_1,,,,,,,,,,J4,7,,,"EC to cold reset APU, low active"
+B2,GPIO34/PS2_DAT2/AD6,VCC1,GPIO34,PS2_DAT2,AD6,,,,,,PIO,,,,,,GIRQ10,9,##,,EC_EVAL_BOMACO_EN,GPIO,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO2,6,,J6,23,GPIO33_11,,"To enable a mode that GPU Off, local memory maintained in self-refresh, high active"
+K2,GPIO35/CR_SOUT4/TEST#,VCC1,GPIO35,CR_SOUT4,TEST#,,,,,,PIO,,,,,,GIRQ12,18,##,,EC_NUM_LED#,Keyboard,GPIO,,OD_1,,,,,,,,,,J5,27,,,"To light NUM LED, low active"
+D4,GPIO36/I2C5_SDA0/RTS#,VCC1,GPIO36,I2C5_SDA0,RTS#,,,,,,PIO,,,,,,GIRQ10,15,##,,EP_EC_INT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,,,IO_EXP0_INT_Handler,J4,13,GPIO33_12,,To notify EC expander0 has an interrupt triggered. low active
+C1,GPIO37/PS2_CLK2/AD5,VCC1,GPIO37,GPIO37,AD5,,,,,,PIO,,,,,,GIRQ11,7,##,,EC_EVAL_SLT_PWREN,GPIO,GPIO,,OD_0,,PWR_OFF,000008h/00000Ch,,,,GIO2,5,,J6,19,GPIO33_9,,"To enable Eval slot's power rail, high active; Alias as M2_SSD2_PWREN on Birman SLT"
+E5,GPIO40/TA1,VCC1,GPIO40,TA1,,,,,,,PIO,,,,,,GIRQ10,6,##,,EC_TACH0,THERMAL,TA1,,,,PWR_OFF,,,,,,,,J4,9,,,"Notify EC, FAN's tachometer, low active"
+C2,GPIO41/AD4,AVCC,GPIO41,AD4,,,,,,,PIO,,,,,,GIRQ8,15,##,,EC_EVAL_CARD_PWREN,GPIO,GPIO,,OD_0,,PWR_OFF,000008h/00000Ch,,,,GIO1,1,,J6,17,GIO33_8,,"To enable Eval card's power rail, high active"
+D3,GPIO42/AD3/RI#,AVCC,GPIO42,AD3,RI#,,,,,,PIO,,,,,,GIRQ8,29,##,,AC_PRSNT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,GIO0,0,AC_SOURCE_PRSN_Handler,J6,13,GPIO33_6,,"To notify EC that AC power source is present, low active"
+E2,GPIO43/AD2,AVCC,GPIO43,AD2,,,,,,,I,,,,,,GIRQ8,19,##,,EC_SD_AUX_RST#,GPIO,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,3,,J6,11,GPIO33_5,,"SD AUX Reset, low active"
+E3,GPIO44/AD1,AVCC,GPIO44,AD1,,,,,,,PIO,,,,,,GIRQ8,4,##,,EC_EVAL_AUX_RST#,GPIO,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,0,,J6,9,GIO33_4,,"EVAL AUX Reset, low active"
+F2,GPIO45/AD0,AVCC,GPIO45,AD0,,,,,,,PIO,,,,,,GIRQ8,2,##,,EC_AC_PD#,GPIO,GPIO,,O_0,,,,,,,,,,,,,, 
+G10,GPIO50/I3C2_SDA,VHIF,GPIO50,I3C2_SDA,,,,,,,PWR,,,,,,,,##,,SPI_APU_EC_ROM_GNT,SYS_BUS,GPIO,,,BOTH_EDGE,PWR_OFF,,,,,,,SPI_ROM_GNT_Handler,J1,1,,,SPI bus grant from APU to EC
+M2,GPIO56/CLKRUN#/I3C2_SCL,VHIF,GPIO56,CLKRUN#,I3C2_SCL,,,,,,PIO,,,,,,GIRQ11,14,##,,SPI_EC_APU_ROM_REQ,SYS_BUS,GPIO,PD,,,,,,,,,,,J1,3,,,EC to notify APU that EC need to use ROM.
+G6,GPIO60/PWM7,VCIO,GPIO60,PWM7,,,,,,,PWR,,,,,,,,##,,EC_DT_SLT_AUX_RST#,GPIO,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,2,,J6,7,GPIO33_3,,"DT AUX Reset, low active"
+K4,GPIO61/PWROFF#,VCIO,GPIO61,PWROFF#,,,,,,,PIO,,,,,,GIRQ11,16,##,,EC_SLP_S5#,PWRSEQ,GPIO,,O_0,,,,,,,,,,J3,19,,,EC to enable/disable system S5 power rails.
+H2,GPIO62/PS2_CLK1/AD16,VCIO,GPIO62,PS2_CLK1,AD16,,,,,,PIO,,,,,,GIRQ10,4,##,,EC_WWAN_AUX_RST#,PWRSEQ,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,4,,J6,3,GPIO33_1,,"WWAN AUX Reset, low active"
+J2,GPIO63/PS2_DAT1/AD17/INTRUDER2#,VCIO,GPIO63,PS2_DAT1,AD17,INTRUDER2#,,,,,PIO,,,,,,GIRQ10,2,##,,EC_WLAN_AUX_RST#,PWRSEQ,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,5,,J6,1,GIO33_0,,"EC will keep S0 PCIe aux reset status during go into or resume from S0i3, this is to save and restore original device status. PCIe global reset will be used for PCIe trainging sequence (parallel mode) control."
+G4,GPIO64/CR_SIN1,VCIO,GPIO64,CR_SIN1,,,,,,In-PU,PIO,,,,,,GIRQ8,24,##,,EC_ESP32_UART1_RXD,DBG,UART,PU,,,,,,,,,,,,,,,
+H4,GPIO65/CR_SOUT1/FLPRG1#,VCIO,GPIO65,CR_SOUT1,FLPRG1#,,,,,,PIO,,,,,,GIRQ11,30,##,,EC_ESP32_UART1_TXD,DBG,UART,PU,,,,,,,,,,,,,,,
+G2,GPIO66,VCIO,GPIO66,,,,,,,,PIO,,,,,,GIRQ8,25,##,,EC_ARM,UNUSED,GPIO,,,,,,,,,,,,,,,,
+J3,GPIO67/PS2_CLK0/AD18,VCIO,GPIO67,PS2_CLK0,AD18,,,,,,PIO,,,,,,GIRQ10,3,##,,EC_TPAD_TYP_GUARD#,GPIO,GPIO,,OD_1,,,,,,,GIO0,3,,J6,25,,,"default high, low active
+palm rejection algorithm on the touchpad. THE I/O lets us know when there is a key activity, in order for us to ?judge? palm activity on the pad FW security is for reprogramming the FW image on the touchpad"
+J4,GPIO70/PS2_DAT0/AD19,VCIO,GPIO70,PS2_DAT0,AD19,,,,,,PWR,,,,,,,,##,,EC_TPAD_KB_BLON#,GPIO,GPIO,,OD_1,,,,,,,GIO1,0,,J6,27,,,"default high, low active"
+G5,GPIO73/TA2,VCC1,GPIO73,TA2,,,,,,,PIO,,,,,,GIRQ26,0,##,,MPM_EVENT#,PWRSEQ,GPIO,,OD_1,,PWR_OFF,000008h/00000Ch,,,,,,,J4,8,GPIO33_20,,"Wireless Manageability Processor interrupt, low active"
+H5,GPIO74/AD23,VCC1,GPIO74,AD23,,,,,,,PIO,,,,,,GIRQ12,3,##,,EC_SLP_S3_S0A3#,PWRSEQ,GPIO,,O_0,,,,,,,,,,J3,17,,,EC to enable/disable system S0 power rails.
+J6,GPIO75/32KHZ_OUT/I2C4_SCL0#/RXD/CR_SIN2,VCC1,GPIO75,32KHZ_OUT,I2C4_SCL0#,RXD,CR_SIN2,,,,PIO,,,,,,GIRQ12,5,##,,EC_UART0_RXD,DBG,UART,PU,,,,,,,,,,,J6,30,,,Default used as UART function RX
+J5,GPIO76/EC_SCI#,VCIO,GPIO76,EC_SCI#,,,,,,,PIO,,,,,,GIRQ12,7,##,,EC_APU_SCI#,ACPI,GPIO,,OD_1,,,,,,,,,,J1,23,,,EC to notify APU a system control interrupt is triggered.
+K5,GPIO80/PWM3,VCC1,GPIO80,PWM3,,,,,,,PIO,,,,,,GIRQ10,10,##,,APU_THERMTRIP#,THERMAL,GPIO,,INPUT,BOTH_EDGE,PWR_OFF,,,,,,,APU_THERMTRIP_Handler,J3,5,,,To notify EC that APU is shutdown
+J9,GPIO86/TXD/CR_SOUT2/FLPRG2#,VCC1,GPIO86,TXD,CR_SOUT2,,,,,,PIO,,,,,,GIRQ9,10,##,,EC_UART0_TXD,DBG,UART,PU,,,,,,,,,,,J6,28,,,Default used as UART function TX
+K7,GPIO87/I2C1_SDA0,VCC1,GPIO87,I2C1_SDA0,,,,,,,PIO,,,,,,GIRQ11,26,##,,EC_I2C1_SDA_3V3_S5,I2C,I2C,,,,,,,,,,,,J6,12,,,EC I2C1 SDA
+K8,GPIO90/I2C1_SCL0,VCC1,GPIO90,I2C1_SCL0,,,,,,,PIO,,,,,,GIRQ8,0,##,,EC_I2C1_SCL_3V3_S5 ,I2C,I2C,,,,,,,,,,,,J6,8,,,EC I2C1 SCL
+K9,GPIO91/I2C2_SDA0,VCC1,GPIO91,I2C2_SDA0,,,,,,,PIO,,,,,,GIRQ10,12,##,,EC_I2C2_SDA_1V8_S5,I2C,I2C,,,,,,,,,,,,J6,18,,,EC I2C2 SDA
+L8,GPIO92/I2C2_SCL0,VCC1,GPIO92,I2C2_SCL0,,,,,,,PIO,,,,,,GIRQ10,0,##,,EC_I2C2_SCL_1V8_S5,I2C,I2C,,,,,,,,,,,,J6,14,,,EC I2C2 SCL
+E11,GPIO93/TA1/F_DIO2/FLM_DI2,VSPI,GPIO93,TA1,F_DIO2,FLM_DI2,,,,,PIO,,,,,,GIRQ10,8,##,,SPI_EC_ROM_D2,SYS_BUS,FLM,,,,,,,,,,,,J1,30,,,"Quad SPI Controller Data 2, Shared SPI port"
+M11,GPIO94,VSPI,GPIO94,,,,,,,,PIO,,,,,,GIRQ9,13,##,,RSMRST#,PWRSEQ,GPIO,,O_0,,,,,,,,,,J4,7,,,"EC to reset FCH, low active."
+L10,GPIO97,VSPI,GPIO97,,,,,,,,PIO,,,,,,GIRQ11,21,##,,APU_PWROK,PWRSEQ,GPIO,,INPUT,BOTH_EDGE,,,,,,,,APU_PWROK_SVID_Handler,J3,3,,,"To notify EC, all system power rails are ready."
+K11,GPIOA5,VSPI,GPIOA5,,,,,,,,PIO,,,,,,GIRQ10,22,##,,EC_PWR_BTN#,PWRSEQ,GPIO,,OD_1,,,,,,,,,,J3,9,,,"To notify APU, power button is pressed."
+F11,GPIOA6/PS2_CLK3/TA2/F_CS1#,VSPI,GPIOA6,PS2_CLK3,TA2,F_CS1#,,,,,PWR,,,,,,,,##,,SPI_EC_ROM_CS1#,SYS_BUS,FLM,,,,,,,,,,,,,,,,"Quad SPI Controller Chip Select, Shared SPI port. 172x: Boot Source select strap, must use as RSMRST# for MAFS."
+J11,GPIOA7/PS2_DAT3/TB2/F_DIO3/FLM_DI3,VSPI,GPIOA7,PS2_DAT3,TB2,F_DIO3,FLM_DI3,,,,PIO,,,,,,GIRQ10,23,##,,SPI_EC_ROM_D3,SYS_BUS,FLM,,,,,,,,,,,,J1,16,,,"Quad SPI Controller Data 3, Shared SPI port"
+L11,GPIOB0,VSPI,GPIOB0,,,,,,,,PIO,,,,,,GIRQ10,11,##,,GPIOB0,UNUSED,GPIO,,,,,,,,,,,,,,,,
+K10,GPIOB2/I2C7_SDA0/DSR#,VCC1,GPIOB2,I2C7_SDA0,DSR#,,,,,,PIO,,,,,,GIRQ9,7,##,,SLP_S5#,PWRSEQ,GPIO,,INPUT,BOTH_EDGE,,,,,,,,SLP_S5_IN_Handler,J3,15,,,EC to enable/disable system S3 power rails.
+J10,GPIOB3/I2C7_SCL0/DCD#,VCC1,GPIOB3,I2C7_SCL0,DCD#,,,,,,PIO,,,,,,GIRQ12,6,##,,APU_EC_ALERT#,THERMAL,GPIO,,INPUT,BOTH_EDGE,,,,,,GIO0,6,APU_ALERT_Handler,J3,2,,,"To nofity EC, APU SB-TSI need service from EC"
+B12,GPIOB4/I2C0_SDA0,VCC1,GPIOB4,I2C0_SDA0,,,,,,,PIO,,,,,,GIRQ26,5,##,,EC_I2C0_SDA_3V3_S0,I2C,I2C,,,,,,,,,,,,J6,6,,,EC I2C0 SDA
+C12,GPIOB5/I2C0_SCL0,VCC1,GPIOB5,I2C_SCL0,,,,,,,PIO,,,,,,GIRQ11,8,##,,EC_I2C0_SCL_3V3_S0,I2C,I2C,,,,,,,,,,,,J6,2,,,EC I2C0 SCL
+L9,GPIOB6/PWM4/GP_SEL#,VCC1,GPIOB6,PWM4,GP_SEL#,,,,,,PIO,,,,,,GIRQ11,25,##,,EC_BLINK#,DBG,GPIO,,OD_1,,,,,,,,,,J6,21,GPIO33_10,,Storage acitve indication
+J7,GPIOB7/PWM5/I2C7_SDA1/S_SBUB,VCC1,GPIOB7,PWM5,I2C7_SDA1,S_SBUB,,,,,PIO,,,,,,GIRQ11,23,##,,SLP_S3_S0A3#,PWRSEQ,GPIO,,INPUT,BOTH_EDGE,,,,,,,,SLP_S3_S0A3_IN_Handler,J3,13,,,"To notify EC, S3 is asserted, low active"
+H8,GPIOC0/PWM6/I2C7_SCL1/S_SBUA,VCC1,GPIOC0,PWM6,I2C7_SCL1,S_SBUA,,,,,PIO,,,,,,GIRQ10,20,##,,TNR_EC_INT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,GIO4,4,TURNER_INT_Handler,J4,2,GPIO33_18,,Interrupt from Turner card to notify EC that slave need service from host
+H9,GPIOC1/I2C6_SDA0/AD22,VCC1,GPIOC1,I2C6_SDA0,AD22,,,,,,PIO,,,,,,GIRQ11,9,##,,EC_APU_PROCHOT#,THERMAL,GPIO,,OD_1,,,,,,,,,,J3,17,,,"EC to notify APU overheating, low active"
+H10,GPIOC2/PWM1/I2C6_SCL0,VCC1,GPIOC2,PWM1,I2C6_SCL0,,,,,,PIO,,,,,,GIRQ11,13,##,,EC_CAP_LED#,Keyboard,GPIO,,OD_0,,,,,,,,,,J5,25,,,"To light CAP LED, low active"
+G9,GPIOC3/PWM0,VCIO,GPIOC3,PWM0,,,,,,,PWR,,,,,,,,##,,EC_PWM0,THERMAL,PWM,,,,PWR_OFF,,,,,,,,J5,5,,,EC to drive FAN PWM signal
+G8,GPIOC4/PWM2,VCC1,GPIOC4,PWM2,,,,,,,PIO,,,,,,GIRQ12,0,##,,EC_SLT_PWRBRK#,GPIO,GPIO,,OD_1,,,,,,,GIO2,0,,J3,18,GPIO33_16,,"To reduce PCIe device's power dissipation, low active"
+H7,GPIOC5/KBRST#,VCIO,GPIOC5,KBRST#,,,,,,,PIO,,,,,,GIRQ12,1,##,,SYSTEM_S5_PG,PWRSEQ,GPIO,,INPUT,BOTH_EDGE,,,,,,GIO0,7,SYSTEM_ALW_PG_Handler,J3,12,,,"To notify EC that system's ALWAYS power rails is ready, high active."
+D10,GPIOC6/SMI#,VCIO,GPIOC6,SMI#,,,,,,,PWR,,,,,,,,##,,EC_EVAL_19V_PWREN,GPIO,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO2,2,,J4,12,GPIO33_22,,"To enable EVAL's 19V power rail, high active"
+F10,GPIOC7/DTR_BOUT/AD11,VCC1,GPIOC7,DTR_BOUT,AD11,,,,,,PWR,,,,,,,,##,,PD1_EC_USBC_INT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,,,USBC2_I2C_INT_Handler,J4,19,GPIO33_15,,"To notify EC, USB PD controller1 need service from EC"
+F9,GPIOD0/I2C3_SDA0,VCC1,GPIOD0,I2C3_SDA0,,,,,,,PWR,,,,,,,,##,,EC_I2C3_SDA_3V3_EC ,I2C,I2C,,,,,,,,,,,,J6,24,,,EC I2C3 SDA
+F8,GPIOD1/I2C3_SCL0,VCC1,GPIOD1,I2C3_SCL0,,,,,,,PWR,,,,,,,,##,,EC_I2C3_SCL_3V3_EC,I2C,I2C,,,,,,,,,,,,J6,20,,,EC I2C3 SCL
+E10,GPIOD3/TB1,VCC1,GPIOD3,TB1,,,,,,,PIO,,,,,,GIRQ12,22,##,,HDR_DOCK_IN#,GPIO,GPIO,,INPUT,,,,,,,GIO4,2,,,,,,"Notify EC,dock is present, low active"
+A9,GPIOD4/CR_SIN3/JTAG_TDO1_SWO1,VCC1,GPIOD4,CR_SIN3,JTAG_TDO1_SWO1,,,,,,PIO,,,,,,GIRQ8,21,##,,EC_JTAG_TDO_SWO,JTAG,,,,,,,,,,,,,,,,,EC JTAG
+A10,GPIOD5/INTRUDER1#/JTAG_TCK1_SWCLK1,VCC1,GPIOD5,INTRUDER1#,JTAG_TCK1_SWCLK1,,,,,,PIO,,,,,,GIRQ26,2,##,,EC_JTAG_TCK_SWCLK,JTAG,,,,,,,,,,,,,,,,,EC JTAG
+H3,GPIOD6/CR_SOUT3/FLM_CSI#,VCC1,GPIOD6,CR_SOUT3,FLM_CSI#,,,,,,PIO,,,,,,GIRQ11,28,##,,EVAL_PRSNT#_EC,GPIO,GPIO,,INPUT,,,,,,,GIO0,2,,J4,4,GPIO33_19,,To notify EC the type of the card inserted in PCIe x8/16 slot
+F4,GPIOE0/AD10,VCC1,GPIOE0,AD10,,,,,,,PIO,,,,,,GIRQ9,5,##,,CHG_EC_PROCHOT#,BAT_CHG,GPIO,,,BOTH_EDGE,,,,,,GIO0,5,CHG_PROCHOT_Handler,J4,20,GPIO33_25,,"Notify EC that charger is overheating, low active"
+F3,GPIOE1/AD7,AVCC,GPIOE1,AD7,,,,,,,PIO,,,,,,GIRQ8,8,##,,EC_ADC_RSVD,GPIO,,,,,PWR_OFF,,,,,,,,J3,16,,,Reserved for ADC
+A11,GPIOE2/JTAG_TDI1,VCC1,GPIOE2,JTAG_TDI1,,,,,,,PIO,,,,,,GIRQ26,4,##,,EC_JTAG_TDI,JTAG,,,,,,,,,,,,,,,,,EC JTAG
+L7,GPIOE3/I2C6_SDA1/I3C1_SDA,VCC1,GPIOE3,I2C6_SDA1,I3C1_SDA,,,,,,PIO,,,,,,GIRQ11,12,##,,EC_S5_PWREN,PWRSEQ,GPIO,,O_0,,,,,,,,,,J4,1,,,"To enable system's ALWAYS power rails, high active"
+L6,GPIOE4/I2C6_SCL1/I3C1_SCL,VCC1,GPIOE4,I2C6_SCL1,I3C1_SCL,,,,,,PIO,,,,,,GIRQ11,2,##,,EC_1V8_S5_EN,PWRSEQ,GPIO,,O_1,,,,,,,,,,J4,3,,,"To enable system's +1.8V_ALW power rail, high active"
+A12,GPIOE5/JTAG_TMS1_SWIO1,VCC1,GPIOE5,JTAG_TMS1_SWIO1,,,,,,,PIO,,,,,,GIRQ8,12,##,,EC_JTAG_TMS_SWIO,JTAG,,,,,,,,,,,,,,,,,EC JTAG
+D2,GPIOF0/AD9,AVCC,GPIOF0,AD9,,,,,,,PIO,,,,,,GIRQ8,11,##,,PD_PRSNT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,GIO0,4,PD_SOURCE_PRSNT_Handler,J6,15,GPIO33_7,,"To notify EC that PD power source is present, low active"
+G3,GPIOF1/AD8,AVCC,GPIOF1,AD8,,,,,,,I,,,,,,,,##,,EC_LOM_AUX_RST#,PWRSEQ,GPIO,,O_0,,PWR_OFF,000008h/00000Ch,,,,GIO3,1,,J6,5,GPIO33_2,,"LOM AUX Reset, low active"
+F6,GPIOF2/I2C4_SDA1,VCIO,GPIOF2,I2C4_SDA1,,,,,,,PIO,,,,,,GIRQ9,17,##,,EC_UDC_UART_INT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,,,UART0_INTn_EC_UDC_Handler,J4,18,GPIO33_24,,UART0 interrupt from EC to UDC
+F5,GPIOF3/I2C4_SCL1,VCIO,GPIOF3,I2C4_SCL1,,,,,,,PIO,,,,,,GIRQ9,4,##,,PD0_EC_USBC_INT#,GPIO,GPIO,,,BOTH_EDGE,,,,,,,,USBC1_I2C_INT_Handler,J4,17,GPIO33_14,,"To notify EC, USB PD controller0 need service from EC"
+E9,GPIOF4/I2C5_SDA1/I3C3_SDA,VHIF,GPIOF4,I2C5_SDA1,I3C3_SDA,,,,,,VBAT,,,,,,,,##,,APU_EC_RESET#,PWRSEQ,GPIO,PU,,BOTH_EDGE,,,,,,,,LPC_RST_Handler,J3,1,,,"APU to reset eSPI slave, low active"
+E8,GPIOF5/I2C5_SCL1/I3C3_SCL,VHIF,GPIOF5,I2C5_SCL1,I3C3_SCL,,,,,,PIO,,,,,,GIRQ11,29,##,,KBRST#,PWRSEQ,GPIO,,OD_1,,,,,,,,,,J4,5,,,"EC to Warm reset APU, low active"
+A2,KSI0/GPIO31/AD15/TRACEDATA3/GP_MOSI,VCC1,KSI0,GPIO31,AD15,TRACEDATA3,GP_MOSI,,KSI0,,PIO,,,,,,GIRQ10,18,##,,SMSC_KSI_0,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,2,,,Keyboard Scan Matrix Input
+A3,KSI1/GPIO30/AD25/TRACEDATA2/GP_CS#,VCC1,KSI1,GPIO30,AD25,TRACEDATA2,GP_CS#,,KSI1,,ANA,,,,,,,,##,,SMSC_KSI_1,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,4,,,Keyboard Scan Matrix Input
+A4,KSI2/GPIO27/TRACEDATA21/AD14,VCC1,KSI2,GPIO27,TRACEDATA21,AD14,,,KSI2,O2ma-Low,PIO,,,,,,GIRQ9,1,##,,SMSC_KSI_2,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,6,,,Keyboard Scan Matrix Input
+B3,KSI3/GPIO26/AD13/TRACEDATA0,VCC1,KSI3,GPIO26,AD13,TRACEDATA0,,,KSI3,,PIO,,,,,,GIRQ11,27,##,,SMSC_KSI_3,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,8,,,Keyboard Scan Matrix Input
+B4,KSI4/GPIO25/AD24/TRACECLK/GP_SCLK,VCC1,KSI4,GPIO25,AD24,TRACECLK,GP_SCLK,,KSI4,,PIO,,,,,,GIRQ11,0,##,,SMSC_KSI_4,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,10,,,Keyboard Scan Matrix Input
+C3,KSI5/GPIO24/AD12/GP_MISO,VCC1,KSI5,GPIO24,AD12,GP_MISO,,,KSI5,,PIO,,,,,,GIRQ12,17,##,,SMSC_KSI_5,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,12,,,Keyboard Scan Matrix Input
+C4,KSI6/GPIO23/AD21/S_SBUB,VCC1,KSI6,GPIO23,AD21,S_SBUB,,,KSI6,,PIO,,,,,,GIRQ11,20,##,,SMSC_KSI_6,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,14,,,Keyboard Scan Matrix Input
+C5,KSI7/GPIO22/AD20/S_SBUA,VCC1,KSI7,GPIO22,AD20,S_SBUA,,,KSI7,,PIO,,,,,,GIRQ11,19,##,,SMSC_KSI_7,Keyboard,KSI,PU,,FALLING,,,,,,,,,J3,16,,,Keyboard Scan Matrix output
+B5,KSO00/GPIO21/JTAG_TCK0_SWCLK0,VCC1,KSO00,GPIO21,JTAG_TCK0_SWCLK0,,,,KSO00,,PWR,,,,,,,,##,,SMSC_KSO_0,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,18,,,Keyboard Scan Matrix output
+B6,KSO01/GPIO20/JTAG_TMS0_SWIO0,VCC1,KSO01,GPIO20,JTAG_TMS0_SWIO0,,,,KSO01,O2ma-Low,PIO,,,,,,GIRQ9,2,##,,SMSC_KSO_1,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,20,,,Keyboard Scan Matrix output
+B7,KSO02/GPIO17/JTAG_TDI0,VCC1,KSO02,GPIO17,JTAG_TDI0,,,,KSO02,O2ma-Low,PIO,,,,,,GIRQ8,26,##,,SMSC_KSO_2,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,22,,,Keyboard Scan Matrix output
+B8,KSO03/GPIO16/JTAG_TDO0_SWO0,VCC1,KSO03,GPIO16,JTAG_TDO0_SWO0,,,,KSO03,,PIO,,,,,,GIRQ8,1,##,,SMSC_KSO_3,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,24,,,Keyboard Scan Matrix output
+C7,KSO04/GPIO15/XNOR,VCC1,KSO04,GPIO15,XNOR,,,,KSO04,O2ma-High,O2ma,,,,,,,,##,,SMSC_KSO_4,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,26,,,Keyboard Scan Matrix output
+C6,KSO05/GPIO14,VCC1,KSO05,GPIO14,,,,,KSO05,,PIO,,,,,,GIRQ8,17,##,,SMSC_KSO_5,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,28,,,Keyboard Scan Matrix output
+C8,KSO06/GPIO13,VCC1,KSO06,GPIO13,,,,,KSO06,,PIO,,,,,,GIRQ11,4,##,,SMSC_KSO_6,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,1,,,Keyboard Scan Matrix output
+B9,KSO07/GPIO12,VCC1,KSO07,GPIO12,,,,,KSO07,,PIO,,,,,,GIRQ26,1,##,,SMSC_KSO_7,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,3,,,Keyboard Scan Matrix output
+C9,KSO08/GPIO11/CR_SOUT1,VCC1,KSO08,GPIO11,CR_SOUT1,,,,KSO08,,PIO,,,,,,GIRQ8,7,##,,SMSC_KSO_8,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,5,,,Keyboard Scan Matrix output
+C10,KSO09/GPIO10/CR_SIN1,VCC1,KSO09,GPIO10,CR_SIN1,,,,KSO09,,PIO,,,,,,GIRQ26,3,##,,SMSC_KSO_9,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,7,,,Keyboard Scan Matrix output
+B11,KSO10/P80_CLK/GPIO07,VCC1,KSO10,P80_CLK,GPIO07,,,,KSO10,,PIO,,,,,,GIRQ26,6,##,,SMSC_KSO_10,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,9,,,Keyboard Scan Matrix output
+B10,KSO11/P80_DAT/GPIO06,VCC1,KSO11,P80_DAT,GPIO06,,,,KSO11,,PIO,,,,,,GIRQ26,12,##,,SMSC_KSO_11,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,11,,,Keyboard Scan Matrix output
+C11,KSO12/GPIO05,VCC1,KSO12,GPIO05,,,,,KSO12,,PIO,,,,,,GIRQ8,13,##,,SMSC_KSO_12,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,13,,,Keyboard Scan Matrix output
+D11,KSO13/GPIO04,VCC1,KSO13,GPIO04,,,,,KSO13,,PIO,,,,,,GIRQ11,18,##,,SMSC_KSO_13,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,15,,,Keyboard Scan Matrix output
+D6,KSO14/GPIO82,VCC1,KSO14,GPIO82,,,,,KSO14,,I,,,,,,,,##,,SMSC_KSO_14,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,17,,,Keyboard Scan Matrix output
+D7,KSO15/GPIO83,VCC1,KSO15,GPIO83,,,,,KSO15,,PIO,,,,,,GIRQ9,21,##,,SMSC_KSO_15,Keyboard,KSO,PU,OD_1,,,,,,,,,,J3,19,,,Keyboard Scan Matrix output
+D9,KSO16/GPIO03,VCC1,KSO16,GPIO03,,,,,KSO16,,PIO,,,,,,GIRQ9,23,##,,HW_LID_CLOSE#,GPIO,GPIO,,,BOTH_EDGE,,,,,,GIO4,1,,,,,,"Notify EC that Lid is closed, low active"
+D8,KSO17/GPIOB1/CR_SIN4,VCC1,KSO17,GPIOB1,CR_SIN4,,,,KSO17,,PIO,,,,,,GIRQ9,22,##,,EVAL_PWRGD,GPIO,GPIO,,INPUT,,,,,,,GIO0,1,,J3,20,GPIO33_17,,"Notify EC, EVAL card's power is ready, high active"
+H1,LAD0/eSPI_IO0/GPIO46/SHI_SDI,VHIF,LAD0,eSPI_IO0,GPIO46,,,,LAD0,,PIO,,,,,,GIRQ9,12,##,,ESPI_EC_D0,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,6,,,"eSPI Data Bus, bit 0. Input (MOSI) in x1 Bus Mode. Else, it holds the LS data bit. "
+J1,LAD1/eSPI_IO1/GPIO47/SHI_SDO,VHIF,LAD1,eSPI_IO1,GPIO47,,,,LAD1,,PIO,,,,,,GIRQ9,11,##,,ESPI_EC_D1,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,8,,,"eSPI Data Bus, bit 1. Output (MISO) in x1 Bus Mode. Also, by default, presents ALERT# state between frames. "
+K1,LAD2/eSPI_IO2/GPIO51,VHIF,LAD2,eSPI_IO2,GPIO51,,,,LAD2,,PIO,,,,,,GIRQ10,27,##,,ESPI_EC_D2,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,12,,,"eSPI Data Bus, bit 2. Used only in x4 mode"
+L1,LAD3/eSPI_IO3/GPIO52,VHIF,LAD3,eSPI_IO3,GPIO52,,,,LAD3,,PIO,,,,,,GIRQ10,26,##,,ESPI_EC_D3,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,14,,,"eSPI Data Bus, bit 3. Used only in x4 mode, as MS bit"
+L2,LFRAME#/eSPI_CS#/GPIO53/SHI_CS#,VHIF,LFRAME#,eSPI_CS#,GPIO53,SHI_CS#,,,LFRAME#,,PIO,,,,,,GIRQ10,19,##,,ESPI_EC_CS#,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,7,,,"eSPI Chip Select, Low-Active"
+K3,LRESET#/eSPI_RST#/GPIO54,VHIF,LRESET#,eSPI_RST#,GPIO54,,,,LRESET#,,PIO,,,,,,GIRQ12,23,##,,ESPI_EC_RESET#,SYS_BUS,eSPI,,,,PWR_OFF,,,,,,,,,,,,
+M1,PCI_CLK/eSPI_CLK/GPIO55/SHI_SCLK,VHIF,PCI_CLK,eSPI_CLK,GPIO55,SHI_SCLK,,,PCI_CLK,,PIO,,,,,,GIRQ10,25,##,,ESPI_EC_CLK,SYS_BUS,eSPI,,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,2,,,eSPI Clock 
+M7,PECI_DATA/GPIO81,VPECI,PECI_DATA,GPIO81,,,,,PECI_DATA,,PIO,,,,,,GIRQ9,24,##,,GPIO81,UNUSED,GPIO,,,,,,,,,,,,,,,,
+H6,PSL_GPO/GPIOD7,VCC1,PSL_GPO,GPIOD7,,,,,PSL_GPO,,PIO,,,,,,GIRQ12,2,##,,GPIOD7,UNUSED,GPIO,,,,,,,,,,,,,,,,
+G7,PSL_IN1#/GPIOD2,VCIO,PSL_IN1#,GPIOD2,,,,,PSL_IN1#,,PIO,,,,,,GIRQ12,4,##,,CHG_ACOK,BAT_CHG,GPIO,,,BOTH_EDGE,,,,,,GIO4,0,CHG_ACOK_Handler,J3,8,,,"To notify EC, AC is present"
+E7,PSL_IN2#/GPIO00/EXT_PURST#,VCIO,PSL_IN2#,GPIO00,EXT_PURST#,,,,PSL_IN2#,,PIO,,,,,,GIRQ9,19,##,,HW_PWR_BTN#,PWRSEQ,GPIO,,INPUT,BOTH_EDGE,,,,,,,,PWR_BTN_HW_Handler,J3,11,,,"To notify EC, power button is pressed, low active"
+J8,PSL_OUT,VCC1,PSL_OUT,GPIO85,,,,,PSL_OUT,,PIO,,,,,,GIRQ9,16,##,,EC_PSL_OUT,PWRSEQ,,,,,,,,,,,,,J3,10,,,To enable +3V3_PWM (also +3V3_EC)
+M4,PWRGD/GPIO72,VCC1,PWRGD,GPIO72,,,,,PWRGD,,PIO,,,,,,GIRQ10,14,##,,BAT_PRSNT#,BAT_CHG,GPIO,,,BOTH_EDGE,,,,,,GIO4,3,BAT_IN_Handler,J4,15,GPIO33_13,,"Notify EC that battery is present, low active"
+L3,SER_IRQ/eSPI_ALERT#/GPIO57,VHIF,SER_IRQ,eSPI_ALERT#,GPIO57,,,,SER_IRQ,,PIO,,,,,,GIRQ12,20,##,,ESPI_EC_ALERT#,SYS_BUS,eSPI,PU,,,PWR_OFF,000008h/00000Ch,000008h/00000Ch,,,,,,J1,5,,,"eSPI Alert signal, Low-Active. Exercised only if ALERT# is configured to be pre-sented separately from the IO1 pin"
+M12,SPIP_MISO/GPIO95,VSPI,SPIP_MISO,GPIO95,,,,,SPIP_MISO,,PIO,,,,,,GIRQ11,22,##,,GPIO95,UNUSED,GPIO,,,,,,,,,,,,,,,,
+K12,SPIP_MOS/GPIOA3,VSPI,SPIP_MOS,GPIOA3,,,,,SPIP_MOS,,PIO,,,,,,GIRQ10,21,##,,GPIOA3,UNUSED,GPIO,,,,,,,,,,,,,,,,
+L12,SPIP_SCLK/GPIOA1,VSPI,SPIP_SCLK,GPIOA1,,,,,SPIP_SCLK,,PIO,,,,,,GIRQ10,17,##,,GPIOA1,UNUSED,GPIO,,,,,,,,,,,,,,,,
+L4,VBAT,,VBAT,,,,,,VBAT,,PIO,,,,,,GIRQ12,19,##,,,chip,,,,,,,,,,,,,,,,,
+A7,VCC1,,VCC1,,,,,,VCC1,,PIO,,,,,,GIRQ8,3,##,,,chip,,,,,,,,,,,,,,,,,
+B1,VCC1,,VCC1,,,,,,VCC1,,PIO,,,,,,GIRQ8,14,##,,,chip,,,,,,,,,,,,,,,,,
+D12,VCC1,,VCC1,,,,,,VCC1,,PIO,,,,,,GIRQ9,6,##,,,chip,,,,,,,,,,,,,,,,,
+K6,VCC1_RST#,,VCC1_RST#,,,,,,VCC1_RST#,,PIO,,,,,,GIRQ8,9,##,,,chip,,,,,,,,,,,,,,,,,
+M8,VCIO,,VCIO,,,,,,VCIO,,PIO,,,,,,GIRQ11,17,##,,,chip,,,,,,,,,,,,,,,,,
+F1,VHIF,,VHIF,,,,,,VHIF,,PWR,,,,,,,,##,,,chip,,,,,,,,,,,,,,,,,
+M6,VREF_PECI,,VREF_PECI,,,,,,VREF_PECI,,PIO,,,,,,GIRQ9,25,##,,,chip,,,,,,,,,,,,,,,,,
+M10,VSBY,,VSBY,,,,,,VSBY,,PIO,,,,,,GIRQ9,26,##,,,chip,,,,,,,,,,,,,,,,,
+H12,VSPI,,VSPI,,,,,,VSPI,,PIO,,,,,,GIRQ11,24,##,,,chip,,,,,,,,,,,,,,,,,
+A1,VSS,,VSS,,,,,,VSS,,ANA,,,,,,,,##,,,chip,,,,,,,,,,,,,,,,,
+A5,VSS,,VSS,,,,,,VSS,O2ma-Low,O,,,,,,,,##,,,chip,,,,,,,,,,,,,,,,,
+A8,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ8,5,##,,,chip,,,,,,,,,,,,,,,,,
+E12,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ11,3,##,,,chip,,,,,,,,,,,,,,,,,
+G1,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ8,6,##,,,chip,,,,,,,,,,,,,,,,,
+J12,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ10,24,##,,,chip,,,,,,,,,,,,,,,,,
+M3,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ10,13,##,,,chip,,,,,,,,,,,,,,,,,
+M9,VSS,,VSS,,,,,,VSS,,PIO,,,,,,GIRQ8,10,##,,,chip,,,,,,,,,,,,,,,,,
+,,~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ END ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

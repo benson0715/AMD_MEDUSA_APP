@@ -1,0 +1,109 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright (c) 2026 Realtek Semiconductor Corporation, SIBG-SD7
+ *
+ * ADC channels (12 thermistor / sense channels on GPIO080-091).
+ * Split out of rts5918_bison.dts in the 2026-04-16 dtsi reorg.
+ */
+
+/ {
+	poc_adc_channels: poc-adc-channels {
+		compatible = "vnd,poc-adc-channels";
+		poc_adc_channels_00: poc-adc-channels-00 {
+			enum-name = "AD_TS_1_TEMP";
+			channel = <0>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_01: poc-adc-channels-01 {
+			enum-name = "AD_TS_2_TEMP";
+			channel = <1>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_02: poc-adc-channels-02 {
+			enum-name = "AD_TS_3_TEMP";
+			channel = <2>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_03: poc-adc-channels-03 {
+			enum-name = "AD_TS_4_TEMP";
+			channel = <3>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_04: poc-adc-channels-04 {
+			enum-name = "AD_TS_5_TEMP";
+			channel = <4>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_05: poc-adc-channels-05 {
+			enum-name = "AD_TS_6_TEMP";
+			channel = <5>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+/*
+		poc_adc_channels_06: poc-adc-channels-06 {
+			enum-name = "ADC_CH_EC_FAN_ID";
+			channel = <6>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+*/
+		poc_adc_channels_07: poc-adc-channels-07 {
+			enum-name = "ADB_MAIN_BAT_TEMP";
+			channel = <7>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+			handler = "AdbAdDone";
+		};
+		poc_adc_channels_08: poc-adc-channels-08 {
+			enum-name = "ADC_CH_SENSE2";
+			channel = <8>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_09: poc-adc-channels-09 {
+			enum-name = "ADC_CH_SENSE4";
+			channel = <9>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_10: poc-adc-channels-10 {
+			enum-name = "ADC_CH_SENSE6";
+			channel = <10>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+		};
+		poc_adc_channels_11: poc-adc-channels-11 {
+			enum-name = "AD_PSYS_DETECT";
+			channel = <11>;
+			vref-mv = <3300>;
+			adc-ctrl = <&adc0>;
+			handler = "PsysAdDone";
+		};
+	};
+
+	poc_adc_nonfunc_channels: poc-adc-nonfunc-channels {
+		compatible = "realtek,non-funcs-enum";
+		poc_adc_nonfunc_channels_00: poc-adc-nonfunc-channels-00 {
+			enum-name = "AD_BAY_DEVICE";
+		};
+		poc_adc_nonfunc_channels_01: poc-adc-nonfunc-channels-01 {
+			enum-name = "ADB_2ND_BAT_TEMP";
+		};
+	};
+};
+
+&adc0 {
+	status = "okay";
+	pinctrl-0 = <&adc1_gpio080 &adc2_gpio081 &adc3_gpio082
+		     &adc4_gpio083 &adc5_gpio084 &adc6_gpio085
+		     &adc7_gpio086 &adc8_gpio087 &adc9_gpio088
+		     &adc10_gpio089 &adc11_gpio090 &adc12_gpio091>;
+	pinctrl-names = "default";
+};

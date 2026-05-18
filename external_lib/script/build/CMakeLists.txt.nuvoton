@@ -1,0 +1,25 @@
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+target_sources(app
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/nuvoton_gpio_ctrl.c
+    ${CMAKE_CURRENT_LIST_DIR}/gpio_npcx4mnx.c
+    ${CMAKE_CURRENT_LIST_DIR}/acpi_npcx4mnx.c
+    ${CMAKE_CURRENT_LIST_DIR}/nuvoton_espi.c
+    PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/nuvoton_gpio_ctrl.h
+    ${CMAKE_CURRENT_LIST_DIR}/gpio_ec.h
+    ${CMAKE_CURRENT_LIST_DIR}/nuvoton_espi.h
+    )
+
+target_sources_ifdef(CONFIG_PSL app
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/psl.c
+    PUBLIC
+    ${CMAKE_CURRENT_LIST_DIR}/psl.h
+    )
+
+target_include_directories(app
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    )

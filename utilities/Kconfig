@@ -1,0 +1,23 @@
+/*****************************************************************************
+ * Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ ******************************************************************************
+ */
+
+
+config REBOOT_SHELL
+	bool "Enable reboot shell"
+	help
+	  This shell provides access to reboot systerm
+
+config AMD_EEPROM_SHELL
+	bool "Enable eeprom shell"
+	help
+	  This shell provides eeprom access to systerm
+
+config AMD_EEPROM_SHELL_BUFFER_SIZE
+	int "EEPROM shell buffer size"
+	default 256
+	depends on AMD_EEPROM_SHELL
+	help
+	  Size of the buffer used for EEPROM read/write commands in
+	  the EEPROM shell.

@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2026 Realtek Semiconductor Corporation
+#
+
+identifier: rts5918_mdsplum
+name: Realtek RTS5918 on AMD MDS Plum
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 192
+flash: 403
+supported:
+  - gpio
+  - pinmux
+  - i2c
+  - adc
+  - pwm
+  - watchdog
+vendor: realtek

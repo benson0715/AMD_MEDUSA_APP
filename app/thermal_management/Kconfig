@@ -1,0 +1,28 @@
+# EC application thermal build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+
+menu "Thermal management"
+
+config THERMAL_MANAGEMENT
+	bool "Enable thermal management"
+	help
+	  Indicate if EC supports management of fan, reading thermal
+	  sensors and cpu temperature.
+
+config THERMAL_MGMT_LOG_LEVEL
+	int "Thermal management log level"
+	depends on APP_THERMAL
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for thermal management module.
+
+config APP_THERMAL
+        bool "Enable AMD thermal application"
+	help
+	  Indicate if EC supports management of fan, reading thermal
+	  sensors and cpu temperature.
+endmenu

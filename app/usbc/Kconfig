@@ -1,0 +1,133 @@
+# EC USBC module build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+
+menu "usbc features"
+
+config USBC_POWER_DELIVERY
+	bool "Enable USBC Power Delivery Management"
+	default y
+	help
+	  Indicate if EC supports USB Type-C power delivery includes:
+	  1. Charging using USB-C power sources like Type-C chargers.
+	  2. UCSI support.
+	  3. Sink and source power path control.
+	  4. USBC PD controller fw update.
+
+config USBC_CCGX
+	bool "Enable USBC CCGX feature support (CCGx supports IFX PD controller HPI protocol)"
+	depends on USBC_POWER_DELIVERY
+	default y
+	help
+	  Enable EC support for USBC CCGX PD controller:
+	  1) HPI: interface between CCGX and EC via I2C.
+	  2) UCSI: interface between CCGX and EC via I2C for UCSI driver.
+	  
+config USBC_4CC
+	bool "Enable USBC 4CC feature support (4CC supports TI PD controller 4CC protocol)"
+	depends on USBC_POWER_DELIVERY
+	default y
+	help
+	  Enable EC support for USBC TI PD controller:
+	  1) 4CC: interface between TI and EC via I2C.
+	  2) UCSI: interface between TI and EC via I2C for UCSI driver.
+	  
+config USBC_ITE
+	bool "Enable USBC ITE feature support (This supports ITE PD controller ITE protocol)"
+	depends on USBC_POWER_DELIVERY
+	default n
+	help
+	  Enable EC support for USBC ITE PD controller:
+	  1) ITE: interface between ITE and EC via I2C.
+	  2) UCSI: interface between ITE and EC via I2C for UCSI driver.
+	  
+config USBC_RTK
+	bool "Enable USBC RTK feature support (This supports RTK PD controller RTK protocol)"
+	depends on USBC_POWER_DELIVERY
+	default y
+	help
+	  Enable EC support for USBC RTK PD controller:
+	  1) RTK: interface between RTK and EC via I2C.
+	  2) UCSI: interface between RTK and EC via I2C for UCSI driver.
+
+config USBC_UCSI_TUNNEL
+	bool "Enable USBC UCSI tunnel feature support"
+	depends on USBC_POWER_DELIVERY
+	default y
+	help
+	  Enable EC support for USBC UCSI tunnel. Support vendor:
+	  1) CCGX: HPI interface
+	  2) TI: 4CC interface
+
+config USBC_PS883x
+	bool "Enable PS883x retimer support"
+	depends on USBC_POWER_DELIVERY
+	default n
+	help
+	  Enable PS883x retimer support.
+
+config CCGX_LOG_LEVEL
+	int "ccgx log level"
+	depends on USBC_CCGX
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for usbc module ccgx.
+	  
+config 4CC_LOG_LEVEL
+	int "4cc log level"
+	depends on USBC_4CC
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 4
+	help
+	  Set log level for usbc module 4cc.
+	  
+config ITE_APP_LOG_LEVEL
+	int "ite app log level"
+	depends on USBC_ITE
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 4
+	help
+	  Set log level for usbc module ite.
+	  
+config RTK_APP_LOG_LEVEL
+	int "rtk app log level"
+	depends on USBC_RTK
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 4
+	help
+	  Set log level for usbc module rtk.
+
+config UCSI_TUNNEL_LOG_LEVEL
+	int "ucsi tunnel log level"
+	depends on USBC_UCSI_TUNNEL
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for usbc module ucsi tunnel.
+	  
+config USBC_TASK_LOG_LEVEL
+	int "usbc task log level"
+	depends on USBC_POWER_DELIVERY
+	depends on LOG
+	default 0 if EC_DEBUG_LOG
+	default 4
+	help
+	  Set log level for usbc task.
+
+config PS883x_LOG_LEVEL
+	int "PS883x driver log level"
+	depends on LOG
+	depends on USBC_PS8830
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for PS883x driver.
+
+endmenu

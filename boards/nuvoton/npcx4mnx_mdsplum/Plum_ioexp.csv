@@ -1,0 +1,134 @@
+,,,,,,,,,,,
+CHIP ID,SLAVE ADDR,I2C PORT,ACCESS SPEED,PIN INDEX,NET NAME,BUF TYPE,POR SETTING,CATEGORY,INT_EN,INT_HANDLER,DESCRIPTION
+U5105,0x27,I2C3,100K,0,HW_WWAN_RADIO#,I,,,YES,,"Notify EC to toggle enable/disable WWAN radio, falling edge active"
+U5105,0x27,I2C3,100K,1,HW_WIFI_RADIO#,I,,,YES,,"Notify EC to toggle enable/disable WIFI radio, falling edge active"
+U5105,0x27,I2C3,100K,2,DC_S5_PWRCTL,I,,,,,"High: S5 POWER ON IN DC MODE
+Low: S5 POWER OFF IN DC MODE(default)"
+U5105,0x27,I2C3,100K,3,PD_FORCE_FW_UP#,I,,,YES,,"Notify EC to force update PD FW when triggered in G3', falling edge active
+Notify EC to toggle debug post code or Board basic info, falling edge active"
+U5105,0x27,I2C3,100K,4,AC_330W_PRSNT#,I,,,,,Low when using 330W adaptor.
+U5105,0x27,I2C3,100K,5,FCH_DBG_BUS_EN,I,,,,,"Notify EC that FCH debug mode is enabled, high active"
+U5105,0x27,I2C3,100K,6,MEM_PMIC_PWR_GOOD,I,,,YES,,"Notify EC that SODIMM/LPCAMM PMIC power ok, then can enable VR_EN pin"
+U5105,0x27,I2C3,100K,7,LPCAMM_EP_GSI#_3V3,I,,,,,Reserved. Notity EC/BIOS that the LPCAMM GSI_L pin status. 
+U5105,0x27,I2C3,100K,8,PSL_MODE_EN,I,,,,,"High: EC PSL (VCI) mode Enable (default);
+Low: EC PSL (VCI) mode Disable; "
+U5105,0x27,I2C3,100K,9,EXT_TALERT#,I,,,,,"To nofity EC, an overheating event is occurred. low active"
+U5105,0x27,I2C3,100K,10,WLAN_IO33#_IO18_SEL,I,,,,,"Notify EC the M.2 WLAN card I/O level. Low --3.3V level, High -- 1.8V level"
+U5105,0x27,I2C3,100K,11,UDC_EP_DBG_CARD_PRSNT#,I,,,YES,,"To notify EC, the UDC debug card is present. low active"
+U5105,0x27,I2C3,100K,12,EC_UART_DOGL_PRSNT#,I,,,YES,,"To notify EC, the UART dongle is present, low active"
+U5105,0x27,I2C3,100K,13,WAIIE_EP_SENSOR_EN_STA#,I,,,,,"Reserved to notify EC, the WALLE sensor power enable from system power. "
+U5105,0x27,I2C3,100K,14,EVAL_NEW#_LEGACY,I,,,,,"Low: Plugged EVAL card is a new card ; 
+High: Plugged EVAL card is a legacy card;"
+U5105,0x27,I2C3,100K,15,EC_SHARE_SAF#_MODE,I,,,,,"Notify EC that APU is in SHARE/SAFS mode. High- SHARE, Low - SAFA"
+U5100,0x21,I2C1,100K,0,EP_TPM_PWREN,OD,0,,,,"EC to enable TPM power, high active"
+U5100,0x21,I2C1,100K,1,EP_USBA_PWREN,O,1,,,,Load Switch EN for all USBA port. Enable=1 (Default); OFF=0.
+U5100,0x21,I2C1,100K,2,EP_CODEC_DEPOP_MUTE#,O,0,,,,To mute codec POP noise
+U5100,0x21,I2C1,100K,3,EP_HDR_DEPOP_MUTE#,O,0,,,,To mute plugged codec module POP noise
+U5100,0x21,I2C1,100K,4,EP_SD_AUX_PWREN,OD,0,,,,"EC to enable SD controller power, high active"
+U5100,0x21,I2C1,100K,5,EP_SD_MAIN_PWREN,O,1,,,,EC to control SD S0 domain power enable
+U5100,0x21,I2C1,100K,6,EP_SSD0_PWREN,OD,0,,,,"EC to enable M.2 SSD0 power, high active"
+U5100,0x21,I2C1,100K,7,EP_SSD1_PWREN,OD,0,,,,"EC to enable M.2 SSD0 power, high active"
+U5100,0x21,I2C1,100K,8,EP_RTL_ISOLATE#,OD,1,,,,Reserved for PCIE link ISOLATE.  Low active.
+U5100,0x21,I2C1,100K,9,EP_LOM_S5_PWREN,OD,0,,,,"EC to enable LOM power, high active"
+U5100,0x21,I2C1,100K,10,EP_WLAN_1V8_PWREN,OD,1,,,,"Reserved to enable WLAN 1V8 power separately, high active"
+U5100,0x21,I2C1,100K,11,EP_WLAN_3V3_PWREN,OD,0,,,,"EC to enable WLAN power, high active; "
+U5100,0x21,I2C1,100K,12,EP_WLAN_RADIO_DIS,O,0,,,,"To disable WLAN's raido, high active.  High-disable; "
+U5100,0x21,I2C1,100K,13,EP_WLAN_WIFI_RST,O,0,,,,"To reset WLAN module, high active"
+U5100,0x21,I2C1,100K,14,EP_BT_RADIO_DIS,O,0,,,,"To disable Bluetooth radio, high active"
+U5100,0x21,I2C1,100K,15,EP_M2_BT_WAKE,O,0,,,,EC to wake Blue Tooth module. high active
+U5101,0x22,I2C1,100K,0,EP_FPR_LOCK#,OD,1,,,,"Low- Finger print enters low power state, High - for normal operation"
+U5101,0x22,I2C1,100K,1,EP_FPR_OFF#,OD,1,,,,"High to enable wake up function, low to disable wake up function"
+U5101,0x22,I2C1,100K,2,EP_FPR_PWREN,OD,0,,,,"EC to enable Fingerprint power, high active"
+U5101,0x22,I2C1,100K,3,EP_FPR_GPIO,OD,1,,,,Reserved for Fingerprint side band control
+U5101,0x22,I2C1,100K,4,EP_TPAD_DIS#,OD,1,,,,"To disable touch pad, low active"
+U5101,0x22,I2C1,100K,5,EP_TPAD_FW_SEC#,O,0,,,,"for reprogramming the FW image on the touchpad,default low, high active"
+U5101,0x22,I2C1,100K,6,EP_TPNL_EN,OD,0,,,,"EC to enable Touch panel function, high active"
+U5101,0x22,I2C1,100K,7,EP_TPNL_PWREN,OD,0,,,,"EC to enable Touch panel power, high active"
+U5101,0x22,I2C1,100K,8,EP_USBCAM_FW_WP#,O,0,,,,"Camera FW update write protect, low active, low for normal operation"
+U5101,0x22,I2C1,100K,9,EP_USBCAM_PRIV,OD,1,,,,Reserved for USBCAM. 
+U5101,0x22,I2C1,100K,10,EP_USBCAM_PWREN,O,0,,,,"EC to enable USB CAM power, high active"
+U5101,0x22,I2C1,100K,11,EP_WWAN_PWREN,OD,0,,,,"EC to enable WWAN power, high active"
+U5101,0x22,I2C1,100K,12,EP_WWAN_CARD_PWROFF#,OD,0,,,,To control WWAN power on/off;  High - pwr on ; Low - pwr off
+U5101,0x22,I2C1,100K,13,EP_WWAN_MODULE_RST#,OD,0,,,,"To reset WWAN module, low active"
+U5101,0x22,I2C1,100K,14,EP_GNSS_RADIO_DIS#,OD,1,,,,"To disable WWAN's GNSS raido, low active"
+U5101,0x22,I2C1,100K,15,EP_MAIN_RADIO_DIS#,OD,1,,,,"To disable WWAN's radio, low active"
+U5102,0x23,I2C1,100K,0,EP_USBMUX_BT#_TPNL_SEL,O,0,,,,"EC to select USB6 routing, low-BT, high--TPNL"
+U5102,0x23,I2C1,100K,1,EP_USBMUX_FPR#_GBE_SEL,O,1,,,,"EC to select USB5 routing, low-Fingerprint, high--GbE"
+U5102,0x23,I2C1,100K,2,EP_WLAN#_SD_SEL,OD,1,,,,"EC to select PCIE routing, low- WLAN, high - SD."
+U5102,0x23,I2C1,100K,3,EP_WWAN#_LOM_SEL,OD,1,,,,"EC to select PCIE routing, low- WWAN, high - LOM"
+U5102,0x23,I2C1,100K,4,EP_UART0_WLAN#_HDR_SEL,OD,1,,,,"EC to select APU UART0 routing, low- WLAN, hihg - Header"
+U5102,0x23,I2C1,100K,5,EP_AUD_SW#_HDR_SEL,O,0,,,,"EC to select Audio routing, low - SW Codec, high - Header"
+U5102,0x23,I2C1,100K,6,EP_EVAL_SMB_APU#_EC_SEL,OD,0,,,,"EC to select Eval SMBus routing, low - APU SMB1, high - EC I2C1"
+U5102,0x23,I2C1,100K,7,EP_WAIIE#_MP2_SEL,O,0,,,,"To control I2C for PWR sensor switch, low--WALLE, devices, high--APU MP2"
+U5102,0x23,I2C1,100K,8,EP_SMB0_BUFF_EN,OD,1,,,,"EC to enable SMBus0 buffer, high active"
+U5102,0x23,I2C1,100K,9,EP_SMB1_BUFF_EN,OD,1,,,,"EC to enable SMBus1 buffer, high active"
+U5102,0x23,I2C1,100K,10,EP_USBC_RT_SMB_BUFF_EN,OD,1,,,,EC to enable Re-timer I2C0/SMB1 buffer. Low- disable; high- enable for RT FW Update
+U5102,0x23,I2C1,100K,11,EP_TPAD_I2C_BUFF_EN,OD,0,,,,"EC to control TPAD I2C buffer enable, high active"
+U5102,0x23,I2C1,100K,12,EP_TPNL_I2C_BUFF_EN,OD,1,,,,"EC to control TPNL I2C buffer enable, high active"
+U5102,0x23,I2C1,100K,13,EP_NFC_I2C_BUFF_EN,OD,1,,,,"EC to control NFC I2C buffer enable, high active"
+U5102,0x23,I2C1,100K,14,EP_SFH_I2C_BUFF_GATE#,OD,1,,,,"EC control to gate SFH 3V3 route path, low active"
+U5102,0x23,I2C1,100K,15,EP_ESP32_I2C_EN#,O,1,,,,"EC to control E3 on I2C0 buffer enable, low active"
+U5103,0x25,I2C1,100K,0,EP_BAT_LED#,OD,1,,,,Battery LED
+U5103,0x25,I2C1,100K,1,EP_KBC_LOW_BAT#,OD,1,,,,"Reserved to notify APU, to enter low battary mode, low active"
+U5103,0x25,I2C1,100K,2,EP_ADAPTER_OFF,O,0,,,,"To gate adapter power source, high active"
+U5103,0x25,I2C1,100K,3,APU_EC_VDDCORE_HIGH,I,,,,,
+U5103,0x25,I2C1,100K,4,EP_SB_TSI_SEL,O,1,,,,To select SB-TSI routing. High- EC I2C0; low - ESP32
+U5103,0x25,I2C1,100K,5,EP_APU_PCC#,O,1,,,,"Reserved for APU PCC function, low active"
+U5103,0x25,I2C1,100K,6,EP_DP0_HPD,OD,1,,,,Reserved to drive this signal High/Low to mimic Plug-in/ Plug-out
+U5103,0x25,I2C1,100K,7,EP_DP1_HPD,OD,1,,,,Reserved to drive this signal High/Low to mimic Plug-in/ Plug-out
+U5103,0x25,I2C1,100K,8,EP_EDP_SMUX_PWM_EN,O,0,,,,Smart MUX PWM control
+U5103,0x25,I2C1,100K,9,EP_EDP_SMUX_BLON,O,0,,,,Smart MUX back light on
+U5103,0x25,I2C1,100K,10,EP_EDP_SMUX_PNL_RST#,O,0,,,,Smart MUX panel reset
+U5103,0x25,I2C1,100K,11,EP_EDP_SMUX_PWMMUX_SEL,O,0,,,,Smart MUX PWM mux control
+U5103,0x25,I2C1,100K,12,APU_EC_VDDCORE_LEDON,I,,,,,Reserved for Vcore LED indicator
+U5103,0x25,I2C1,100K,13,EP_CODEC_AUX_MODE_EN,O,0,,,,To enable Codec AUX Mode. High - AUX mode enable; Low- AUX mode disable. 
+U5103,0x25,I2C1,100K,14,EP_CODEC_MIC_HW_MUTE,O,0,,,,"To enable Codex MIC Mute.  High - MIC Mute , Low - MIC Unmute"
+U5103,0x25,I2C1,100K,15,EP_JTAG_SEL#,OD,1,,,,"EC to control APU JTAG path to UDC, low active"
+U5104,0x26,I2C1,100K,0,EP_MEM_SEL,O,0,,,,"MEM VDD power selection for different speed, high - 8533, low - 9600.  "
+U5104,0x26,I2C1,100K,1,EP_AUD_DMIC#_HDR_SEL,O,0,,,,"EC to select Audio DMIC routing, low - DMIC header,  high - I2S header"
+U5104,0x26,I2C1,100K,2,DIS_DASH#,OD,1,,,,"Reserved for DASH enable or disable,  low - Dash disable  ; high - Dash enable"
+U5104,0x26,I2C1,100K,3,EC_EFFP_MODULE_RESET_N,OD,1,,,,"Reserved for eFFP module debug only, TBD"
+U5104,0x26,I2C1,100K,4,,,,,,,
+U5104,0x26,I2C1,100K,5,MEM_PMIC_VIN_BULK_PWREN,O,0,,,,"Reserved to enable SODIMM/LPCAMM VIN BULK power, high active. "
+U5104,0x26,I2C1,100K,6,MEM_PMIC_VR_EN_3V3,O,0,,,,"VR EN pin control, high active. I2C command mode when power on, VR EN pin mode in power off. "
+U5104,0x26,I2C1,100K,7,TPM_OB#_HDR_SEL,O,0,,,,"EC to select TPM SPI routing , low- onboard TPM,  high- TPM header"
+U5104,0x26,I2C1,100K,8,EP_LPCAMM_VDDQ_PWREN,O,0,,,,"Reserved to enbale VDDQ power for LPCAMM, high active."
+U5104,0x26,I2C1,100K,9,EP_LPCAMM_VDDQ_DIS_3V3,O,0,,,,"Reserved to control LPCAMM VDDQ_DISABLE pin. High - disable, Low- Enable. "
+U5104,0x26,I2C1,100K,10,EP_LPCAMM_UNLOCK_3V3,OD,1,,,,"EC to control LPCAMM UNLOCK pin.  High- Unlock, Low-Lock"
+U5104,0x26,I2C1,100K,11,EP_LPCAMM_DVFSQ#_3V3,OD,1,,,,Reserved to control LPCAMM DVFSQ_L pin.  Low active
+U5104,0x26,I2C1,100K,12,EP_MEM_1V0_PWREN,O,0,,,,EC to enable MEM I3C buffer 1.0V power. High active
+U5104,0x26,I2C1,100K,13,EP_MEM_I2C_EN,O,0,,,,EC to enable MEM LS buffer.  High active
+U5104,0x26,I2C1,100K,14,EP_WWAN_1V8_PWREN,OD,0,,,,Reserved to Enable WWAN 1.8V power. High active. 
+U5104,0x26,I2C1,100K,15,WWAN_IO33#_IO18_SEL,I,,,,,"Reserved. Notify EC that 3.3V or 1.8V WWAN module installed.  High- 1.8V WWAN, Low- 3.3V WWAN.  "
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,

@@ -1,0 +1,27 @@
+#;*****************************************************************************
+#;
+#; Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+#;
+#;******************************************************************************
+
+identifier: npcx4mnx_mdsdorne
+name: NPCX4MNX Medusa Dorne
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+ram: 64
+flash: 352
+supported:
+#  - adc
+  - counter
+  - espi
+  - gpio
+  - i2c
+  - pinmux
+#  - pwm
+#  - watchdog
+  - ps2
+  - kscan
+  - sensor

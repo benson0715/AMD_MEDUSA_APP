@@ -1,0 +1,36 @@
+# EC UDC management build options
+
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+config UDC_MANAGEMENT
+	bool "Enable udc management"
+	default n
+	help
+	  Indicate if udc management is enabled.
+
+config UDC_LOG_LEVEL
+	int "Debug Port80 log level"
+	depends on UDC_MANAGEMENT
+	depends on LOG
+	default 2 if EC_DEBUG_LOG
+	default 0
+	help
+	  Set log level for udc management.
+
+config ESPI_PERIPHERAL_DEBUG_PORT_80
+	default y if UDC_MANAGEMENT
+	default n
+
+config POWER_MONITOR
+	bool "ina219 current/power monitor"
+	depends on UDC_MANAGEMENT
+	default y
+	help
+	  ina219 current/power monitor.
+	  
+config UDC_UART
+	bool "ina219 current/power monitor"
+	depends on UDC_MANAGEMENT
+	default y
+	help
+	  ina219 current/power monitor.

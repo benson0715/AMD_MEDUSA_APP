@@ -1,0 +1,11 @@
+# Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+set(SPI_IMAGE_NAME spi_image.bin)
+
+board_set_flasher_ifnset(dediprog)
+
+# --vcc=0 - use 3.5V to flash
+board_finalize_runner_args(dediprog
+  "--spi-image=${PROJECT_BINARY_DIR}/${SPI_IMAGE_NAME}"
+  "--vcc=0"
+)

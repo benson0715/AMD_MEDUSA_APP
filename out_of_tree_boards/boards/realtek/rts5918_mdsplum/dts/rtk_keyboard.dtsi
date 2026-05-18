@@ -1,0 +1,55 @@
+/ {
+	chosen {
+		rtk-ec,keyboard = &kbd;
+		zephyr,keyboard-scan = &kscan_input;
+	};
+
+	aliases {
+		kscan0 = &kscan_input;
+	};
+
+};
+
+&kbd {
+	status = "okay";
+	pinctrl-0 = <
+		&ksi0_gpio050
+		&ksi1_gpio051
+		&ksi2_gpio052
+		&ksi3_gpio053
+		&ksi4_gpio054
+		&ksi5_gpio055
+		&ksi6_gpio094
+		&ksi6_gpio094_pin_sel
+		&ksi7_gpio095
+		&ksi7_gpio095_pin_sel
+		&kso0_gpio030
+		&kso1_gpio031
+		&kso2_gpio032
+		&kso3_gpio033
+		&kso4_gpio034
+		&kso5_gpio035
+		&kso6_gpio036
+		&kso7_gpio037
+		&kso8_gpio038
+		&kso9_gpio039
+		&kso10_gpio040
+		&kso11_gpio043
+		&kso12_gpio044
+		&kso13_gpio045
+		&kso14_gpio046
+		&kso15_gpio047
+		&kso16_gpio048
+		&kso17_gpio049
+	>;
+	row-size = <8>;
+	col-size = <18>;
+	settle-time-us = <100>;
+	pinctrl-names = "default";
+	no-ghostkey-check;
+
+
+	kscan_input: kscan-input {
+		compatible = "zephyr,kscan-input";
+	};
+};
