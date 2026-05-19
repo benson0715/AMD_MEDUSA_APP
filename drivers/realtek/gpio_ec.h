@@ -28,12 +28,13 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include "realtek_gpio_ctrl.h"
+#include <dt-bindings/gpio_defines.h>
 
 /* Same encoding as nuvoton: high byte = port (bank), low byte = pin */
-#define EC_GPIO_PORT_POS	8U
-#define EC_GPIO_PORT_MASK	((uint32_t)0xfU << EC_GPIO_PORT_POS)
-#define EC_GPIO_PIN_POS		0U
-#define EC_GPIO_PIN_MASK	((uint32_t)0x1fU << EC_GPIO_PIN_POS)
+// #define EC_GPIO_PORT_POS	8U
+// #define EC_GPIO_PORT_MASK	((uint32_t)0xfU << EC_GPIO_PORT_POS)
+// #define EC_GPIO_PIN_POS		0U
+// #define EC_GPIO_PIN_MASK	((uint32_t)0x1fU << EC_GPIO_PIN_POS)
 
 #define EC_GPIO_PORT_PIN(_port, _pin)                                 \
 	(((uint32_t)(_port) << EC_GPIO_PORT_POS) |                    \
@@ -234,6 +235,64 @@
 
 #define GPIO_CTRL_PWRG_VTR_IO	0
 #define GPIO_CTRL_PWRG_OFF	1
+
+/* DT node name for gpios on POC */
+#define GPIO_HUB_NODE_NAME poc_gpios
+
+/* DT node name for gpio interrupt on POC */
+#define GPIO_INT_HUB_NODE_NAME poc_gpio_ints
+
+/**
+ * @brief Get GPIO port and pin value from `gpios` property
+
+ * @param node Node identifier.
+ * @param array Array name contains gpio information
+ * @return GPIO port and pin value
+ */
+#define GPIO_VAL_FROM_NODE(node, array) 					\
+	((DT_PROP(DT_GPIO_CTLR(node, array), index) << EC_GPIO_PORT_POS)	\
+	 | (DT_GPIO_PIN(node, array) << EC_GPIO_PIN_POS))
+
+#if NPCK /* RTK modify: original N4SHT17W drop targeted nuvoton_npcx_gpio */
+#define GPIO_VAL_FROM_UNDEF_NODE(node, array) 					\
+	(((DT_PROP(DT_GPIO_CTLR(node, array), index) + 				\
+	   DT_NUM_INST_STATUS_OKAY(nuvoton_npcx_gpio)) << EC_GPIO_PORT_POS)	\
+	 | (DT_GPIO_PIN(node, array) << EC_GPIO_PIN_POS))
+#else
+#define GPIO_VAL_FROM_UNDEF_NODE(node, array) 					\
+	(((DT_PROP(DT_GPIO_CTLR(node, array), index) + 				\
+	   DT_NUM_INST_STATUS_OKAY(realtek_rts5918_gpio)) << EC_GPIO_PORT_POS) \
+	 | (DT_GPIO_PIN(node, array) << EC_GPIO_PIN_POS))
+#endif
+
+#define GPIO_VAL_FROM_ARRAY(node, array) 					\
+	GPIO_VAL_FROM_NODE(node, array) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_EXPANDER ? BIT(31) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_OUTPUT ? BIT(7) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_OUTPUT_INIT_HIGH ? BIT(6) : 0) | \
+	((DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_OPEN_DRAIN) == GPIO_OPEN_DRAIN ? BIT(17) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_ACTIVE_LOW ? BIT(5) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_DEFINE ? BIT(21) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_VWIRE ? BIT(20) : 0) | \
+	(DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_UNDEFINE_PIN ? BIT(30) : 0)
+	// (DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_EXPANDER_ACTIVE_LOW ? BIT(5) : 0) | 
+	// (DT_PROP(node, gpios_IDX_0_VAL_flags) & GPIO_EXPANDER_OPEN_DRAIN ? BIT(17) : 0)  | 
+
+
+/**
+ * @brief Macro function to construct a list of GPIO pin enumeration
+
+ * @param node Node identifier.
+ * @return Enumeration and its value which from GPIO port and pin
+ */
+#define GPIO_NAME_FROM_ENUM(node) 						\
+	DT_STRING_TOKEN(node, enum_name) = GPIO_VAL_FROM_ARRAY(node, gpios)
+	// DT_STRING_UPPER_TOKEN(node, enum_name) = GPIO_VAL_FROM_ARRAY(node, gpios)
+
+/* Enumeration of GPIO Pins */
+enum gpio_idx {
+	DT_FOREACH_CHILD_SEP(DT_PATH(GPIO_HUB_NODE_NAME), GPIO_NAME_FROM_ENUM, (,)),
+};
 
 struct gpio_ec_config {
 	uint32_t port_pin;
