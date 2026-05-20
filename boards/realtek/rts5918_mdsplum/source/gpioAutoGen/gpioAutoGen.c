@@ -5,10 +5,14 @@
  */
 
 #include "gpioAutoGen.h"
-
+void prim_pwrg_isr(void)
+{
+	printk("FOR TEST In GPIO ISR\r\n");
+}
 void __autoGen_initECGPIO(void)
 {
 	gpio_configure_all_pins();
+	gpio_interrupt_configure_all();
 }
 
 void Board_Gpio_AcpiHandler(uint8_t isRead, uint8_t ui8Idx, uint8_t *pui8Data)

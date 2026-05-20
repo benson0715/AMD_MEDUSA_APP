@@ -67,6 +67,7 @@ int periph_register_gpio_cb_vector(void)
 	int ret = 0;
 	uint8_t index = 0;
 
+#if CONFIG_SOC_SERIES_NPCX4
 	for (index = 0; index < gpio_cb_list_len; index++) {
 		info = &inputBuffer_lst[index];
 
@@ -94,7 +95,9 @@ int periph_register_gpio_cb_vector(void)
 			LOG_ERR("Failed to configure isr for %s", info->name);
 		}
 	}
-
+#else
+	gpio_interrupt_configure_all();
+#endif
 	return ret;
 }
 
@@ -269,11 +272,12 @@ void periph_thread(void *p1, void *p2, void *p3)
 
 		if (task_periphSlpReady != NULL)
 			*task_periphSlpReady &= ~BIT(0);
-
-		/* Handle IO expender */
-		if (g_InputBufferIoExp0_flag) {
-			board_periph_IoExp_IntDispatcher();
-		}
+		#if 0 //RTK_TODO
+			/* Handle IO expender */
+			if (g_InputBufferIoExp0_flag) {
+				board_periph_IoExp_IntDispatcher();
+			}
+		#endif
 
 		do {
 			/* Perform debounce for all buttons */

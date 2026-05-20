@@ -325,6 +325,30 @@ int gpio_remove_callback_pin(uint32_t port_pin, struct gpio_callback *callback);
 int gpio_force_configure_pin(uint32_t port_pin, gpio_flags_t flags);
 int gpio_get_pending_interrupt_pin(uint32_t port_pin);
 
+/**
+ * @brief Configure pin interrupt.
+ *
+ * This wrapper interface configures interrupt capabilities for a given pin.
+ *
+ * @param pin_idx Encoded value of gpio port/pin.
+ * @param flags Interrupt configuration flags as defined by GPIO_INT_*.
+ *
+ * @retval -ENODEV error when internal device validation failed.
+ * @retval 0 if successful, negative errno code on failure.
+ */
+int gpio_interrupt_configure_pin(enum gpio_idx pin_idx, gpio_flags_t flags);
+
+/**
+ * @brief Configure gpio interrupt routines from DT node.
+ *
+ * Wrapper to configure several GPIOs ISR by receiving
+ * an array containing the encoded Port/Pin, flags and callback funcs.
+ *
+ * Please notice this routine will enable all GPIO interrupts here!
+ *
+ * @retval none.
+ */
+void gpio_interrupt_configure_all(void);
 
 /**
  * @brief Configure all GPIO pins to their default states.

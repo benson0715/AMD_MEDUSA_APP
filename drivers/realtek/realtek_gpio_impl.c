@@ -254,6 +254,50 @@ const struct device *drv_gpio_get_dev(uint32_t port)
 	return NULL;
 }
 
+int gpio_interrupt_configure_pin(enum gpio_idx pin_idx, gpio_flags_t flags)
+{
+	uint32_t             port = gpio_get_port(pin_idx);
+	gpio_pin_t           pin = gpio_get_pin(pin_idx);
+	const struct device *gpio_dev = drv_gpio_get_dev(port);
+
+	if (gpio_dev == NULL) {
+		LOG_ERR("Invalid port %d", port);
+		return -ENODEV;
+	}
+
+	return gpio_pin_interrupt_configure(gpio_dev, pin, flags);
+}
+
+void gpio_interrupt_configure_all(void)
+{
+	/* Configure board GPIO callback functions */
+	for (int i = 0; i < ARRAY_SIZE(gpio_hub_ints); i++) {
+		int ret;
+
+		ret = gpio_init_callback_pin(gpio_hub_ints[i].pin_idx,
+		                             &gpio_hub_ints[i].callback,
+		                             gpio_hub_ints[i].handler);
+		if (ret != 0) {
+			LOG_ERR("Invalid gpio ISR init at %d, %d", i, ret);
+			continue;
+		}
+
+		ret = gpio_add_callback_pin(gpio_hub_ints[i].pin_idx,
+		                            &gpio_hub_ints[i].callback);
+		if (ret != 0) {
+			LOG_ERR("Invalid gpio ISR add at %d, %d", i, ret);
+			continue;
+		}
+
+		ret = gpio_interrupt_configure_pin(gpio_hub_ints[i].pin_idx,
+		                                   gpio_hub_ints[i].flags);
+		if (ret != 0) {
+			LOG_ERR("Invalid gpio ISR configure at %d, %d", i, ret);
+		}
+	}
+}
+
+
 /* S-G 07/31/25 Adjust the timing to configure all GPIOs before turning on M-power. */
 /* static int gpio_hub_init(void) */
 int gpio_configure_all_pins(void)
@@ -411,27 +455,47 @@ int gpio_read_pin(enum gpio_idx pin_idx)
 	return ret;
 }
 
-int gpio_init_callback_pin(uint32_t port_pin,
+int gpio_init_callback_pin(enum gpio_idx pin_idx,
 			   struct gpio_callback *callback,
 			   gpio_callback_handler_t handler)
 {
-	const struct device *dev = bank_dev(port_pin);
+	gpio_pin_t pin;
 
-	if (!dev || !callback) {
+	if (handler == NULL || callback == NULL) {
+		return -EINVAL;
+	}
+	if (GPIO_PIN_IS_UNDEFINED(pin_idx) || GPIO_PIN_IS_EXPANDER(pin_idx)) {
+		/* No Zephyr GPIO device behind these pins. Without this
+		 * gate, a later gpio_add_callback_pin() on an expander pin
+		 * would land on gpioa..gpiod (bank-collision in the port
+		 * field) and attach to the wrong real bank.
+		 */
 		return -ENODEV;
 	}
-	gpio_init_callback(callback, handler, BIT(gpio_get_pin(port_pin)));
+
+	pin = gpio_get_pin(pin_idx);
+	/* zephyr function is void */
+	gpio_init_callback(callback, handler, BIT(pin));
+
 	return 0;
 }
 
-int gpio_add_callback_pin(uint32_t port_pin, struct gpio_callback *callback)
+int gpio_add_callback_pin(enum gpio_idx pin_idx,
+			  struct gpio_callback *callback)
 {
-	const struct device *dev = bank_dev(port_pin);
+	uint32_t             port = gpio_get_port(pin_idx);
+	const struct device *gpio_dev = drv_gpio_get_dev(port);
 
-	if (!dev) {
+	if (gpio_dev == NULL) {
+		LOG_ERR("Invalid port %d", port);
 		return -ENODEV;
 	}
-	return gpio_add_callback(dev, callback);
+
+	if (callback == NULL) {
+		return -EINVAL;
+	}
+
+	return gpio_add_callback(gpio_dev, callback);
 }
 
 int gpio_remove_callback_pin(uint32_t port_pin, struct gpio_callback *callback)

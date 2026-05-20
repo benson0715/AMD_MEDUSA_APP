@@ -98,79 +98,79 @@
 		// it have to be declared most front if the pin is not used.
 		event: pin_event {
 			gpios = <&gpioc 4 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE)>;
-			enum-name = "PInEvent";
+			enum-name = "AC_PRSNT_N";
 		};
 		pcie_wake: pin_pcie_wake {
 			gpios = <&gpiod 4 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_DEFINE)>;
-			enum-name = "PInPcieWake";
+			enum-name = "HW_PWR_BTN_N";
 		};
 		poa_power_req: pin_poa_power_req {
 			gpios = <&gpioc 6 (GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE)>;
-			enum-name = "PInPOAPowerReq";
+			enum-name = "HDR_DOCK_IN_N";
 		};
 		acdc_led: pout_acdc_led {
-			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutACDC_LED";
+			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_DEFINE)>;
+			enum-name = "HW_LID_CLOSE_N";
 		};
 		bay_media_eject: pout_bay_media_eject {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutBayMediaEject";
+			enum-name = "EC_UDC_UART_INT_N";
 		};
 		dock_led_ctl0: pout_dock_led_ctl0 {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutDOCK_LED_CTL0";
+			enum-name = "BAT_PRSNT_N";
 		};
 		dock_led_ctl1: pout_dock_led_ctl1 {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutDOCK_LED_CTL1";
+			enum-name = "CHG_ACOK";
 		};
 		ga20: pout_ga20 {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutGA20";
+			enum-name = "PD_PRSNT_N";
 		};
 		kbd_light: pout_kbd_light {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutKBDLight";
+			enum-name = "CHG_EC_PROCHOT_N";
 		};
 		led_bay1: pout_led_bay1 {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutLEDBAY1";
+			enum-name = "APU_EC_RESET_N";
 		};
 		led_suspend: pout_led_suspend {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutLEDSuspend";
+			enum-name = "APU_PWROK";
 		};
 		poa_enable: pout_poa_enable {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutPOAEnable";
+			enum-name = "APU_THERMTRIP_N";
 		};
 		w_wan_on: pout_w_wan_on {
 			gpios = <&expander2_p1 4 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_EXPANDER)>;
-			enum-name = "POutWWANOn";
+			enum-name = "APU_EC_ALERT_N";
 		};
 		boost_mode_indicator: pin_boost_mode_indicator {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_UNDEFINE_PIN)>;
-			enum-name = "PInBoostModeIndicator";
+			enum-name = "SLP_S3_S0A3_N";
 		};
 		video_therm_alert: pout_video_therm_alert {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_HIGH | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutVideoThermAlert";
+			enum-name = "SLP_S5_N";
 		};
 		bay_not_attach: pin_bay_not_attach {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_UNDEFINE_PIN)>;
-			enum-name = "PInBayNotAttach";
+			enum-name = "PD0_EC_USBC_INT_N";
 		};
 		dcin_vbus_en: pout_dcin_vbus_en {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_LOW | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutDcinVBusEn";
+			enum-name = "PD1_EC_USBC_INT_N";
 		};
 		gpu_reset: pout_gpu_reset {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_LOW | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutGpuReset";
+			enum-name = "EP_EC_INT_N";
 		};
 		bdc_on: pout_bdc_on {
 			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_UNDEFINE_PIN)>;
-			enum-name = "POutBDCOn";
+			enum-name = "SYSTEM_S5_PG";
 		};
 		w_wan_disable: pout_w_wan_disable {
 			gpios = <&expander1_p1 3 (GPIO_ACTIVE_LOW | GPIO_OUTPUT_LOW | GPIO_EXPANDER)>;
@@ -1462,6 +1462,7 @@
 			flags = <GPIO_INT_LEVEL_HIGH>;
 			handler = "prim_pwrg_isr";
 		};
+		/*
 		int_power_off: power_off_int {
 			irq-pin = <&power_off>;
 			flags = <GPIO_INT_LEVEL_LOW>;
@@ -1472,6 +1473,7 @@
 			flags = <GPIO_INT_EDGE_BOTH>;
 			handler = "vga_blon_isr";
 		};
+		*/
 		//
 		//
 		//
