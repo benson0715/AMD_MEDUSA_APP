@@ -33,8 +33,10 @@ void main(void)
 	app_vci_samplePwrBtn();
 	app_vci_latchRst();
 #endif
+	printk("In main!!\r\n");
 	/* Delayed start for debug */
 	k_sleep(K_SECONDS(CONFIG_EC_DELAYED_BOOT));
+	printk("In main2!!\r\n");
 #if CONFIG_PSL
 	if (psl_get_input() & 0x02) {
 		g_ui8PwrBtnVciFlag = 1;
@@ -44,7 +46,7 @@ void main(void)
 	psl_configure();
 #endif
 	f_bram_onBootUp();
-	LOG_INF("EC FW Zephyr %p %s", k_current_get(), CONFIG_BOARD);
+	printk("EC FW Zephyr %p %s\r\n", k_current_get(), CONFIG_BOARD);
 
 	/* The espi block needs to be initialized before the GPIOS. This is
 	 * because we must query the boot mode before assigning functions

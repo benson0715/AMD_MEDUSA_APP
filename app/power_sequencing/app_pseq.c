@@ -722,6 +722,7 @@ static void app_pseq_update(void)
  */
 void app_pseq_thread(void *p1, void *p2, void *p3)
 {
+	printk("In app_pseq_thread\r\n");
 	uint32_t period = *(uint32_t *)p1;
 	task_pseqSlpReady = (uint8_t*) p2;
 	/* Can enter sleep before first circle */

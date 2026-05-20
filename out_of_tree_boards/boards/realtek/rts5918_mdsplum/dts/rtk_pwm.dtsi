@@ -81,7 +81,7 @@
 };
 
 &pwm1 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&pwm1_gpio020>;
 	pinctrl-names = "default";
 };

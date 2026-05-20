@@ -97,15 +97,15 @@
 
 		// it have to be declared most front if the pin is not used.
 		event: pin_event {
-			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_UNDEFINE_PIN)>;
+			gpios = <&gpioc 4 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE)>;
 			enum-name = "PInEvent";
 		};
 		pcie_wake: pin_pcie_wake {
-			gpios = <&gpioa 0 (GPIO_ACTIVE_LOW | GPIO_INPUT | GPIO_UNDEFINE_PIN)>;
+			gpios = <&gpiod 4 (GPIO_ACTIVE_HIGH | GPIO_OUTPUT_HIGH | GPIO_DEFINE)>;
 			enum-name = "PInPcieWake";
 		};
 		poa_power_req: pin_poa_power_req {
-			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_UNDEFINE_PIN)>;
+			gpios = <&gpioc 6 (GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE)>;
 			enum-name = "PInPOAPowerReq";
 		};
 		acdc_led: pout_acdc_led {

@@ -196,6 +196,102 @@ int gpio_init(void)
 	return 0;
 }
 
+/*
+ * Build a {index, device*} entry for one realtek,rts5918-gpio node.
+ * The COND_CODE_1 wrapper compiles each entry to nothing if the
+ * node is status="disabled" (so disabled banks don't pull in their
+ * device pointer).
+ */
+#define DRV_GPIO_TABLE_ENTRY(node_id)                                      \
+	COND_CODE_1(DT_NODE_HAS_STATUS(node_id, okay),                     \
+		    ({                                                     \
+			    .index = DT_PROP(node_id, index),              \
+			    .dev   = DEVICE_DT_GET(node_id),               \
+		    },),                                                   \
+		    ())
+
+struct drv_gpio_entry {
+	uint32_t             index;
+	const struct device *dev;
+};
+
+static const struct drv_gpio_entry drv_gpio_table[] = {
+	DT_FOREACH_STATUS_OKAY(realtek_rts5918_gpio, DRV_GPIO_TABLE_ENTRY)
+};
+
+struct gpio_pin_name {
+	enum gpio_idx pin_idx;
+	const char *name;
+};
+
+#define GPIO_PIN_NAME_ENTRY(node)				\
+	{							\
+		.pin_idx = GPIO_VAL_FROM_ARRAY(node, gpios),	\
+		.name = DT_PROP(node, enum_name),		\
+	}
+
+static const struct gpio_pin_name gpio_pin_names[] = {
+	DT_FOREACH_CHILD_SEP(DT_PATH(GPIO_HUB_NODE_NAME), GPIO_PIN_NAME_ENTRY, (,))
+};
+
+const char *get_pin_name(enum gpio_idx pin_idx)
+{
+	for (int i = 0; i < ARRAY_SIZE(gpio_pin_names); i++) {
+		if (gpio_pin_names[i].pin_idx == pin_idx) {
+			return gpio_pin_names[i].name;
+		}
+	}
+	return "?";
+}
+
+const struct device *drv_gpio_get_dev(uint32_t port)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(drv_gpio_table); i++) {
+		if (drv_gpio_table[i].index == port) {
+			return drv_gpio_table[i].dev;
+		}
+	}
+	return NULL;
+}
+
+/* S-G 07/31/25 Adjust the timing to configure all GPIOs before turning on M-power. */
+/* static int gpio_hub_init(void) */
+int gpio_configure_all_pins(void)
+{
+	/* Configure all gpios here */
+	for (int i = 0; i < ARRAY_SIZE(gpio_hub_pins); i++) {
+		uint32_t             port = gpio_get_port(gpio_hub_pins[i].pin_idx);
+		gpio_pin_t           pin = gpio_get_pin(gpio_hub_pins[i].pin_idx);
+		const struct device *gpio_dev = drv_gpio_get_dev(port);
+		int                  ret;
+
+		LOG_DBG("i: %d port: %p pin: %d cfg: %x", i, gpio_dev, pin, gpio_hub_pins[i].cfg);
+		if (GPIO_PIN_IS_UNDEFINED(gpio_hub_pins[i].pin_idx)) {
+			continue;
+		}
+		if (GPIO_PIN_IS_EXPANDER(gpio_hub_pins[i].pin_idx)) {
+			/* Expander pins encode an expander chip/port index in
+			 * the port field that collides with real GPIO bank
+			 * indices (gpioa..gpiod = 0..3, expander1_p0..expander2_p1
+			 * = 0..3). Skip here; per-pin IoInit() drives
+			 * IoInitExpander() during board bring-up.
+			 */
+			continue;
+		}
+		if (!gpio_dev) {
+			LOG_ERR("Invalid port %d at %d", port, i);
+			continue;
+		}
+		ret = gpio_pin_configure(gpio_dev, pin, gpio_hub_pins[i].cfg);
+		if (ret) {
+			LOG_ERR("Config fail: %d i:%d port:%p pin: %d cfg: %d", ret,
+			        i, gpio_dev, pin, gpio_hub_pins[i].cfg);
+		}
+	}
+
+	return 0;
+}
+
 int gpio_configure_pin(uint32_t port_pin, gpio_flags_t flags)
 {
 	const struct device *dev = bank_dev(port_pin);
@@ -238,24 +334,81 @@ int gpio_set_interrupt(uint32_t port_pin, uint32_t flag)
 	return gpio_pin_interrupt_configure(dev, gpio_get_pin(port_pin), flag);
 }
 
-int gpio_write_pin(uint32_t port_pin, int value)
+int gpio_write_pin(enum gpio_idx pin_idx, int value)
 {
-	const struct device *dev = bank_dev(port_pin);
+	uint32_t             port;
+	gpio_pin_t           pin;
+	const struct device *gpio_dev;
 
-	if (!dev) {
+#ifndef CONFIG_MDL_GPIO_HUB_QUIET
+	printk("gpio_write_pin: %s(%d)\n", get_pin_name(pin_idx), value);
+#endif
+
+	if (GPIO_PIN_IS_UNDEFINED(pin_idx)) {
 		return -ENODEV;
 	}
-	return gpio_pin_set(dev, gpio_get_pin(port_pin), value);
+	if (GPIO_PIN_IS_EXPANDER(pin_idx)) {
+		/* IoSetExpander always drives the pin to "logical active".
+		 * To clear (value=0), flip the active-low bit so the same
+		 * call drives the pin to "logical inactive". This mirrors
+		 * the trick Jupiter/IoPort.c::IoClr() uses internally for
+		 * non-embedded ports.
+		 */
+		unsigned long key = (unsigned long)pin_idx;
+
+		if (value == 0) {
+			key ^= GPIO_PIN_ACTIVE_LOW_BIT;
+		}
+		//IoSetExpander(key);
+		return 0;
+	}
+
+	port     = gpio_get_port(pin_idx);
+	pin      = gpio_get_pin(pin_idx);
+	gpio_dev = drv_gpio_get_dev(port);
+
+	if (gpio_dev == NULL) {
+		LOG_ERR("Invalid port %d", port);
+		return -ENODEV;
+	}
+	return gpio_pin_set(gpio_dev, pin, value);
 }
 
-int gpio_read_pin(uint32_t port_pin)
+int gpio_read_pin(enum gpio_idx pin_idx)
 {
-	const struct device *dev = bank_dev(port_pin);
+	uint32_t             port;
+	gpio_pin_t           pin;
+	const struct device *gpio_dev;
 
-	if (!dev) {
+	if (GPIO_PIN_IS_UNDEFINED(pin_idx)) {
+		return 0;
+	}
+	if (GPIO_PIN_IS_EXPANDER(pin_idx)) {
+		/* IoGetExpander returns IOP_ACTIVE (1) or IOP_INACTIVE (0)
+		 * already accounting for the active-low bit. Map directly
+		 * onto Zephyr's gpio_pin_get() return convention.
+		 */
+		//return IoGetExpander((unsigned long)pin_idx);
+		return 0;
+	}
+
+	port     = gpio_get_port(pin_idx);
+	pin      = gpio_get_pin(pin_idx);
+	gpio_dev = drv_gpio_get_dev(port);
+
+	if (gpio_dev == NULL) {
+		LOG_ERR("Invalid port %d", port);
 		return -ENODEV;
 	}
-	return gpio_pin_get(dev, gpio_get_pin(port_pin));
+	int ret = gpio_pin_get(gpio_dev, pin);
+
+#ifndef CONFIG_MDL_GPIO_HUB_QUIET
+	//const char *caller_name = get_caller_name();
+	//if (strcmp(caller_name, "SnsMonitor") != 0) {
+		printk("gpio_read_pin: %s %d\r\n", get_pin_name(pin_idx), ret);
+	//}
+#endif
+	return ret;
 }
 
 int gpio_init_callback_pin(uint32_t port_pin,

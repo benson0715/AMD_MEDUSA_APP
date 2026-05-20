@@ -31,6 +31,17 @@ int board_init(void)
 	 * the Plum-on-RTS5918 GPIO autogen table is in place. For now
 	 * we return success so app/main.c proceeds to thread startup.
 	 */
+	/**
+	 * Initialize EC GPIO
+	 */
+	__autoGen_initECGPIO();
+	/**
+	 * Detect boot mode
+	 */
+	detect_boot_mode();
+
+	printk("%s\r\n", __func__);
+	k_msleep(100);
 	return 0;
 }
 

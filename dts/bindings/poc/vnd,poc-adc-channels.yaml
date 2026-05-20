@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: Bison stub poc-adc-channels container.
+
+compatible: "vnd,poc-adc-channels"
+
+child-binding:
+  description: One ADC channel entry referenced by mdl_adc_hub.
+  properties:
+    enum-name:
+      type: string
+      required: true
+    channel:
+      type: int
+      default: 0
+    vref-mv:
+      type: int
+      default: 3300
+    adc-ctrl:
+      type: phandle
+    io-channels:
+      type: phandle-array
+    handler:
+      type: string

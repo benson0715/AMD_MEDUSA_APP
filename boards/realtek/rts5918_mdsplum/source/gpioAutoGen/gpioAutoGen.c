@@ -8,10 +8,7 @@
 
 void __autoGen_initECGPIO(void)
 {
-	/* TODO(realtek-schematic): regenerate from Plum-on-RTS5918
-	 * BGA→pin map and invoke gpio_configure_array() with the
-	 * resulting struct gpio_ec_config table.
-	 */
+	gpio_configure_all_pins();
 }
 
 void Board_Gpio_AcpiHandler(uint8_t isRead, uint8_t ui8Idx, uint8_t *pui8Data)

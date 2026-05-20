@@ -25,7 +25,7 @@ LOG_MODULE_REGISTER(f_bram, CONFIG_BRAM_LOG_LEVEL);
 #if CONFIG_SOC_SERIES_NPCX4
 static F_BRAM_SPACE * _s_bramPtr = ((F_BRAM_SPACE * )0x400AF000);
 #else
-static F_BRAM_SPACE * _s_bramPtr = ((F_BRAM_SPACE * )0x4000A800);
+static F_BRAM_SPACE * _s_bramPtr = ((F_BRAM_SPACE * )0x20200000);
 #endif
 
 static uint8_t _s_pageSelector = 0;

@@ -325,4 +325,12 @@ int gpio_remove_callback_pin(uint32_t port_pin, struct gpio_callback *callback);
 int gpio_force_configure_pin(uint32_t port_pin, gpio_flags_t flags);
 int gpio_get_pending_interrupt_pin(uint32_t port_pin);
 
+
+/**
+ * @brief Configure all GPIO pins to their default states.
+ *
+ * @retval none.
+ */
+int gpio_configure_all_pins(void);
+
 #endif /* __REALTEK_GPIO_EC_H__ */

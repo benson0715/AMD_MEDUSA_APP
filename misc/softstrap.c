@@ -85,18 +85,18 @@ static void strap_validate_timeouts(void)
 	 * shall guarantee it
 	 */
 	if (time->rsm_rst_pwrgd == 0) {
-		LOG_WRN("Invalid SW strap RSMRST_PWRDG timeout");
+		printk("Invalid SW strap RSMRST_PWRDG timeout");
 	}
 
-	LOG_DBG("SW timeout config supported by FW: %d",
+	printk("SW timeout config supported by FW: %d",
 		soft_header->support.timeout_config);
-	LOG_DBG("RSM_RST_PWRGD timeout %d ms",
+	printk("RSM_RST_PWRGD timeout %d ms",
 		TIMEOUT_TO_MS(strps->timeouts.rsm_rst_pwrgd));
-	LOG_DBG("espi_rst timeout %d ms",
+	printk("espi_rst timeout %d ms",
 		TIMEOUT_TO_MS(strps->timeouts.espi_rst));
-	LOG_DBG("PLT_RESET_TIMEOUT timeout %d ms",
+	printk("PLT_RESET_TIMEOUT timeout %d ms",
 		TIMEOUT_TO_MS(strps->timeouts.plt_rst));
-	LOG_DBG("PLT_RESET_TIMEOUT timeout %d us",
+	printk("PLT_RESET_TIMEOUT timeout %d us",
 		TIMEOUT_TO_US(strps->timeouts.plt_rst));
 }
 
@@ -111,21 +111,21 @@ void strap_init(void)
 	const struct softstrap_header *soft_header = &strp_reg.header;
 
 	/* Debug data to verify specification */
-	LOG_DBG("Softstrap header size: %d", sizeof(struct softstrap_header));
-	LOG_DBG("Sofstrap payload size: %d", sizeof(struct softstrap_region));
-	LOG_DBG("Platform features size: %d", sizeof(struct plat_features));
-	LOG_DBG("Timeout config size: %d", sizeof(struct timeout_params));
-	LOG_DBG("USBC config size: %d", sizeof(struct usbc_config));
-	LOG_DBG("Charger config size: %d", sizeof(struct charger_config));
-	LOG_DBG("SPI config size: %d", sizeof(struct spi_config));
-	LOG_DBG("DTT config size: %d", sizeof(struct dtt_config));
-	LOG_DBG("Dev config size: %d", sizeof(struct dev_config));
-	LOG_DBG("Security config size: %d", sizeof(struct security_config));
+	printk("Softstrap header size: %d", sizeof(struct softstrap_header));
+	printk("Sofstrap payload size: %d", sizeof(struct softstrap_region));
+	printk("Platform features size: %d", sizeof(struct plat_features));
+	printk("Timeout config size: %d", sizeof(struct timeout_params));
+	printk("USBC config size: %d", sizeof(struct usbc_config));
+	printk("Charger config size: %d", sizeof(struct charger_config));
+	printk("SPI config size: %d", sizeof(struct spi_config));
+	printk("DTT config size: %d", sizeof(struct dtt_config));
+	printk("Dev config size: %d", sizeof(struct dev_config));
+	printk("Security config size: %d", sizeof(struct security_config));
 
-	LOG_INF("Softstrap version: v%d.%d", soft_header->major_version,
+	printk("Softstrap version: v%d.%d", soft_header->major_version,
 		soft_header->minor_version);
-	LOG_DBG("Softstrap encoded size: %d", soft_header->size);
-	LOG_DBG("SW feature override supported by FW: %d",
+	printk("Softstrap encoded size: %d", soft_header->size);
+	printk("SW feature override supported by FW: %d",
 		soft_header->support.feature_override);
 
 	strap_validate_timeouts();

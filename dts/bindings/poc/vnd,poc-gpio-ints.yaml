@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Container for GPIO interrupt callbacks installed by application code.
+  Each child node describes one (pin, trigger, handler) triple. The
+  middle layer (middle/gpio/mdl_gpio_hub.c) walks all child nodes
+  during gpio_interrupt_configure_all() and registers them via
+  gpio_init_callback / gpio_add_callback / gpio_pin_interrupt_configure.
+
+  Property name conventions match what mdl_gpio_hub.c::INT_CONFIG_ENTRY
+  reads — do not rename without updating the C side.
+
+compatible: "vnd,poc-gpio-ints"
+
+child-binding:
+  description: A single GPIO interrupt entry.
+
+  properties:
+    irq-pin:
+      type: phandle
+      required: true
+      description: |
+        Phandle to a poc-gpios child node (the pin that triggers this
+        interrupt). The middle layer extracts the encoded pin_idx via
+        GPIO_VAL_FROM_ARRAY(irq_pin, gpios).
+    flags:
+      type: int
+      required: true
+      description: |
+        Standard Zephyr GPIO_INT_* flag (e.g. GPIO_INT_EDGE_BOTH,
+        GPIO_INT_EDGE_TO_ACTIVE, GPIO_INT_LEVEL_LOW). Passed to
+        gpio_pin_interrupt_configure() unchanged.
+    handler:
+      type: string
+      required: true
+      description: |
+        Name of a C function with the signature
+            void name(const struct device *port,
+                      struct gpio_callback *cb,
+                      gpio_port_pins_t pins);
+        The middle layer DT_FOREACH_CHILD generates a forward
+        declaration for this name, so the linker checks at build
+        time that the function exists.

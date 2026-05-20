@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Stub binding for the `poc_gpios` parent node consumed by
+# middle/gpio/mdl_gpio_hub.c. Each child supplies the gpios
+# property + an enum-name string the C side turns into an
+# `enum gpio_idx` member.
+
+description: |
+  Bison stub poc-gpios container. Children are individual GPIO
+  pin objects consumed by mdl_gpio_hub.
+
+compatible: "vnd,poc-gpios"
+
+child-binding:
+  description: A single GPIO pin entry referenced by the application.
+
+  properties:
+    gpios:
+      type: phandle-array
+      required: true
+    enum-name:
+      type: string
+      required: true
+    undefined-pin:
+      type: int
+      default: 0
+    gpios_IDX_0_VAL_flags:
+      type: int
+      default: 0
