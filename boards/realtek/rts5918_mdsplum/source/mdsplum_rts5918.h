@@ -5,7 +5,7 @@
  *
  * Per-board symbolic pin map for AMD MDS Plum hardware refreshed with
  * Realtek RTS5918 silicon. The macro NAMES match the original Plum
- * NPCX4 header (mdsplum_npcx4mnx.h) so AMD's app/* code that references
+ * NPCX4 header (mdsplum_npcx4mnx.h) so AMD's app/ code that references
  * EC_PWR_BTN_N, EC_BLINK_N, SLP_S3_S0A3_N, etc. continues to compile.
  *
  * The VALUES are bring-up placeholders. Each macro currently encodes
@@ -39,7 +39,7 @@
 #define APU_PWROK          TODO_PIN  /* TODO(realtek-schematic) */
 #define EC_PWR_BTN_N       TODO_PIN  /* TODO(realtek-schematic) */
 
-/* SLP semantic helpers used by app/power_sequencing/* */
+/* SLP semantic helpers used by app/power_sequencing/ */
 #define SLP_S3_ASSERT       (!gpio_read_pin(SLP_S3_S0A3_N))
 #define SLP_S5_ASSERT       (!gpio_read_pin(SLP_S5_N))
 #define ASSERT_FCH_PWRBTN   gpio_write_pin(EC_PWR_BTN_N, 0)
@@ -76,7 +76,7 @@
 #define WLAN_PD_N          TODO_PIN  /* TODO(realtek-schematic) */
 #define WWAN_PD_N          TODO_PIN  /* TODO(realtek-schematic) */
 
-/* Power-sequencing signals referenced from app/power_sequencing/* */
+/* Power-sequencing signals referenced from app/power_sequencing */
 #define APU_THERMTRIP_N    TODO_PIN  /* TODO(realtek-schematic) */
 #define CHG_EC_PROCHOT_N   TODO_PIN  /* TODO(realtek-schematic) */
 #define EC_APU_PROCHOT_N   TODO_PIN  /* TODO(realtek-schematic) */
@@ -182,7 +182,7 @@
  * `i2c_bus_num` enum gives the per-board integer index that
  * drivers/i2c_hub.c's static `i2c_inst[]` array uses. The DT
  * `I2C_BUS_n` macros above feed DEVICE_DT_GET() at array-init time;
- * the `I2C_n` enum values below are what app/* passes as the
+ * the `I2C_n` enum values below are what app/ passes as the
  * `uint8_t instance` argument to i2c_hub_config / write / read /
  * write_read.
  *

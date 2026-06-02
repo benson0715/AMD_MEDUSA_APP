@@ -5,7 +5,7 @@
  *
  * Realtek RTS5918 mirror of drivers/nuvoton/gpio_ec.h.
  *
- * Keeps the same uint32_t (port << 8) | pin encoding so app/* code that
+ * Keeps the same uint32_t (port << 8) | pin encoding so app/ code that
  * uses EC_GPIO_xx symbols stays unchanged. Only the underlying bank
  * count and per-port pin count differ from NPCX4.
  *

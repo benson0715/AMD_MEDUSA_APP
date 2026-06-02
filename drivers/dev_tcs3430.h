@@ -119,8 +119,8 @@
 #define MIN_LUX_TH        16384    //Min LUX thrshold value below which CCT=4.5 when cap feature in ON
 #endif
 
-#define likely(x)       __builtin_expect(!!(x), 1)
-#define unlikely(x)     x
+// #define likely(x)       __builtin_expect(!!(x), 1)
+// #define unlikely(x)     x
 
 #pragma pack(push, 1)
 /* TCS3430_REG_ENABLE -> 0x80 */

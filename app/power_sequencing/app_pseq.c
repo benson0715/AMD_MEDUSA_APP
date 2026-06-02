@@ -341,7 +341,7 @@ static bool app_pseq_transitionToS0(void)
 	if (g_ui8MondernStandbySupport && ACPI_isHostNotifyDisable()) {
 		ACPI_EnableHostNotify();
 	}
-	gpio_set_power(APU_THERMTRIP_N, GPIO_CTRL_PWRG_VTR_IO);
+	// gpio_set_power(APU_THERMTRIP_N, GPIO_CTRL_PWRG_VTR_IO); RTK_TODO
 #if CONFIG_BATTERY_MANAGEMENT
 #if CONFIG_CHARGER_ISL9241
 	dev_isl9241_setProchot();
@@ -699,7 +699,7 @@ static void app_pseq_update(void)
 		current_state = next_state;
 
 		/* update GPIO setting based on power sequence */
-		__autoGen_runtimeGpioSwitching(current_state);
+		// __autoGen_runtimeGpioSwitching(current_state); RTK_TODO
 	} else {
 		LOG_ERR("Unsupported next state: %s", system_power_state_str[next_state]);
 		/* Do not transition to invalid state,

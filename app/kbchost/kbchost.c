@@ -897,7 +897,7 @@ void kbc_set_leds(uint8_t leds)
 	k_mutex_lock(&led_mutex, K_FOREVER);
 
 #if defined(KBC_SCROLL_LOCK) && !defined(CONFIG_DEBUG_LED)
-	gpio_set_type(KBC_SCROLL_LOCK, GPIO_OUTPUT);
+	//gpio_set_type(KBC_SCROLL_LOCK, GPIO_OUTPUT); // RTK_TODO
 	ret = gpio_write_pin(KBC_SCROLL_LOCK, !GET_SCROLL_LOCK(leds));
 #endif
 	if (ret) {
@@ -911,7 +911,7 @@ void kbc_set_leds(uint8_t leds)
 	}
 
 #if defined(KBC_NUM_LOCK) && !defined(CONFIG_DEBUG_LED)
-	gpio_set_type(KBC_NUM_LOCK, GPIO_OUTPUT);
+	//gpio_set_type(KBC_NUM_LOCK, GPIO_OUTPUT); //RTK_TODO
 	ret = gpio_write_pin(KBC_NUM_LOCK, !GET_NUM_LOCK(leds));
 #endif
 	if (ret) {

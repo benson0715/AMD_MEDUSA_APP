@@ -11,3 +11,4 @@ target_sources(app PRIVATE src/gpio_shell.c)
 target_sources(app PRIVATE src/flash_shell.c)
 
 zephyr_compile_options(-Werror)
+zephyr_compile_options(-Wno-unused-variable)

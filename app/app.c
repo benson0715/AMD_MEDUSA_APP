@@ -25,7 +25,7 @@ LOG_MODULE_REGISTER(ecfw, CONFIG_EC_LOG_LEVEL);
  * Initializes VCI, PSL, board configuration, and starts all tasks.
  * Runs the main application loop.
  */
-void main(void)
+int main(void)
 {
 	int ret;
 #if CONFIG_VCI
@@ -56,7 +56,7 @@ void main(void)
 	ret = board_init();
 	if (ret) {
 		LOG_ERR("Failed to init board %d", ret);
-		return;
+		return 0;
 	}
 	strap_init();
 	start_all_tasks();

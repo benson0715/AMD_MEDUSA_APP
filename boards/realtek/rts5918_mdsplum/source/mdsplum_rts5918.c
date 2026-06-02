@@ -11,6 +11,7 @@
  */
 
 #include "board_config.h"
+#include "espi_hub.h"
 
 /* Mirror of `g_sysAcLimit1` declared in board_init.h. Definition has
  * to live somewhere; place it here so it's part of the per-board

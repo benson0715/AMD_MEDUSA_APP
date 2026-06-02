@@ -38,8 +38,8 @@ bool brdId_isPEO(void);
 bool brdId_isDM(void);
 bool brdId_isRevC(void);
 
-/* High-level board-class predicates referenced from app/* and
- * Jupiter/*. All default to false on RTS5918 until the EEPROM SKU read
+/* High-level board-class predicates referenced from app/ and
+ * Jupiter/. All default to false on RTS5918 until the EEPROM SKU read
  * path is implemented.
  */
 #define BRDID_isTV          (0)

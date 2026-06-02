@@ -5,6 +5,10 @@
  */
 
 #include "gpioAutoGen.h"
+#include <zephyr/sys/printk.h>
+#include "gpio_ec.h"
+
+
 void prim_pwrg_isr(void)
 {
 	printk("FOR TEST In GPIO ISR\r\n");

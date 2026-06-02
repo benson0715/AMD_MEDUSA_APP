@@ -3,7 +3,7 @@
 
 # RTS5918 vendor shim layer — only compiled in when the SoC series is
 # RTS5918. Mirror of drivers/nuvoton/CMakeLists.txt with Realtek
-# equivalents for the helpers AMD's app/* and drivers/* code calls
+# equivalents for the helpers AMD's app/ and drivers/* code calls
 # through Nuvoton-named entry points.
 
 target_sources(app

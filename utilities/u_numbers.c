@@ -20,7 +20,7 @@ TtempFix u_num_temp_flt2fix(TtempFlt flt)
 	if (flt < -U_NUM_TEMPERATURE_FIX_POINT_ENCODING_OFFSET)
 		return fix;
 
-	if (flt > (255.875 - U_NUM_TEMPERATURE_FIX_POINT_ENCODING_OFFSET)) {
+	if (flt > (255.875f - U_NUM_TEMPERATURE_FIX_POINT_ENCODING_OFFSET)) {
 		fix.u16 = 0xFFFF;
 		return fix;
 	}
@@ -71,7 +71,7 @@ TtempF16 u_num_temp_fltTof16(TtempFlt flt)
 		return f16;
 	}
 
-	f16.u16 = (uint16_t)((int16_t)(flt / (1.0 / 256)));
+	f16.u16 = (uint16_t)((int16_t)(flt / (1.0f / 256.0f)));
 	return f16;
 }
 

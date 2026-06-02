@@ -15,8 +15,8 @@
 
 #define DBG_LOGFIFO_SIZE    (1024 * 8)   // Default size 8K
 
-static uint8_t _s_logFifo[DBG_LOGFIFO_SIZE];
-static uint8_t _s_rrqId_logFifo = U_RRQ_INVALID_RRQ_ID;
+// static uint8_t _s_logFifo[DBG_LOGFIFO_SIZE];
+// static uint8_t _s_rrqId_logFifo = U_RRQ_INVALID_RRQ_ID;
 static K_MUTEX_DEFINE(fifo_mutex);
 const struct device *uart_fifo;
 
