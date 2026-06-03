@@ -100,7 +100,7 @@
 };
 
 &adc0 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&adc1_gpio080 &adc2_gpio081 &adc3_gpio082
 		     &adc4_gpio083 &adc5_gpio084 &adc6_gpio085
 		     &adc7_gpio086 &adc8_gpio087 &adc9_gpio088

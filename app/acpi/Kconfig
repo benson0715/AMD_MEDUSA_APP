@@ -3,6 +3,12 @@
 # Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
 menu "ACPI"
 
+config EC_ACPI
+	bool "Enable ACPI"
+	default y
+	help
+	  Indicate if EC supports ACPI.
+
 config ACPI
 	bool "Enable ACPI"
 	default y
@@ -18,7 +24,7 @@ config ACPI_DAC_PWR
 
 config ACPI_LOG_LEVEL
 	int "ACPI log level"
-	depends on ACPI
+	depends on EC_ACPI
 	depends on LOG
 	default 2 if EC_DEBUG_LOG
 	default 0

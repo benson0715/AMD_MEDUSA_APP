@@ -33,7 +33,7 @@ int main(void)
 	app_vci_samplePwrBtn();
 	app_vci_latchRst();
 #endif
-	printk("In main!!\r\n");
+	printk("In main!!6/3 fuck\r\n");
 	/* Delayed start for debug */
 	k_sleep(K_SECONDS(CONFIG_EC_DELAYED_BOOT));
 	printk("In main2!!\r\n");

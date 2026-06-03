@@ -561,10 +561,10 @@ void AcpiSwitchHandler_SW01 (uint8_t isRead, uint8_t ui8Idx, uint8_t * pui8Data)
 
 		if (ui8Data & (0x10)) {                     /* Bit[4] - f_wirelessManagability */
 			SET_NV_OPTIONS(f_wirelessManagability, 1);
-			gpio_set_power(MPM_EVENT_N, GPIO_CTRL_PWRG_VTR_IO);
+			// gpio_set_power(MPM_EVENT_N, GPIO_CTRL_PWRG_VTR_IO); // TODO_RTK
 		} else {
 			SET_NV_OPTIONS(f_wirelessManagability, 0);
-			gpio_set_power(MPM_EVENT_N, GPIO_CTRL_PWRG_OFF);
+			// gpio_set_power(MPM_EVENT_N, GPIO_CTRL_PWRG_OFF); // TODO_RTK
 		}
 
 		if (ui8Data & (0x20)) {                     /* Bit[5] - f_s0i3KbcWake */
@@ -1154,16 +1154,18 @@ void AcpiEcVersionHandler (uint8_t isRead, uint8_t ui8Idx, uint8_t * pui8Data)
 {
 	uint8_t ui8Length, ui8Index;
 
-	if (isRead) {
-		uint8_t ui8Buff[10];
-		ui8Length = ec_version_stringGet(3, ui8Buff, sizeof(ui8Buff));
-		ui8Index = ui8Idx - ACPI_EC_FW_VERSION;
+	// if (isRead) {
+	// 	uint8_t ui8Buff[10];
+	// 	ui8Length = ec_version_stringGet(3, ui8Buff, sizeof(ui8Buff));
+	// 	ui8Index = ui8Idx - ACPI_EC_FW_VERSION;
 
-		if (!ui8Length || ui8Index > ui8Length) {
-			return;
-		}
-		*pui8Data = ui8Buff[ui8Index];
-	}
+	// 	if (!ui8Length || ui8Index > ui8Length) {
+	// 		return;
+	// 	}
+	// 	*pui8Data = ui8Buff[ui8Index];
+	// }
+	*pui8Data = 0x11; // TODO_RTK
+	return;
 }
 
 /**
@@ -1178,30 +1180,32 @@ void AcpiEcBuildDateHandler (uint8_t isRead, uint8_t ui8Idx, uint8_t * pui8Data)
 	uint8_t ui8Length, ui8Index;
 	static uint8_t strBuf[4] = {0, 0, 0, 0};
 
-	if (isRead) {
-		if (0 == strBuf[0]) {
-			uint8_t ui8Buff[11];
-			ui8Length = ec_version_stringGet(2, ui8Buff, sizeof(ui8Buff));
-			if (!ui8Length) return;
-			uint16_t yyyy = (ui8Buff[0] - '0') * 1000 +
-							(ui8Buff[1] - '0') * 100 +
-							(ui8Buff[2] - '0') * 10 +
-							(ui8Buff[3] - '0');
-			uint8_t mm =	(ui8Buff[5] - '0') * 10 +
-							(ui8Buff[6] - '0');
+	// if (isRead) {
+	// 	if (0 == strBuf[0]) {
+	// 		uint8_t ui8Buff[11];
+	// 		ui8Length = ec_version_stringGet(2, ui8Buff, sizeof(ui8Buff));
+	// 		if (!ui8Length) return;
+	// 		uint16_t yyyy = (ui8Buff[0] - '0') * 1000 +
+	// 						(ui8Buff[1] - '0') * 100 +
+	// 						(ui8Buff[2] - '0') * 10 +
+	// 						(ui8Buff[3] - '0');
+	// 		uint8_t mm =	(ui8Buff[5] - '0') * 10 +
+	// 						(ui8Buff[6] - '0');
 
-			strBuf[0] = (uint8_t)((yyyy - 2010) >= 10 ? ('A' + (yyyy - 2010)) : ('0' + (yyyy - 2010)));
-			strBuf[1] = (uint8_t)(mm >= 10 ? ('A' + (mm - 10)) : ('0' + mm));
-			strBuf[2] = ui8Buff[8];
-			strBuf[3] = ui8Buff[9];
-		}
+	// 		strBuf[0] = (uint8_t)((yyyy - 2010) >= 10 ? ('A' + (yyyy - 2010)) : ('0' + (yyyy - 2010)));
+	// 		strBuf[1] = (uint8_t)(mm >= 10 ? ('A' + (mm - 10)) : ('0' + mm));
+	// 		strBuf[2] = ui8Buff[8];
+	// 		strBuf[3] = ui8Buff[9];
+	// 	}
 
-		ui8Index = ui8Idx - ACPI_EC_FW_BUILD_DATE;
-		if (0 == strBuf[0] || ui8Index >= 4) {
-			return;
-		}
-		*pui8Data = strBuf[ui8Index];
-	}
+	// 	ui8Index = ui8Idx - ACPI_EC_FW_BUILD_DATE;
+	// 	if (0 == strBuf[0] || ui8Index >= 4) {
+	// 		return;
+	// 	}
+	// 	*pui8Data = strBuf[ui8Index];
+	// }
+	*pui8Data = 0x11; // TODO_RTK
+	return;
 }
 
 /**
@@ -1215,16 +1219,18 @@ void AcpiEcBuildTimeHandler (uint8_t isRead, uint8_t ui8Idx, uint8_t * pui8Data)
 {
 	uint8_t ui8Length, ui8Index;
 
-	if (isRead) {
-		uint8_t ui8Buff[10];
-		ui8Length = ec_version_stringGet(6, ui8Buff, sizeof(ui8Buff));
-		ui8Index = ui8Idx - ACPI_EC_FW_BUILD_TIME;
+	// if (isRead) {  // TODO_RTK
+	// 	uint8_t ui8Buff[10];
+	// 	ui8Length = ec_version_stringGet(6, ui8Buff, sizeof(ui8Buff));
+	// 	ui8Index = ui8Idx - ACPI_EC_FW_BUILD_TIME;
 
-		if (!ui8Length || ui8Index > ui8Length) {
-			return;
-		}
-		*pui8Data = ui8Buff[ui8Index];
-	}
+	// 	if (!ui8Length || ui8Index > ui8Length) {
+	// 		return;
+	// 	}
+	// 	*pui8Data = ui8Buff[ui8Index];
+	// }
+	*pui8Data = 0x11;
+	return;
 }
 
 
@@ -1269,7 +1275,7 @@ void ACPIMiscStatusControlHandler (uint8_t isRead, uint8_t ui8Idx, uint8_t * pui
 	} else {
 #if CONFIG_ACDCSWITCH
 		if (*pui8Data & AMD_AC_DC_SWITCH_ENABLE) {
-			gpio_set_type(CHG_ACOK, GPIO_OPEN_DRAIN | GPIO_OUTPUT);
+			gpio_set_type(CHG_ACOK, GPIO_OPEN_DRAIN | GPIO_OUTPUT_HIGH);
 
 			SET_NV_OPTIONS(chg_AcDcSwitch, 1);
 #if CONFIG_BATTERY_MANAGEMENT

@@ -59,7 +59,7 @@
 };
 
 &ps2_1 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&ps2data1_gpio067 &ps2data1_gpio067_pin_sel
 		     &ps2clk1_gpio068 &ps2clk1_gpio068_pin_sel>;
 	pinctrl-names = "default";

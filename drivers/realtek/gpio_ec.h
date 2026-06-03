@@ -324,7 +324,27 @@ int gpio_add_callback_pin(uint32_t port_pin, struct gpio_callback *callback);
 int gpio_remove_callback_pin(uint32_t port_pin, struct gpio_callback *callback);
 int gpio_force_configure_pin(uint32_t port_pin, gpio_flags_t flags);
 int gpio_get_pending_interrupt_pin(uint32_t port_pin);
+/**
+ * @brief Change GPIO attribute: input, output, or open drain
+ *
+ * @param port_pin gpio pin number.
+ * @param type gpio type: input, output, or open drain
+ */
+void gpio_set_type(uint32_t port_pin, gpio_flags_t type);
 
+/**
+ * @brief Set the power for a pin.
+ *
+ * Wrapper interface to configure several GPIOs by receiving
+ * an array containing the encoded Port/Pin, flags and direction.
+ *
+ * @param port_pin Encoded port/pin.
+ * @param value Desired logical level.
+ *
+ * @retval -ENODEV error when internal device validation failed.
+ * @retval 0 if successful, negative errno code on failure.
+ */
+int  gpio_set_power(uint32_t port_pin, uint32_t pwrSt);
 /**
  * @brief Configure pin interrupt.
  *

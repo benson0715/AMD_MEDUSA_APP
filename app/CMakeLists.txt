@@ -137,7 +137,7 @@ target_sources_ifdef(CONFIG_UDC_MANAGEMENT app
     ${CMAKE_CURRENT_LIST_DIR}/udc/app_udc.h
     )
 
-target_sources_ifdef(CONFIG_ACPI app
+target_sources_ifdef(CONFIG_EC_ACPI app
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/acpi/app_acpi.c
     PUBLIC

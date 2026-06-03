@@ -309,7 +309,7 @@ int gpio_configure_all_pins(void)
 		const struct device *gpio_dev = drv_gpio_get_dev(port);
 		int                  ret;
 
-		LOG_DBG("i: %d port: %p pin: %d cfg: %x", i, gpio_dev, pin, gpio_hub_pins[i].cfg);
+		printf("i: %d port: %p pin: %d cfg: %x, idx: %x\r\n", i, gpio_dev, pin, gpio_hub_pins[i].cfg, gpio_hub_pins[i].pin_idx);
 		if (GPIO_PIN_IS_UNDEFINED(gpio_hub_pins[i].pin_idx)) {
 			continue;
 		}
@@ -353,19 +353,31 @@ int gpio_force_configure_pin(uint32_t port_pin, gpio_flags_t flags)
 
 int gpio_configure_array(struct gpio_ec_config *gpios, uint32_t len)
 {
-	int rc = 0;
+	int ret;
 
-	if (!gpios) {
-		return -EINVAL;
-	}
-	for (uint32_t i = 0; i < len; i++) {
-		int err = gpio_configure_pin(gpios[i].port_pin, gpios[i].cfg);
-
-		if (err && !rc) {
-			rc = err;
+	/* Configure static board gpios */
+	for (int i = 0; i < len; i++) {
+		uint32_t             port = gpio_get_port(gpios[i].port_pin);
+		gpio_pin_t           pin = gpio_get_pin(gpios[i].port_pin);
+		const struct device *gpio_dev = drv_gpio_get_dev(port);		
+		printk("gpio_configure_array: %x\r\n", gpios[i].port_pin);
+		if (GPIO_PIN_IS_UNDEFINED(gpios[i].port_pin)) {
+			continue;
 		}
+
+		if (!gpio_dev) {
+			LOG_ERR("Invalid port %d at %d", port, i);
+			continue;
+		}
+		ret = gpio_pin_configure(gpio_dev, pin, gpios[i].cfg);
+		if (ret) {
+			LOG_ERR("Config fail: %d i:%d port:%p pin: %d cfg: %d", ret,
+			        i, gpio_dev, pin, gpio_hub_pins[i].cfg);
+		}				
+
 	}
-	return rc;
+
+	return 0;
 }
 
 int gpio_set_interrupt(uint32_t port_pin, uint32_t flag)
@@ -384,9 +396,9 @@ int gpio_write_pin(enum gpio_idx pin_idx, int value)
 	gpio_pin_t           pin;
 	const struct device *gpio_dev;
 
-#ifndef CONFIG_MDL_GPIO_HUB_QUIET
-	printk("gpio_write_pin: %s(%d)\n", get_pin_name(pin_idx), value);
-#endif
+//#ifndef CONFIG_MDL_GPIO_HUB_QUIET
+	printk("RTK_gpio_write_pin: %s(%d)\n", get_pin_name(pin_idx), value);
+//#endif
 
 	if (GPIO_PIN_IS_UNDEFINED(pin_idx)) {
 		return -ENODEV;
@@ -454,6 +466,19 @@ int gpio_read_pin(enum gpio_idx pin_idx)
 #endif
 	return ret;
 }
+
+/**
+ * @brief Change GPIO attribute: input, output, or open drain
+ *
+ * @param port_pin gpio pin number.
+ * @param type gpio type: input, output, or open drain
+ */
+void gpio_set_type(uint32_t port_pin, gpio_flags_t type)
+{
+	gpio_configure_pin(port_pin, type);
+}
+
+
 
 int gpio_init_callback_pin(enum gpio_idx pin_idx,
 			   struct gpio_callback *callback,

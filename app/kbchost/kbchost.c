@@ -911,7 +911,7 @@ void kbc_set_leds(uint8_t leds)
 	}
 
 #if defined(KBC_NUM_LOCK) && !defined(CONFIG_DEBUG_LED)
-	//gpio_set_type(KBC_NUM_LOCK, GPIO_OUTPUT); //RTK_TODO
+	//gpio_set_type(KBC_NUM_LOCK, GPIO_OUTPUT); // RTK_TODO
 	ret = gpio_write_pin(KBC_NUM_LOCK, !GET_NUM_LOCK(leds));
 #endif
 	if (ret) {
@@ -925,7 +925,7 @@ void kbc_set_leds(uint8_t leds)
 	}
 
 #if defined(KBC_CAPS_LOCK) && !defined(CONFIG_DEBUG_LED)
-	gpio_set_type(KBC_CAPS_LOCK, GPIO_OUTPUT);
+	//gpio_set_type(KBC_CAPS_LOCK, GPIO_OUTPUT); // RTK_TODO
 #if defined(BRD_MDS_DORNE) || defined(BRD_MDS_AERIS)
 	ret = gpio_write_pin(KBC_CAPS_LOCK, GET_CAPS_LOCK(leds));
 #else

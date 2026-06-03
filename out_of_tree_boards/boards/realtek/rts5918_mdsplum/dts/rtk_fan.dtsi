@@ -51,14 +51,14 @@
 };
 
 &tach1 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&tacho1_gpio074>;
 	pinctrl-names = "default";
 	pulses-per-round = <2>;
 };
 
 &tach2 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&tacho2_gpio075>;
 	pinctrl-names = "default";
 	pulses-per-round = <2>;

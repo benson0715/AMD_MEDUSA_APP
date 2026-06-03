@@ -74,7 +74,7 @@ config VR_CONFIG_LOG_LEVEL
 config BOARD_PERIPH_LOG_LEVEL
 	int "board periph log level"
 	depends on LOG
-	default 2 if EC_DEBUG_LOG
+	default 4 if EC_DEBUG_LOG
 	default 0
 	help
 	  Set log level for board periph.

@@ -138,7 +138,7 @@
 /* ----- I2C buses (Bison uses 9 of the 11 controllers) ----- */
 &i2c_1 {
 	/* WWAN — GPIO077/078 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c01_dataa_gpio077 &i2c01_dataa_gpio077_pin_sel
 		     &i2c01_clka_gpio078 &i2c01_clka_gpio078_pin_sel>;
 	pinctrl-names = "default";
@@ -152,11 +152,11 @@
  * desired.
  */
  /*
-&i2c_2 { status = "okay"; };
+&i2c_2 { status = "disabled"; };
 */
 &i2c_3 {
 	/* GSENSE — GPIO142/143 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c03_datab_gpio142 &i2c03_datab_gpio142_pin_sel
 		     &i2c03_clkc_gpio143 &i2c03_clkc_gpio143_pin_sel>;
 	pinctrl-names = "default";
@@ -191,7 +191,7 @@
 	 *      and KTS1622's behavior at those addresses is not
 	 *      identical (drive-strength register layout differs).
 	 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c04_dataa_gpio069 &i2c04_dataa_gpio069_pin_sel
 		     &i2c04_clka_gpio070 &i2c04_clka_gpio070_pin_sel>;
 	pinctrl-names = "default";
@@ -199,7 +199,7 @@
 
 &i2c_5 {
 	/* PD controller — GPIO015/016 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c05_clk_gpio015 &i2c05_data_gpio016>;
 	pinctrl-names = "default";
 };
@@ -208,19 +208,19 @@
 	/* SSD_THRM — GPIO100/101 (datasheet GPIO100/101 = I3C06_SCL/SDA Func1,
 	 * I3C03_SCL/SDA Func2) — actually the CSV says GPIO100=clk, GPIO101=data
 	 */
-	status = "okay";
+	status = "disabled";
 };
 
 &i2c_7 {
 	/* Debug I2C — GPIO014/017 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c07_clk_gpio014 &i2c07_data_gpio017>;
 	pinctrl-names = "default";
 };
 
 &i2c_8 {
 	/* BAT — GPIO147 (DATA), GPIO150 (CLK) */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c08_datab_gpio147 &i2c08_datab_gpio147_pin_sel
 		     &i2c08_clkb_gpio150 &i2c08_clkb_gpio150_pin_sel>;
 	pinctrl-names = "default";
@@ -228,7 +228,7 @@
 
 &i2c_9 {
 	/* CHARGE — GPIO144 (CLK), GPIO148 (DATA) */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c09_clka_gpio144 &i2c09_clka_gpio144_pin_sel
 		     &i2c09_dataa_gpio148 &i2c09_dataa_gpio148_pin_sel>;
 	pinctrl-names = "default";
@@ -247,7 +247,7 @@
 	 *   _I2C10_SDA_SEL bit 14 = 0  -> GPIO149 (i2c10_dataa)
 	 *   _I2C10_SCL_SEL bit 13 = 1  -> GPIO152 (i2c10_clkb)
 	 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c10_dataa_gpio149 &i2c10_dataa_gpio149_pin_sel
 		     &i2c10_clkb_gpio152  &i2c10_clkb_gpio152_pin_sel>;
 	pinctrl-names = "default";
@@ -267,7 +267,7 @@
 	 *   _I2C11_SDA_SEL bit 16 = 0  -> GPIO071 (i2c11_dataa)
 	 *   _I2C11_SCL_SEL bit 15 = 0  -> GPIO072 (i2c11_clka)
 	 */
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&i2c11_dataa_gpio071 &i2c11_dataa_gpio071_pin_sel
 		     &i2c11_clka_gpio072  &i2c11_clka_gpio072_pin_sel>;
 	pinctrl-names = "default";

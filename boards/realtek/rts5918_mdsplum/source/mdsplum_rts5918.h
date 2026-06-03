@@ -27,17 +27,10 @@
 #include "gpio_ec.h"
 #include "gpioAutoGen.h"  /* exposes Board_Gpio_AcpiHandler() to app/acpi/ */
 
-#define PLATFORM_DATA(x, y) ((x) | ((y) << 8))
 
-#define TODO_PIN  EC_GPIO_PORT_PIN(RTK_GPIO_A, RTK_GPIO_00)
 #define GPIO_PIN_NULL  0xFFFFFFFFu
 
-/* Power sequencing / SLP signals */
-#define SLP_S3_S0A3_N      TODO_PIN  /* TODO(realtek-schematic) */
-#define SLP_S5_N           TODO_PIN  /* TODO(realtek-schematic) */
-#define APU_RST_N          TODO_PIN  /* TODO(realtek-schematic) */
-#define APU_PWROK          TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_PWR_BTN_N       TODO_PIN  /* TODO(realtek-schematic) */
+
 
 /* SLP semantic helpers used by app/power_sequencing/ */
 #define SLP_S3_ASSERT       (!gpio_read_pin(SLP_S3_S0A3_N))
@@ -46,47 +39,14 @@
 #define DEASSERT_FCH_PWRBTN gpio_write_pin(EC_PWR_BTN_N, 1)
 
 /* Debug / status LEDs */
-#define EC_BLINK_N         TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_CAP_LED_N       TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_SCROLL_LED_N    TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_NUM_LED_N       TODO_PIN  /* TODO(realtek-schematic) */
+
 #define EC_DEBUG_LED(x)    gpio_write_pin(EC_BLINK_N, !(x))
 #define KBC_CAPS_LOCK      EC_CAP_LED_N
 #define KBC_SCROLL_LOCK    EC_SCROLL_LED_N
 #define KBC_NUM_LOCK       EC_NUM_LED_N
 
-/* Peripheral auxiliary reset lines */
-#define EC_WLAN_AUX_RST_N  TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_WWAN_AUX_RST_N  TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_LOM_AUX_RST_N   TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_SD_AUX_RST_N    TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_EVAL_AUX_RST_N  TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_EVAL_CARD_PWREN TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_EVAL_SLT_PWREN  TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_EVAL_BOMACO_EN  TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_EVAL_19V_PWREN  TODO_PIN  /* TODO(realtek-schematic) */
 
-/* Charger / power-supply signals */
-#define CHG_ACOK           TODO_PIN  /* TODO(realtek-schematic) */
-#define CHG_BATT_DETECT    TODO_PIN  /* TODO(realtek-schematic) */
-#define CHG_PROCHOT_N      TODO_PIN  /* TODO(realtek-schematic) */
 
-/* Wireless / MPM event signals */
-#define MPM_EVENT_N        TODO_PIN  /* TODO(realtek-schematic) */
-#define WLAN_PD_N          TODO_PIN  /* TODO(realtek-schematic) */
-#define WWAN_PD_N          TODO_PIN  /* TODO(realtek-schematic) */
-
-/* Power-sequencing signals referenced from app/power_sequencing */
-#define APU_THERMTRIP_N    TODO_PIN  /* TODO(realtek-schematic) */
-#define CHG_EC_PROCHOT_N   TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_APU_PROCHOT_N   TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_1V8_S5_EN       TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_S5_PWREN        TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_SLP_S3_S0A3_N   SLP_S3_S0A3_N  /* alias to SLP_S3_S0A3_N */
-#define EC_SLP_S5_N        SLP_S5_N       /* alias to SLP_S5_N */
-#define RSMRST_N           TODO_PIN  /* TODO(realtek-schematic) */
-#define SYSTEM_S5_PG       TODO_PIN  /* TODO(realtek-schematic) */
-#define EC_APU_SCI_N       TODO_PIN  /* TODO(realtek-schematic) */
 
 /* AMD-custom eSPI virtual-wire signals that NPCX4 gets via the AMD
  * kernel patch. Defined here (rather than in drivers/realtek/realtek_espi.h)
@@ -115,31 +75,28 @@
 #define ESPI_VWIRE_SIGNAL_SOC_LP         ((enum espi_vwire_signal)0x84)
 #endif
 
-/* eSPI signals — these live on the RTS5918 eSPI pinctrl group; the
- * tokens below are kept for any explicit gpio_write_pin reference but
- * must remain in pinctrl mode under normal operation.
- */
-#define ESPI_EC_ALERT_N    TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_CLK        TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_CS_N       TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_D0         TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_D1         TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_D2         TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_D3         TODO_PIN  /* TODO(realtek-schematic) */
-#define ESPI_EC_RESET_N    TODO_PIN  /* TODO(realtek-schematic) */
 
-/* Power sequencing pin lists — empty placeholders, terminated by
- * GPIO_PIN_NULL so power_sequencing iteration safely no-ops until
- * filled in from the schematic.
- */
+/*******************
+ * APU Power OK
+ *******************/
 #define PIN_LIST_DRIVER_TO_HIGH_AFTER_APU_PWROK \
-	GPIO_PIN_NULL
+     EC_WLAN_AUX_RST_N,               EC_WWAN_AUX_RST_N,                 EC_LOM_AUX_RST_N,                   EC_SD_AUX_RST_N,                   \
+     EC_EVAL_AUX_RST_N,               GPIO_PIN_NULL
+
+/*******************
+ * ESPI Power on
+ *******************/
 #define PIN_LIST_ESPI_SIGNALES_TO_PWRON \
-	ESPI_EC_ALERT_N, ESPI_EC_CLK, ESPI_EC_CS_N, ESPI_EC_D0, \
-	ESPI_EC_D1, ESPI_EC_D2, ESPI_EC_D3, ESPI_EC_RESET_N, \
-	GPIO_PIN_NULL
+     ESPI_EC_ALERT_N,            ESPI_EC_CLK,                  ESPI_EC_CS_N,                  ESPI_EC_D0,                 \
+     ESPI_EC_D1,                 ESPI_EC_D2,                   ESPI_EC_D3,                    ESPI_EC_RESET_N,            \
+     GPIO_PIN_NULL
+
+/*******************
+ * SLP S3 high
+ *******************/
 #define PIN_LIST_DRIVER_TO_LOW_BEFORE_EC_SLP_S3_L_TO_HIGH \
-	GPIO_PIN_NULL
+     EC_EVAL_AUX_RST_N,               EC_EVAL_CARD_PWREN,      EC_EVAL_SLT_PWREN,    EC_EVAL_BOMACO_EN,             \
+     EC_EVAL_19V_PWREN,                GPIO_PIN_NULL
 
 /*
  * Device instance handles. Mirror the AMD app's vocabulary so
@@ -229,9 +186,53 @@ enum i2c_bus_num {
  */
 #define SHA              DT_INVALID_NODE
 
+/*
+ * Smart battery
+ */
+#define APP_SMTBTY_DEBUG_ENABLE             (1)
+#define MAX_BATTERY_SUPPORTED               (1)
+#define APP_BATTERY_NO_BATT_CHARGE_VOLTAGE  (12000)   // If there is no battery adjust the charger output voltage to 12V
+#define APP_BATTERY_FULL_CHARGE_VOLTAGE     (13200)   /* 3-cell */
+#define APP_BATTERY_MIN_BATTERY_VOLTAGE     (10176)   /* [13:6] 0x27C0; 3.4V/cell */
+
+#define APP_BATTERY_REACTIVING_VOLTAGE      (13200)
+#define APP_BATTERY_REACTIVING_CURRENT      (256)
+
+#define APP_BATTERY_PRECHARGE_THRESHOLD     (0x30)
+#define APP_BATTERY_PRECHARGE_VOLTAGE       (13200)
+#define APP_BATTERY_PRECHARGE_CURRENT       (512)
+
+#define APP_BATTERY_MAX_CHARGE_CURRENT      (2428)    /* [12:2] 0x097C; 0.5C */
+#define APP_BATTERY_MAX_DISCHARGE_CURRENT   (5000)
+
+#define MAX_CHARGER_SUPPORTED           	(1)
+#define F_AC_ADAPTER_VIN_VOLTAGE        	(19000)   /* 19000mV */
+#define F_AC_ADAPTER_VIN_VOLTAGE_330        (19500)   /* 19000mV */
+#define F_AC_ADAPTER_130W_MAX_CURRENT   	(6848)    /* 6848mA for 130W adapter */
+#define F_AC_ADAPTER_150W_MAX_CURRENT   	(7872)   /* 7552mA@19V = 143.4W adapter / 7872mA@19V = 149.56W adapter */
+#define F_AC_ADAPTER_330W_MAX_CURRENT  		(16900)   /* 16900mA@19V = 321W adapter */
+#define APP_SMTBTY_CAPACITY_MODE_10MWH      (1)    /* 1: 10mWh; 0: mAh */
+// Charger ID
+#define AC_SINK   0
+#define PD_SINK   1
+#define DEV_CHARGER_ID_TO_PORT(chgId)    (chgId & 0x01)
+
+#define DEV_CHARGER_CURRENT_PORT                 0
+#define DEV_CHARGER_SWITCH_TO_PORT(port)         do { } while (0)
+
+#define MD_ACPI_HYPERPLANE_MAX_PLANES   (30)
+
+/* smart prochot for DC mode hotplug PD source */
+#define PD_DC_HOTPLUG_PROCHOT           (1)
+/* smart prochot for AC/PD switch */
+#define PD_AC_HOTPLUG_PROCHOT           (1)
+
+/* enable the PD 48V support */
+#define PD_MODULE_48V_EN                (0)
 /* AC adapter / battery limits used by power-source management. Bring-up
  * values are deliberately conservative; tune against Plum BOM later.
  */
+#define F_AC_ADAPTER_130W_MAX_CURRENT   	(6848)    /* 6848mA for 130W adapter */
 #define BOARD_AC_ADAPTER_WATT_MAX_DEFAULT  150u
 #define BOARD_BATTERY_CELL_COUNT_DEFAULT   3u
 

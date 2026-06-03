@@ -10,7 +10,7 @@
 /**
  * @brief System power states as defined in ACPI spec chapter 2-2.
  */
-#include "zephyr/toolchain/gcc.h"
+#include <zephyr/toolchain.h>
 enum system_power_state {
 	/* Initial system status after system power on */
 	SYSTEM_INIT_STATE,

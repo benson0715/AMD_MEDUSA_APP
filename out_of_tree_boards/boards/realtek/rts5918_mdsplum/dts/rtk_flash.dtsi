@@ -56,8 +56,8 @@
  */
 &flash_controller {
 	pinctrl-0 = <
-		&spic01_cs0e_gpio122                                    /* CS0 → SPI_CS0 */
-		&spic01_cs0d_intr_gpio121                               /* CS1 → GPIO */
+		&spic01_cs0d_gpio121                                /* CS1 → SPI_CS1 */
+		&spic01_cs0e_intr_gpio122                           /* CS0 → GPIO */
 		&spic01_clk0c_gpio125                                   /* CLK */
 		&spic01_io0b_gpio123 &spic01_io0b_gpio123_pin_sel       /* IO0 */
 		&spic01_io1b_gpio124 &spic01_io1b_gpio124_pin_sel       /* IO1 */

@@ -13,6 +13,53 @@
 #define __GPIO_AUTOGEN_H__
 
 #include <stdint.h>
+#include "system.h"
+
+
+/* Runtime GPIO settings */
+#define GPIO_RUNTIME_SWITCH_G3                                         \
+    {EC_EVAL_BOMACO_EN,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_SLT_PWREN,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_CARD_PWREN, GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_SD_AUX_RST_N,    GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_AUX_RST_N,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_DT_SLT_AUX_RST_N, GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,          0         },    \
+    {EC_BLINK_N,         GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_WWAN_AUX_RST_N,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_WLAN_AUX_RST_N,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {MPM_EVENT_N,        GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_19V_PWREN,  GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+    {EC_LOM_AUX_RST_N,   GPIO_ACTIVE_HIGH | GPIO_INPUT | GPIO_DEFINE,           0         },    \
+
+#if 0
+#define GPIO_RUNTIME_SWITCH_S5S4                                       \
+    {ESPI_EC_D0,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D1,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D2,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D3,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_CS_N,       GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_CLK,        GPIO_INPUT,                                  0         },    \
+    {ESPI_EC_ALERT_N,    GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+
+
+#define GPIO_RUNTIME_SWITCH_S3                                         \
+    {ESPI_EC_D0,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D1,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D2,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_D3,         GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_CS_N,       GPIO_INPUT | GPIO_PULL_UP,                   0         },    \
+    {ESPI_EC_CLK,        GPIO_INPUT,                                  0         },    \
+
+#endif
+#define GPIO_RUNTIME_SWITCH_S0                                         \
+
+/**
+ * @brief change GPIO group status based on power sequence
+ *
+ * @param current power sequence status
+ * @retval void
+ */
+void __autoGen_runtimeGpioSwitching (enum system_power_state pwr_state);
 
 void __autoGen_initECGPIO(void);
 

@@ -135,8 +135,6 @@ struct inputBuffer_info inputBuffer_lst[] = {
 			{{0}, NULL, 0}, "PdSrcOn"},
 	{CHG_EC_PROCHOT_N,         false, 0,                        NULL, CHG_PROCHOT_INIT_POS,
 			{{0}, NULL, 0}, "ChgProchot"},
-	{APU_EC_RESET_N,             false, 0,                        NULL, APU_RST_INIT_POS,
-			{{0}, NULL, 0}, "ApuRst"},
 	{APU_PWROK,             false, 0,                        NULL, APU_PWROK_INIT_POS,
 			{{0}, NULL, 0}, "ApuPwrOk"},
 	{APU_THERMTRIP_N,        false, 0,                        NULL, APU_THERMALTRIP_INIT_POS,
@@ -189,7 +187,6 @@ void _dumpPinSt(uint8_t st, const char * pMsg)
 {
 	uint32_t pinSt = 0;
 #if (CONFIG_PERIPHERAL_LOG_LEVEL)
-	pinSt |= (gpio_read_pin(APU_EC_RESET_N)   ? 0x0001 : 0);
 	pinSt |= (gpio_read_pin(APU_PWROK)        ? 0x0002 : 0);
 	pinSt |= (gpio_read_pin(SYSTEM_S5_PG)    ? 0x0004 : 0);
 	pinSt |= (gpio_read_pin(SLP_S3_S0A3_N)    ? 0x0008 : 0);
@@ -244,14 +241,13 @@ static struct inputBuffer_info* periph_get_gpio_info(uint32_t pin)
  * @param gpio_cb: callback
  * @param    pins: pin status
  */
-void board_periph_apu_rst_callback(const struct device *dev,
-		     struct gpio_callback *gpio_cb, uint32_t pins)
+void board_periph_apu_rst_callback()
 {
-	struct inputBuffer_info *info = CONTAINER_OF(gpio_cb, struct inputBuffer_info, gpio_cb);
+	// struct inputBuffer_info *info = CONTAINER_OF(gpio_cb, struct inputBuffer_info, gpio_cb);
 
-	uint8_t level = gpio_read_pin(APU_EC_RESET_N);
-	LOG_PWRSEQ_PIN_STATUS(level, info->name);
-
+	//uint8_t level = gpio_read_pin(APU_EC_RESET_N);
+	//LOG_PWRSEQ_PIN_STATUS(level, info->name);
+	uint8_t level = (*(volatile uint32_t *)(0x40100834) & (1UL << 2)); // Read GPIO002 status
 	LOG_ERR("APURST: %x", level);
 
 	if (!level) {
@@ -788,7 +784,6 @@ periph_gpio_callback gpio_cb_list[] = {
 	board_periph_chg_ok_callback,
 	board_periph_pd_src_callback,
 	board_periph_chg_prochot_callback,
-	board_periph_apu_rst_callback,
 	board_periph_apu_pwrok_callback,
 	board_periph_apu_thermal_trip_callback,
 	board_periph_apu_alert_callback,
@@ -1444,11 +1439,14 @@ int board_periph_init(void)
 	periph_register_debounce_handler(ex_AC_330W_PRSNTn, periph_debouncer_AC_330W_PRSNT);
 	periph_register_debounce_handler(ex_MEM_PMIC_PWR_GOOD, periph_debouncer_MEM_PMIC_PWR_GOOD);
     #endif
+#if CONFIG_POWER_SOURCE_MANAGEMENT			
 	uint8_t ChgAcOKstatus = gpio_read_pin(CHG_ACOK);
 	if (ChgAcOKstatus != g_ChgAcOK) {
 		g_ChgAcOK = gpio_read_pin(CHG_ACOK);
-		board_pwrSrcEvent();
-	}
 
+		board_pwrSrcEvent();
+
+	}
+#endif
 	return ret;
 }

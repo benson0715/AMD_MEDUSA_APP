@@ -13,11 +13,7 @@
 #include "board_config.h"
 #include "espi_hub.h"
 
-/* Mirror of `g_sysAcLimit1` declared in board_init.h. Definition has
- * to live somewhere; place it here so it's part of the per-board
- * compilation unit.
- */
-uint16_t g_sysAcLimit1 = BOARD_AC_ADAPTER_WATT_MAX_DEFAULT;
+
 
 /* `boot_mode_maf` is owned by app/power_sequencing/app_pseq.c (defined
  * unconditionally at line 112). Keep only the extern declaration via

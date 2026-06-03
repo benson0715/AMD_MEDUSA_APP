@@ -96,6 +96,14 @@ int periph_register_gpio_cb_vector(void)
 		}
 	}
 #else
+	for (index = 0; index < gpio_cb_list_len; index++) {
+		info = &inputBuffer_lst[index];
+		ret = gpio_init_callback_pin(info->port_pin, &info->gpio_cb, gpio_cb_list[index]);
+		if (ret) {
+			LOG_ERR("Failed to init callback for %s", info->name);
+			return ret;
+		}		
+	}
 	gpio_interrupt_configure_all();
 #endif
 	return ret;

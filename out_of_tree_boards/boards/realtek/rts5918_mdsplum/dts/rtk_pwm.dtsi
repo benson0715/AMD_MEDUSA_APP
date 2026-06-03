@@ -87,25 +87,25 @@
 };
 
 &pwmled1 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&led1_gpio138>;
 	pinctrl-names = "default";
 };
 
 &pwmled2 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&led2_gpio059>;
 	pinctrl-names = "default";
 };
 
 &pwm2 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&pwm2_gpio079>;
 	pinctrl-names = "default";
 };
 
 &pwm6 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&pwm6_gpio066>;
 	pinctrl-names = "default";
 };
@@ -121,7 +121,7 @@
  */
 
  &pwm12 {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <&pwm12_gpio108>;
 	pinctrl-names = "default";
  };

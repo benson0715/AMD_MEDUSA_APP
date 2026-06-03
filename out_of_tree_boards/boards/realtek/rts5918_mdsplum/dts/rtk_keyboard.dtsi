@@ -11,7 +11,7 @@
 };
 
 &kbd {
-	status = "okay";
+	status = "disabled";
 	pinctrl-0 = <
 		&ksi0_gpio050
 		&ksi1_gpio051

@@ -699,7 +699,7 @@ static void app_pseq_update(void)
 		current_state = next_state;
 
 		/* update GPIO setting based on power sequence */
-		// __autoGen_runtimeGpioSwitching(current_state); RTK_TODO
+		__autoGen_runtimeGpioSwitching(current_state);
 	} else {
 		LOG_ERR("Unsupported next state: %s", system_power_state_str[next_state]);
 		/* Do not transition to invalid state,
