@@ -23,23 +23,44 @@
 
 int board_init(void)
 {
-	/* TODO(realtek-schematic): replicate the POR init sequence from
-	 * boards/nuvoton/npcx4mnx_mdsplum/source/mdsplum_npcx4mnx.c once
-	 * the Plum-on-RTS5918 GPIO autogen table is in place. For now
-	 * we return success so app/main.c proceeds to thread startup.
+	int ret;
+
+	/**
+	 * Get Sys Config from rom 
 	 */
+	ret = brdSysConfig_Init();
+	if (ret) {
+		//LOG_ERR("Failed to get Sys Config from rom: %d", ret);
+		return ret;
+	}
+
 	/**
 	 * Initialize EC GPIO
 	 */
 	__autoGen_initECGPIO();
+
+
+	/**
+	 * Initialize SPI Flash
+	 */
+	//ret = amd_crb_drivers_sFlashInit();
+	if (ret) {
+		return ret;
+	}
+
 	/**
 	 * Detect boot mode
 	 */
 	detect_boot_mode();
 
-	printk("%s\r\n", __func__);
+	/**
+	 * Initialize the platform
+	 */
+	board_init_platformInit();
+
 	k_msleep(100);
-	return 0;
+
+	return 0;	
 }
 
 int board_suspend(void)
@@ -56,8 +77,39 @@ void board_onApuPwrOK(void)
 {
 }
 
+/* Runtime GPIO settings */
+#define DRIVER_TO_LOW_BEFORE_EC_SLP_S3_L_TO_HIGH                                         \
+    {EC_EVAL_AUX_RST_N,  GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_CARD_PWREN,  GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_SLT_PWREN, GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_BOMACO_EN,    GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE,           0         },    \
+    {EC_EVAL_19V_PWREN,  GPIO_ACTIVE_HIGH | GPIO_OUTPUT_LOW | GPIO_DEFINE,           0         },    \
+
+struct gpio_ec_config evalCardCtrlPins[] = {
+    DRIVER_TO_LOW_BEFORE_EC_SLP_S3_L_TO_HIGH
+};
+
+/**
+ * @brief Initialize eval card control pins to low state
+ *
+ * PLAT-84470
+ * Init all of the pin status to 0 on APU_RST# but keep them untouched across S3/S0i3
+ *
+ * @param void
+ * @return void
+ */
 void board_evalCardCtrlPins(void)
 {
+	// uint32_t pinList[] = {
+	// 	PIN_LIST_DRIVER_TO_LOW_BEFORE_EC_SLP_S3_L_TO_HIGH,
+	// };
+
+	gpio_configure_array(evalCardCtrlPins, ARRAY_SIZE(evalCardCtrlPins));   
+
+	// for (uint8_t i = 0; pinList[i] != GPIO_PIN_NULL; i++) {
+	// 	gpio_write_pin(pinList[i], 0);
+		//gpio_set_power(pinList[i], GPIO_CTRL_PWRG_VTR_IO);
+	//}
 }
 
 void board_turnOffJtagInterface(void)

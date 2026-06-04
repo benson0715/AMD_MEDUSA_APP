@@ -129,11 +129,11 @@
  * make sure the AMD app's I2C_BUS_N indices land on wrappers that the
  * overlay actually `status = "okay"`s.
  */
-#define I2C_BUS_0        DT_NODELABEL(i2c_1_wrapper)
-#define I2C_BUS_1        DT_NODELABEL(i2c_2_wrapper)
-#define I2C_BUS_2        DT_NODELABEL(i2c_3_wrapper)
-#define I2C_BUS_3        DT_NODELABEL(i2c_4_wrapper)
-#define I2C_BUS_4        DT_NODELABEL(i2c_5_wrapper)
+#define I2C_BUS_0        DT_NODELABEL(i2c_4)
+#define I2C_BUS_1        DT_NODELABEL(i2c_1)
+#define I2C_BUS_2        DT_NODELABEL(i2c_5)
+#define I2C_BUS_3        DT_NODELABEL(i2c_2)
+#define I2C_BUS_4        DT_NODELABEL(i2c_0)
 
 /*
  * `i2c_bus_num` enum gives the per-board integer index that
@@ -186,10 +186,159 @@ enum i2c_bus_num {
  */
 #define SHA              DT_INVALID_NODE
 
+/* inputBuffer Initial positions */
+#define PWR_BTN_INIT_POS		           (1)
+#define AC_PRSENT_INIT_POS                 (1)
+#define UART_DONGLE_PRSENT_INIT_POS        (1)
+#define UART0_INTn_INIT_POS                (1)
+#define SMIn_INTn_INIT_POS                 (1)
+#define BAT_IN_INIT_POS                    (1)
+#define CHG_OK_INIT_POS                    (0)
+#define DOCK_IN_INIT_POS                   (1)
+#define LID_INIT_POS                       (1)
+#define DISP_SW_INIT_POS                   (0)
+#define DBG_CARD_INIT_POS                  (1)
+#define AC_330W_PRSNT_INIT_POS             (0)
+#define CHG_PROCHOTn1_INIT_POS             (1)
+#define CHG_PROCHOTn2_INIT_POS             (1)
+#define DC_S5_ALW_INIT_POS                 (0)
+#define PD_SRC_ON_INIT_POS                 (1)
+#define CHG_PROCHOT_INIT_POS               (1)
+#define APU_RST_INIT_POS                   (1)
+#define APU_PWROK_INIT_POS                 (0)
+#define APU_THERMALTRIP_INIT_POS           (0)
+#define APU_ALERT_INIT_POS                 (1)
+#define SLP_S3_INIT_POS                    (1)
+#define SLP_S5_INIT_POS                    (1)
+#define USB1_INT_INIT_POS                  (1)
+#define USB2_INT_INIT_POS                  (1)
+#define IOEXP0_INIT_POS                    (1)
+#define ALW_GD_INIT_POS                    (0)
+#define MEM_PMIC_PWR_GOOD_INIT_POS         (0)
+
+#define DBG_LOG_FIFO_ENABLE                (0) // TODO_RTK
+#define DISP_SW_DEBUG_ALWAYS               (0)
+
+#define SBRMI_SLV_ADDRESS_PKG0             (0x78 >> 1)
+#define SYS_CONFIG_MAX_P3T_LIMIT           (216000)      // P3T max. 216W for Phx
+
+/* RPMC ROM and Capabilities configuration */
+/** RPMC ROM version: 0 Debug version, >0 Release version (Note: Debug version and release version changes will erase RPMC ROM data after power on) */
+#define RPMC_ROM_VERSION                   (2)
+
+/** RPMC ROM access mode: 0 Stable mode (default), 1 Performance mode */
+#define RPMC_ROM_ACCESS_POSTPONE           (0)
+
+/** Number of RPMC ROM monotonic counters: 0-3 Reserved for MC, 4-7 Reserved for FAR2.0 */
+#define RPMC_ROM_MC_NUM                    (8)
+
+/**  RPMC ROM base address in internal flash */
+#define RPMC_ROM_BASE_ADDR                 (0x80000)
+
+/** RPMC algorithm support bits for ECAIG (Valid options in RPMC driver include: RPMC_SHA256_MC_ALGID_BIT, RPMC_SHA3_384_MC_ALGID_BIT) */
+#define RPMC_ECAIG_SUPPORT_BITS            (RPMC_SHA256_MC_ALGID_BIT)
+
+/* IOEXP  */
+#define DEV_PCA9535_MAX_CHIP_NUM    7
+#define IOEXP_SETBIT            	dev_pca9535_setBit
+#define IOEXP_SETOUTPUT         	dev_pca9535_setOutput
+#define IOEXP_SMARTREAD         	dev_pca9535_smartRead
+#define IOEXP_SETMODE             dev_pca9535_setPuOd
+
+/* MP2815-SVI3  */
+#define MP2815_I2C_PORT           I2C_1
+#define MP2815_I2C_ADDRESS_ID0    (0x20)
+#define SVRTABLE_CRCCHECK_UPDATE_ENABLE (0)
+
+/* RV686XX-SVI3  */
+#define RV686XX_I2C_PORT       I2C_1
+#define RV686XX_I2C_ADDRESS    (0x60)
+
+/* CPLD -- I2C_1 */
+#define CPLD_I2C_PORT           	I2C_1
+#define SCAN_I2C_PORT          	    I2C_1
+
+/* INA219 -- I2C_1 */
+#define INA219_I2C_PORT         	I2C_1
+#define INA219_I2C_ADDRESS      	(0x40)
+
+/* ISL9241-CHARGER -- I2C_3 */
+#define CHARGER_I2C_PORT        	I2C_3
+#define CHARGER_I2C_ADDRESS     	(0x09)
+
+/* SB-TSI -- I2C_0 */
+#define SBTSI_I2C_PORT         	 	I2C_0
+#define SBTSI_I2C_ADDRESS       	(0x4C)
+
+/* BATTERY -- I2C_3 */
+#define BATTERY_I2C_PORT 			I2C_3
+#define BATTERY_I2C_ADDRESS 		(0x0B)
+
+/* TMP432 -- I2C_0 */
+#define TMP432_I2C_PORT 			I2C_0
+#define TMP432_I2C_ADDRESS 			(0x4D)
+
+/* LM95234 -- I2C_0 */
+#define LM95234_I2C_PORT 			I2C_0
+#define LM95234_I2C_ADDRESS 		(0x4E)
+
+/* MAX695X-Postcode -- I2C_1 */
+#define MAX695X_I2C_PORT 			I2C_1
+#define MAX695X_LOW_I2C_ADDRESS 	(0x38)
+#define MAX695X_HIGH_I2C_ADDRESS 	(0x39)
+
+/* MPC-Postcode -- I2C_1 */
+#define MPC_I2C_PORT 				I2C_1
+#define MPC_I2C_ADDRESS 			(0x37)
+
+/* HPI PD -- I2C_3 */
+#define CCG8_CFP_ENABLE             (1)
+#define HPI_I2C_PORT          		I2C_3
+#if CCG8_CFP_ENABLE
+#define I2C_HPI_ADDRESS_ID1    		(0x40)
+#define I2C_HPI_ADDRESS_ID2    		(0x42)
+#else
+#define I2C_HPI_ADDRESS_ID1    		(0x08)
+#define I2C_HPI_ADDRESS_ID2    		(0x40)
+#endif
+
+/* ITE PD -- I2C_3 */
+#define ITE_I2C_PORT          		I2C_3
+#define I2C_ITE_ADDRESS_P0          (0x4C)
+#define I2C_ITE_ADDRESS_P1          (0x4C)
+#define I2C_ITE_ADDRESS_P2          (0x26)
+
+/* TI PD -- I2C_3 */
+#define TPS_I2C_PORT   				I2C_3
+#define I2C_4CC_ADDRESS_P0      	(0x20)
+#define I2C_4CC_ADDRESS_P1      	(0x24)
+#define I2C_4CC_ADDRESS_P2      	(0x22)
+
+/* RTK PD -- I2C_3 */
+#define REALTEK_I2C_PORT   			I2C_3
+#define I2C_REALTEK_ADDRESS_P0      (0x67)
+#define I2C_REALTEK_ADDRESS_P1      (0x66)
+#define I2C_REALTEK_ADDRESS_P2      (0x69)
+
+/* SFH SLAVE -- I2C_2 */
+#define SFH_I2C_PORT   				I2C_2
+#define SFH_I2C_SLAVE_ADDRESS      	(0x02)
+
+/* board id -- I2C_3 */
+#define EEPROM_DRIVER_I2C_PORT      (I2C_3)
+#define EEPROM_DRIVER_I2C_ADDR      (0x54)
+
+/* DAC -- I2C_3 */
+#define I2C_DAC_PWR_PORT            (I2C_3)
+
+/* EVAL CARD -- I2C_1 */
+#define I2C_EVAL_PORT               (I2C_1)
+
+
 /*
  * Smart battery
  */
-#define APP_SMTBTY_DEBUG_ENABLE             (1)
+#define APP_SMTBTY_DEBUG_ENABLE             (0) // TODO_RTK
 #define MAX_BATTERY_SUPPORTED               (1)
 #define APP_BATTERY_NO_BATT_CHARGE_VOLTAGE  (12000)   // If there is no battery adjust the charger output voltage to 12V
 #define APP_BATTERY_FULL_CHARGE_VOLTAGE     (13200)   /* 3-cell */

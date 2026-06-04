@@ -75,7 +75,7 @@ LOG_MODULE_REGISTER(brdint, CONFIG_BOARD_INIT_LOG_LEVEL);
 /* ************************** *
  *          Macro             *
  * ************************** */
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 #define ex_SmrtMux_IO1       ex_EP_EDP_SMUX_PWM_EN
 #define ex_SmrtMux_IO2       ex_EP_EDP_SMUX_BLON
 #define ex_SmrtMux_IO3       ex_EP_EDP_SMUX_PNL_RSTn
@@ -118,7 +118,7 @@ uint16_t g_sysAcLimit1 = F_AC_ADAPTER_130W_MAX_CURRENT;
 /* For runtime FW status */
 uint8_t g_apuRstS3Flag = 0;
 
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 struct {
 	uint32_t Pin;
 	uint8_t  MuxSetting[2];
@@ -227,7 +227,7 @@ void board_hpiFwUpdateCallback (DRV_HPI_FW_UPDATE_INDICATOR st)
  */
 static void board_readDispSwSt(void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	_s_forcePdUpdate = false;
 
 	if (!ioexp_get(ex_PD_FORCE_FW_UPn)) {
@@ -298,7 +298,7 @@ void board_init_informUserForPdUpdate(void)
  */
 void board_init_platformInit(void)
 {
-	uint32_t optionVal;
+	uint32_t optionVal = 1;
 	int ret;
 
 	/** ***************************************
@@ -341,26 +341,27 @@ void board_init_platformInit(void)
 	 */
 	ret = brdId_Init();
 	if (ret) {
-	    LOG_ERR("Failed to fetch brd id: %d", ret);
+	    printk("Failed to fetch brd id: %d\r\n", ret);
 	} else {
-		LOG_DBG ("Read board id 0x%02X", brdId());
+		printk("Read board id 0x%02X\r\n", brdId());
 	}
-	static const struct device *dev_bbram;
-	dev_bbram =  DEVICE_DT_GET(BBRAM);
-	if (!device_is_ready(dev_bbram)) {
-			LOG_ERR("bbarm device not ready");
-		};
 
-	ret = bbram_check_power(dev_bbram);
-	LOG_INF("bbram_check_power = %x",ret);
+	// static const struct device *dev_bbram;
+	// dev_bbram =  DEVICE_DT_GET(BBRAM);
+	// if (!device_is_ready(dev_bbram)) {
+	// 		LOG_ERR("bbarm device not ready");
+	// 	};
+
+	// ret = bbram_check_power(dev_bbram);
+	// LOG_INF("bbram_check_power = %x",ret);
 
 	/**
 	 * Initialize NV option
-	 */
-	ret = f_nv_options_init();
-	if (ret) {
-	   LOG_ERR("Failed to init nv_options %d", ret);
-	}
+	 */ // TODO_RTK
+	// ret = f_nv_options_init();
+	// if (ret) {
+	//    LOG_ERR("Failed to init nv_options %d", ret);
+	// }
 
 #if (BRDID_isTV)
 	/* hard code the DAC */
@@ -387,7 +388,7 @@ void board_init_platformInit(void)
 
 	offset = 0xF8;
 	value = 0x8A;
-    #if 0 // TODO_RTK
+    #if 1 // TODO_RTK
 	i2c_hub_burst_write_multi_cmd(I2C_DAC_PWR_PORT, 0X50, &offset, 1, &value, 1);
     #endif
 	/**
@@ -397,10 +398,13 @@ void board_init_platformInit(void)
 	board_ioexp_initIoExp();
 	board_ioexp_initIoExp0();
 #endif
-
-    #if 0 // TODO_RTK
+	printk("brdId:%x\r\n", brdId());
+	
+    #if 1 // TODO_RTK
 	/* Set saf boot mode */
 	espihub_set_saf_boot_mode(!ioexp_get(ex_EC_SHARE_SAFn_MODE));
+	printk("ex_EC_SHARE_SAFn_MODE:%x\r\n", ioexp_get(ex_EC_SHARE_SAFn_MODE));
+
     #endif
 	/* Init other submodules */
 #if CONFIG_SELECTABLE_DAC_VALUE
@@ -409,12 +413,12 @@ void board_init_platformInit(void)
 
 	/* Sync up critical NV options */
 	/* Below two are used everywhere of thread init proc, sync the stauts here to ensure they are up to date */
-	GET_NV_OPTIONS(chg_DcOnlyProchot, g_isThrottleApuInDcOnly);
-	GET_NV_OPTIONS(chg_AcOnlyProchot, g_isThrottleApuInAcOnly);
+	//GET_NV_OPTIONS(chg_DcOnlyProchot, g_isThrottleApuInDcOnly); // TODO_RTK
+	//GET_NV_OPTIONS(chg_AcOnlyProchot, g_isThrottleApuInAcOnly); // TODO_RTK
 
 	/* Enable the event for PMIC/VR adjustment */
 	k_work_init(&pmicTunnel_work, board_pmicTunnelProc);
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	/**
 	 * Initialize postcode led
 	 */
@@ -427,7 +431,7 @@ void board_init_platformInit(void)
 	}
 
 	/* preload the postcode on/off setting */
-	GET_NV_OPTIONS(f_TurnOnPostCode, optionVal);
+	//GET_NV_OPTIONS(f_TurnOnPostCode, optionVal); // TODO_RTK
 	if (optionVal)
 		postcode_led_hub_set_sts(true);
 	else
@@ -437,7 +441,7 @@ void board_init_platformInit(void)
 	board_turnOffJtagInterface();
 
 	/* Initialize rom sig */
-	f_romSig_init();
+	//f_romSig_init();  // TODO_RTK
 
 	/**
 	 * Set the selected slot ID to 0xFF and it will be updated later depend on board config.
@@ -476,7 +480,7 @@ void board_init_platformInit(void)
 #if CONFIG_USBC_POWER_DELIVERY
 	/* Load the default status from option */
 	app_usbc_status.ui8Reg = 0;
-	GET_NV_OPTIONS(usbc_status, app_usbc_status.ui8Reg);
+	//GET_NV_OPTIONS(usbc_status, app_usbc_status.ui8Reg); // TODO_RTK
 #endif
 
 	/* Separate the Parade and Kandou re-timer from board. 
@@ -589,8 +593,8 @@ void board_init_platformInit(void)
 	}
 #endif
 
-	memcpy(g_pdCtrlSt[0].retimer, "PS8835", 7);
-	memcpy(g_pdCtrlSt[1].retimer, "PS8835", 7);
+	//memcpy(g_pdCtrlSt[0].retimer, "PS8835", 7); TODO_RTK
+	//memcpy(g_pdCtrlSt[1].retimer, "PS8835", 7); TODO_RTK
 
 
 	/* ****************************************
@@ -654,7 +658,7 @@ void board_init_platformInit(void)
 	k_timer_init(&g_apuRstTrigger, board_init_apuRstTrigger, NULL);
 #if (CONFIG_SFH)
 	/* Init SFH */
-	GET_NV_OPTIONS(waie_b_value, g_WAIE_RITE);
+	//GET_NV_OPTIONS(waie_b_value, g_WAIE_RITE); // TODO_RTK
 	if(g_WAIE_RITE)
 	{
 		app_sfh_waie_init();
@@ -752,7 +756,7 @@ static uint16_t _s_pwrEnRest = 0;
  */
 void board_init_apuSleepEnterHandler (void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	/**
 	 * Don't touch AUX reset across S3/S0i3
 	 */
@@ -840,7 +844,7 @@ void board_init_apuSleepEnterHandler (void)
  */
 void board_init_apuSleepExitHandler (void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	/**
 	 * Bugcheck 0xEF CRITICAL_PROCESS_DIED
 	 *
@@ -964,7 +968,7 @@ void board_init_apuSleepExitHandler (void)
  */
 void board_init_smartMux_V0(void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	for (uint8_t i = 0; i < 4; i++) {
 		IOEXP_SETBIT( IOEXP_I2cSlvAddr(_s_smartMuxTab[i].Pin), IOEXP_I2cPort(_s_smartMuxTab[i].Pin), IOEXP_IdxOfGroup(_s_smartMuxTab[i].Pin),
 			IOEXP_IsPushPullPin(_s_smartMuxTab[i].Pin) ? 1 : 0,
@@ -982,7 +986,7 @@ void board_init_smartMux_V0(void)
  */
 void board_init_smartMux_V1(void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	for (uint8_t i = 0; i < 4; i++) {
 		IOEXP_SETBIT( IOEXP_I2cSlvAddr(_s_smartMuxTab[i].Pin), IOEXP_I2cPort(_s_smartMuxTab[i].Pin), IOEXP_IdxOfGroup(_s_smartMuxTab[i].Pin),
 			1,
@@ -1001,7 +1005,7 @@ void board_init_smartMux_V1(void)
  */
 void board_init_smartMux_V2(void)
 {
-#if 0 // TODO_RTK
+#if 1 // TODO_RTK
 	for (uint8_t i = 0; i < 4; i++) {
 		IOEXP_SETBIT( IOEXP_I2cSlvAddr(_s_smartMuxTab[i].Pin), IOEXP_I2cPort(_s_smartMuxTab[i].Pin), IOEXP_IdxOfGroup(_s_smartMuxTab[i].Pin),
 			1,
@@ -1068,13 +1072,13 @@ static void board_init_mpc_update_callback(void)
 	uint8_t ver1[3];
 	uint8_t romVersion[16];
 	/* Collect PD version information */
-	ver0[0] = g_pdCtrlSt[0].VVVV;
-	ver0[1] = g_pdCtrlSt[0].MM;
-	ver0[2] = g_pdCtrlSt[0].RR;
+	//ver0[0] = g_pdCtrlSt[0].VVVV; // TODO_RTK
+	//ver0[1] = g_pdCtrlSt[0].MM; // TODO_RTK
+	//ver0[2] = g_pdCtrlSt[0].RR; // TODO_RTK
 	
-	ver1[0] = g_pdCtrlSt[1].VVVV;
-	ver1[1] = g_pdCtrlSt[1].MM;
-	ver1[2] = g_pdCtrlSt[1].RR;
+	//ver1[0] = g_pdCtrlSt[1].VVVV; // TODO_RTK
+	//ver1[1] = g_pdCtrlSt[1].MM; // TODO_RTK
+	//ver1[2] = g_pdCtrlSt[1].RR; // TODO_RTK
 	
 	/* Get EC ROM version string */
 	// ec_version_stringGet(3, romVersion, 12); // TODO_RTK

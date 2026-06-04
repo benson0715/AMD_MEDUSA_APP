@@ -309,7 +309,7 @@ int gpio_configure_all_pins(void)
 		const struct device *gpio_dev = drv_gpio_get_dev(port);
 		int                  ret;
 
-		printf("i: %d port: %p pin: %d cfg: %x, idx: %x\r\n", i, gpio_dev, pin, gpio_hub_pins[i].cfg, gpio_hub_pins[i].pin_idx);
+		//printf("i: %d port: %p pin: %d cfg: %x, idx: %x\r\n", i, gpio_dev, pin, gpio_hub_pins[i].cfg, gpio_hub_pins[i].pin_idx);
 		if (GPIO_PIN_IS_UNDEFINED(gpio_hub_pins[i].pin_idx)) {
 			continue;
 		}
@@ -397,7 +397,7 @@ int gpio_write_pin(enum gpio_idx pin_idx, int value)
 	const struct device *gpio_dev;
 
 //#ifndef CONFIG_MDL_GPIO_HUB_QUIET
-	printk("RTK_gpio_write_pin: %s(%d)\n", get_pin_name(pin_idx), value);
+	//printk("RTK_gpio_write_pin: %s(%d)\n", get_pin_name(pin_idx), value);
 //#endif
 
 	if (GPIO_PIN_IS_UNDEFINED(pin_idx)) {
@@ -461,7 +461,7 @@ int gpio_read_pin(enum gpio_idx pin_idx)
 #ifndef CONFIG_MDL_GPIO_HUB_QUIET
 	//const char *caller_name = get_caller_name();
 	//if (strcmp(caller_name, "SnsMonitor") != 0) {
-		printk("gpio_read_pin: %s %d\r\n", get_pin_name(pin_idx), ret);
+	//	printk("gpio_read_pin: %s %d\r\n", get_pin_name(pin_idx), ret);
 	//}
 #endif
 	return ret;

@@ -368,6 +368,7 @@ static void periph_handler(const struct device *dev, struct espi_callback *cb,
 		}
 		break;
 	case ESPI_PERIPHERAL_HOST_IO:
+		//printk("acpihandler\r\n");
 		if (acpi_handlers[ESPIHUB_ACPI_PUBLIC]) {
 			acpi_handlers[ESPIHUB_ACPI_PUBLIC]();
 		} else {

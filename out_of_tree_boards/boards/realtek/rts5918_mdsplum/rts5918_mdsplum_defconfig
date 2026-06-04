@@ -76,7 +76,7 @@ CONFIG_PWRMGT_LOG_LEVEL=4
 
 
 CONFIG_REBOOT=y
-
+CONFIG_EC_MODULE=y
 # Phase 8.3d: PCAL6416A driver removed — the two GPIO expanders on i2c_4
 # are now handled by the Lenovo Nct5635 driver
 # (ecfw-zephyr/Jupiter/peripheral/Nct5635/nct5635.c) via the Phase 8.1

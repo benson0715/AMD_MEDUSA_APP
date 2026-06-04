@@ -38,7 +38,7 @@ static struct k_work f_nv_options_work;
 static unsigned int nv_ram[256];
 EC_NV_OPTIONS * g_ptrNvSpace = (EC_NV_OPTIONS *)(&nv_ram[4]);
 #else
-EC_NV_OPTIONS * g_ptrNvSpace = (EC_NV_OPTIONS *)(0x4000A800+0x10);
+EC_NV_OPTIONS * g_ptrNvSpace = (EC_NV_OPTIONS *)(0x200A0000+0x10);
 #endif
 static uint8_t  _s_activeBlock   = 0; 
 static uint32_t _s_blkLocation[] = {0x0E00, 0x0F00}; // to adapt at minimum 4K-Byte ROM
