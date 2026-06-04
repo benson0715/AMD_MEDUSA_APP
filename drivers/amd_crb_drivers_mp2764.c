@@ -254,7 +254,9 @@ static bool _dev_charger_regAccess(bool isRead, uint8_t slaveAddr, uint8_t reg, 
 			break;
         }
 	if (!isSuccess) {
+#if (CONFIG_ECDBGI_SUPPORT)		
 		info_value_increase(INFO_I2C_CHARGER, 1);
+#endif
 	}
     }
 	_dev_charger_updateBusErrorCounter(slaveAddr, isSuccess);

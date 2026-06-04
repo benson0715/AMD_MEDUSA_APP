@@ -53,7 +53,9 @@ int amd_crb_drivers_raa489300_access (bool isRead, uint8_t address, uint8_t reg,
 	}
 	
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_RAA489300, 1);
+#endif		
 		LOG_DBG("[!!Fatal error!!] on %s RAA489300[%02X], ret %d", isRead ? "R" : "W", reg, ret);
 	}
 	

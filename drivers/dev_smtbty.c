@@ -164,7 +164,9 @@ static bool _dev_smtbty_regAccess(bool isRead, uint8_t slaveAddr, uint8_t reg, v
 
 	_dev_smtbty_updateBusErrorCounter(slaveAddr, isSuccess);
 	if (!isSuccess) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_SMTBAT, 1);
+#endif	
 	}
 
 	return isSuccess;

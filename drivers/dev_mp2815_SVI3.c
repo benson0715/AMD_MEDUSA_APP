@@ -60,7 +60,9 @@ static uint32_t _svi3_regAccess(bool isRead, uint8_t port, uint8_t slv, uint8_t 
 			return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_SVI3, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on SVI3 @ %02X %s [%02X], ret %d", slv, isRead ? "R" : "W", reg, ret);
 	}
 

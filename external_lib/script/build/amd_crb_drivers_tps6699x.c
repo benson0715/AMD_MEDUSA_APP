@@ -115,7 +115,9 @@ int amd_crb_drivers_tps6699x_regAccess(bool isRead, uint8_t reg, void * pBuf, ui
 			return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_TPS6699x, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on %s tps6699x[%02X], ret %d, port(%d)", isRead ? "R" : "W", reg, ret, port);
 	}
 	return ret;

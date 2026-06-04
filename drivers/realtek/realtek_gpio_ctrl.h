@@ -27,6 +27,8 @@
 #define MD_GPIO_PAD_PULLDOWN		0x02ul
 #define MD_GPIO_PAD_KEEPER		0x03ul
 
+#define GPIO_isIoExpPin(pin)        ((3 << 14) == ((pin) & (0x03ul << 14)))
+
 typedef enum {
 	MD_GPIO_EM_PAD__None = 0,
 	MD_GPIO_EM_PAD__PullUp = 1,

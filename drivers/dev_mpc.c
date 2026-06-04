@@ -127,7 +127,9 @@ static uint32_t _mpc_regAccess(bool isRead, uint8_t slvAddr, uint16_t reg, void 
 			return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_MPC, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on %s MPC slv%02X [%02X], ret %d", isRead ? "R" : "W", slvAddr, reg, ret);
 		_s_forceWriteFlag = true;
 	}

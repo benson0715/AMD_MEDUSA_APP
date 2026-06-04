@@ -68,7 +68,9 @@ static uint32_t _max695x_regAccess(bool isRead, uint8_t slvAddr, uint8_t reg, vo
 			return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_MAX695x, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on %s MAX695x slv%02X [%02X], ret %d", isRead ? "R" : "W", slvAddr, reg, ret);
 		_s_forceWriteFlag = true;
 	}

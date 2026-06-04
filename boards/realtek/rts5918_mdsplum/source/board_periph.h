@@ -7,7 +7,7 @@
 #ifndef __BOARD_PERIPH_H__
 #define __BOARD_PERIPH_H__
 
-#define GPIO_isIoExpPin(idx) (((uint32_t)(idx)) & BIT(31))
+
 
 /* inputBuffer Initial positions */
 #define PWR_BTN_INIT_POS		           (1)

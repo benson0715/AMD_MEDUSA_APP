@@ -126,7 +126,9 @@ static uint32_t _pca9535_access(bool isRead, uint8_t slv, uint8_t i2cDev, uint8_
 			return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_PCA9535, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on IoExp @ %02X %s [%02X], ret %d", slv, isRead ? "R" : "W", reg, ret);
 	}
 	return ret;

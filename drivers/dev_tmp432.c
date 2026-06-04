@@ -69,7 +69,9 @@ uint32_t dev_tmp432_regAccess(bool isRead, uint8_t reg, void * pData, uint8_t da
 				return ret;
 	}
 	if (!retry) {
+#if (CONFIG_ECDBGI_SUPPORT)			
 		info_value_increase(INFO_I2C_TMP432, 1);
+#endif		
 		LOG_ERR("[!!Fatal error!!] on %s TMP432x[%02X], ret %d", isRead ? "R" : "W", reg, ret);
 	}
 
