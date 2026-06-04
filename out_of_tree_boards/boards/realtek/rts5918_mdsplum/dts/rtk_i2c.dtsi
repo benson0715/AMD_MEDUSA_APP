@@ -138,70 +138,43 @@
 /* ----- I2C buses (Bison uses 9 of the 11 controllers) ----- */
 &i2c_1 {
 	/* WWAN — GPIO077/078 */
-	status = "disabled";
+	status = "okay";
 	pinctrl-0 = <&i2c01_dataa_gpio077 &i2c01_dataa_gpio077_pin_sel
 		     &i2c01_clka_gpio078 &i2c01_clka_gpio078_pin_sel>;
 	pinctrl-names = "default";
 };
 
-/*
- * i2c_2: legacy enable inherited from the previous application overlay.
- * Flagged as dead enable in check_reports/Phase6_Summary.md M-01 because
- * no pinctrl / wrapper is configured on Bison. Retained here to keep
- * the relocation behaviour-neutral; drop in a follow-up cleanup if
- * desired.
- */
- /*
-&i2c_2 { status = "disabled"; };
-*/
+ 
+&i2c_2 { 
+	status = "okay";
+	pinctrl-0 = <&i2c02_clk_gpio102 &i2c02_data_gpio103>;
+	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;	
+};
+
 &i2c_3 {
 	/* GSENSE — GPIO142/143 */
 	status = "disabled";
 	pinctrl-0 = <&i2c03_datab_gpio142 &i2c03_datab_gpio142_pin_sel
 		     &i2c03_clkc_gpio143 &i2c03_clkc_gpio143_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_4 {
-	/* GPIO_EXPANDER — GPIO069/070
-	 *
-	 * Two KTS1622 GPIO expanders (U5601 + U5602) at I2C addresses
-	 * 0x20 and 0x21. They are NOT instantiated as Zephyr i2c
-	 * children because the Lenovo Nct5635 driver
-	 * (Jupiter/peripheral/Nct5635/nct5635.c) talks to them directly
-	 * via i2c_hub_write/read using EXPANDER1_ADDRESS / EXPANDER2_ADDRESS
-	 * from include/Jupiter/peripheral/Nct5635/Nct5635.h (Phase 8.2).
-	 *
-	 * The "GPIO controller" abstraction the per-pin enum_gpio_idx
-	 * encoding needs is provided by the four virtual port-byte
-	 * nodes (expander1_p0, expander1_p1, expander2_p0, expander2_p1)
-	 * declared in the root `/` block above (Phase 8.3a) — see
-	 * dts/bindings/gpio/vnd,lenovo-iox-virt-port.yaml for the
-	 * encoding rationale.
-	 *
-	 * Phase 4.7's `nxp,pcal6416a` driver instantiation for these
-	 * chips was removed in Phase 8.3d because:
-	 *   1. We're routing through Lenovo Nct5635 instead (Phase 8.3
-	 *      end-to-end chain), keeping N4SHT17W consistency.
-	 *   2. The PCAL driver and the Nct5635 driver would race-init
-	 *      registers 0x06/0x07 if both ran simultaneously.
-	 *   3. Bison BOM is KTS1622 (Kinetic), not PCAL6416A — they are
-	 *      register-compatible at the basic GPIO level but PCAL
-	 *      writes to PCAL-extended registers 0x40-0x4B during init,
-	 *      and KTS1622's behavior at those addresses is not
-	 *      identical (drive-strength register layout differs).
-	 */
-	status = "disabled";
-	pinctrl-0 = <&i2c04_dataa_gpio069 &i2c04_dataa_gpio069_pin_sel
-		     &i2c04_clka_gpio070 &i2c04_clka_gpio070_pin_sel>;
+	status = "okay";
+	pinctrl-0 = <&i2c04_clkb_gpio113 &i2c04_clkb_gpio113_pin_sel
+		     &i2c04_datab_gpio116 &i2c04_datab_gpio116_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_5 {
 	/* PD controller — GPIO015/016 */
-	status = "disabled";
+	status = "okay";
 	pinctrl-0 = <&i2c05_clk_gpio015 &i2c05_data_gpio016>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_6 {
@@ -209,6 +182,7 @@
 	 * I3C03_SCL/SDA Func2) — actually the CSV says GPIO100=clk, GPIO101=data
 	 */
 	status = "disabled";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_7 {
@@ -216,6 +190,7 @@
 	status = "disabled";
 	pinctrl-0 = <&i2c07_clk_gpio014 &i2c07_data_gpio017>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_8 {
@@ -224,6 +199,7 @@
 	pinctrl-0 = <&i2c08_datab_gpio147 &i2c08_datab_gpio147_pin_sel
 		     &i2c08_clkb_gpio150 &i2c08_clkb_gpio150_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_9 {
@@ -232,6 +208,7 @@
 	pinctrl-0 = <&i2c09_clka_gpio144 &i2c09_clka_gpio144_pin_sel
 		     &i2c09_dataa_gpio148 &i2c09_dataa_gpio148_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_10 {
@@ -251,6 +228,7 @@
 	pinctrl-0 = <&i2c10_dataa_gpio149 &i2c10_dataa_gpio149_pin_sel
 		     &i2c10_clkb_gpio152  &i2c10_clkb_gpio152_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 &i2c_11 {
@@ -271,6 +249,7 @@
 	pinctrl-0 = <&i2c11_dataa_gpio071 &i2c11_dataa_gpio071_pin_sel
 		     &i2c11_clka_gpio072  &i2c11_clka_gpio072_pin_sel>;
 	pinctrl-names = "default";
+	clock-frequency = <I2C_BITRATE_STANDARD>;
 };
 
 /* ----- I2C SCCON clock wrappers (Phase 10.10) -----
@@ -302,14 +281,90 @@
  * (-EIO / -ETIMEDOUT). Phase 10.10 commit message has the full
  * trace of why battery SBS reads silently failed before this fix.
  */
-&i2c_1_wrapper  { status = "okay"; };  /* WWAN */
-&i2c_2_wrapper  { status = "okay"; };  /* TODO(realtek-schematic): Plum I2C_BUS_1 target */
-&i2c_3_wrapper  { status = "okay"; };  /* GSENSE */
-&i2c_4_wrapper  { status = "okay"; };  /* GPIO_EXPANDER (KTS1622) */
-&i2c_5_wrapper  { status = "okay"; };  /* PD */
-&i2c_6_wrapper  { status = "okay"; };  /* SSD_THRM */
-&i2c_7_wrapper  { status = "okay"; };  /* DEBUG */
-&i2c_8_wrapper  { status = "okay"; };  /* BAT (SBS battery) */
-&i2c_9_wrapper  { status = "okay"; };  /* CHARGE */
-&i2c_10_wrapper { status = "okay"; };  /* VIDEO/THERM (Phase 10.11) */
-&i2c_11_wrapper { status = "okay"; };  /* KBD (Phase 10.12) */
+&i2c_1_wrapper  {	
+	status = "okay";
+	scl-gpio-pin = <78>;
+	sda-gpio-pin = <77>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* WWAN */
+
+&i2c_2_wrapper  {	
+	status = "okay";
+	scl-gpio-pin = <102>;
+	sda-gpio-pin = <103>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* TODO(realtek-schematic): Plum I2C_BUS_1 target */
+
+&i2c_3_wrapper  {	
+	status = "disabled";
+	scl-gpio-pin = <136>;
+	sda-gpio-pin = <142>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* GSENSE */
+
+&i2c_4_wrapper  {	
+	status = "okay";
+	scl-gpio-pin = <113>;
+	sda-gpio-pin = <116>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* GPIO_EXPANDER (KTS1622) */
+
+&i2c_5_wrapper  {	
+	status = "okay";
+	scl-gpio-pin = <15>;
+	sda-gpio-pin = <16>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* PD */
+
+&i2c_6_wrapper  {	
+	status = "disabled";
+	scl-gpio-pin = <24>;
+	sda-gpio-pin = <25>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* SSD_THRM */
+
+&i2c_7_wrapper  {	
+	status = "disabled";
+	scl-gpio-pin = <14>;
+	sda-gpio-pin = <17>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* DEBUG */
+
+&i2c_8_wrapper  {	
+	status = "disabled";
+	scl-gpio-pin = <146>;
+	sda-gpio-pin = <112>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* BAT (SBS battery) */
+
+&i2c_9_wrapper  {	
+	status = "disabled";
+	scl-gpio-pin = <144>;
+	sda-gpio-pin = <148>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* CHARGE */
+
+&i2c_10_wrapper {	
+	status = "disabled";
+	scl-gpio-pin = <96>;
+	sda-gpio-pin = <149>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* VIDEO/THERM (Phase 10.11) */
+
+&i2c_11_wrapper {	
+	status = "disabled";
+	scl-gpio-pin = <72>;
+	sda-gpio-pin = <71>;
+	sda-timeout-value = <100>;
+	scl-timeout-value = <100>;  
+};  /* KBD (Phase 10.12) */
