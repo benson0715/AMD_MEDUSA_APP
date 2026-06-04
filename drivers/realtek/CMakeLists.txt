@@ -12,6 +12,7 @@ target_sources(app
     ${CMAKE_CURRENT_LIST_DIR}/realtek_espi.c
     ${CMAKE_CURRENT_LIST_DIR}/realtek_gpio_impl.c
     ${CMAKE_CURRENT_LIST_DIR}/scaffold_stubs.c
+    ${CMAKE_CURRENT_LIST_DIR}/realtek_acpi.c
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/psl.h
     ${CMAKE_CURRENT_LIST_DIR}/realtek_espi.h
